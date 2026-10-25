@@ -38,9 +38,30 @@ export async function refreshRanking() {
   }
 }
 
-function openMe() {
+const countries = ['Argentina', 'Bolivia', 'Chile', 'Colombia', 'Costa Rica', 'Cuba', 'Ecuador', 'El Salvador', 'España', 'Estados Unidos', 'Guatemala', 'Honduras', 'México', 'Nicaragua', 'Panamá', 'Paraguay', 'Perú', 'República Dominicana', 'Uruguay', 'Venezuela', 'Otro país'];
+$('#me-country').innerHTML = '<option value="">País, opcional</option>' + countries.map((c) => `<option>${c}</option>`).join('');
+
+let picker = { medals: [], order: [] };
+
+function drawPicker() {
+  $('#me-medals').innerHTML = picker.medals.length
+    ? picker.medals.map((m) => {
+        const at = picker.order.indexOf(m.id);
+        return `<button type="button" class="pick${at > -1 ? ' on' : ''}" data-id="${esc(m.id)}">${esc(m.name)}${at > -1 ? `<i class="count">${at + 1}</i>` : ''}</button>`;
+      }).join('')
+    : '<p class="note">Todavía no ganaste medallas para lucir.</p>';
+}
+
+async function openMe() {
   for (const field of ['name', 'bio', 'country', 'layout', 'switches', 'discord']) $('#me-' + field).value = user[field] || '';
   $('#me-error').textContent = '';
+  try {
+    const p = await api.profile(user.handle);
+    picker = { medals: p.medals.filter((m) => m.earned), order: [...p.shown] };
+  } catch {
+    picker = { medals: [], order: [] };
+  }
+  drawPicker();
   $('#me').showModal();
 }
 
@@ -54,7 +75,7 @@ function setMode(register) {
 }
 
 $('#account').onclick = async () => {
-  if (user) return openMe();
+  if (user) return viewProfile(user.handle);
   setMode(false);
   $('#auth').showModal();
 };
@@ -74,16 +95,20 @@ $('#nav-out').onclick = async () => {
 };
 document.addEventListener('units', refreshRanking);
 $('#me-close').onclick = () => $('#me').close();
-$('#me-profile').onclick = () => { $('#me').close(); viewProfile(user.handle); };
-$('#me-logout').onclick = async () => {
-  await api.logout().catch(() => {});
-  $('#me').close();
-  await refreshUser();
+$('#me-medals').onclick = (e) => {
+  const id = e.target.closest('[data-id]')?.dataset.id;
+  if (!id) return;
+  const at = picker.order.indexOf(id);
+  if (at > -1) picker.order.splice(at, 1);
+  else if (picker.order.length < 6) picker.order.push(id);
+  else $('#me-error').textContent = 'Podés lucir hasta 6 medallas.';
+  drawPicker();
 };
 $('#me-form').onsubmit = async (e) => {
   e.preventDefault();
   const body = {};
   for (const field of ['name', 'bio', 'country', 'layout', 'switches', 'discord']) body[field] = $('#me-' + field).value;
+  body.shown = picker.order;
   try {
     await api.saveProfile(body);
     $('#me').close();

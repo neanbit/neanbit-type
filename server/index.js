@@ -32,6 +32,8 @@ db.exec(`
     id integer primary key, user_id integer not null, text_id integer not null, at integer not null);
 `);
 db.exec('pragma journal_mode = wal; pragma busy_timeout = 5000;');
+try { db.exec('alter table users add column verified integer not null default 0'); } catch {}
+try { db.exec("alter table users add column shown text not null default '[]'"); } catch {}
 for (const col of ['bio', 'country', 'layout', 'switches', 'discord']) {
   try { db.exec(`alter table users add column ${col} text not null default ''`); } catch {}
 }
@@ -45,9 +47,30 @@ db.exec(`
     id integer primary key, title text not null, body text not null,
     at integer not null, active integer not null default 1);
   create table if not exists settings (key text primary key, value text not null);
+  create table if not exists medals (
+    id text primary key, name text not null, description text not null, icon text not null default '',
+    condition text not null, target integer not null default 0,
+    stackable integer not null default 0, secret integer not null default 0, pos integer not null default 0);
+  create table if not exists user_medals (
+    user_id integer not null, medal_id text not null, count integer not null default 1,
+    primary key (user_id, medal_id));
 `);
 seedTexts();
+seedMedals();
 if (admin) db.prepare("update users set role = 'admin' where handle = ?").run(admin);
+
+function seedMedals() {
+  if (db.prepare('select count(*) as n from medals').get().n) return;
+  const add = db.prepare('insert into medals (id, name, description, icon, condition, target, pos) values (?, ?, ?, ?, ?, ?, ?)');
+  [
+    ['primeros-pasos', 'Primeros pasos', 'Completar una carrera', 'play', 'races_total', 1],
+    ['constante', 'Constante', 'Completar 50 carreras', 'rows', 'races_total', 50],
+    ['ritmo', 'Ritmo', 'Llegar a 300 CPM', 'gauge', 'cpm_max', 300],
+    ['veloz', 'Veloz', 'Llegar a 450 CPM', 'bolt', 'cpm_max', 450],
+    ['sin-red', 'Sin red', 'Terminar 5 carreras en Hardcore', 'shield', 'hc_races', 5],
+    ['pulso-firme', 'Pulso firme', 'Llegar a 250 CPM en Hardcore', 'target', 'hc_best', 250],
+  ].forEach((m, i) => add.run(...m, i));
+}
 
 function seedTexts() {
   if (db.prepare('select count(*) as n from texts').get().n) return;
@@ -76,7 +99,7 @@ function maintenance() {
 }
 
 const sha = (s) => createHash('sha256').update(s).digest('hex');
-const mime = { '.png': 'image/png', '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
+const mime = { '.png': 'image/png', '.svg': 'image/svg+xml', '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
 const hits = new Map();
 
 function send(res, status, data, headers = {}) {
@@ -114,19 +137,31 @@ function saveErrors(userId, kind, map) {
   }
 }
 
-const medalList = [
-  ['primeros-pasos', 'Primeros pasos', 'Completar una carrera', (s) => s.races >= 1],
-  ['constante', 'Constante', 'Completar 50 carreras', (s) => s.races >= 50],
-  ['ritmo', 'Ritmo', 'Llegar a 300 CPM', (s) => s.best >= 300],
-  ['veloz', 'Veloz', 'Llegar a 450 CPM', (s) => s.best >= 450],
-  ['sin-red', 'Sin red', 'Terminar 5 carreras en Hardcore', (s) => s.hcRaces >= 5],
-  ['pulso-firme', 'Pulso firme', 'Llegar a 250 CPM en Hardcore', (s) => s.hcBest >= 250],
-];
-
 function profileStats(userId) {
   const normal = db.prepare('select count(*) as races, coalesce(max(cpm), 0) as best from races where user_id = ? and hc = 0').get(userId);
   const hard = db.prepare('select count(*) as hcRaces, coalesce(max(cpm), 0) as hcBest from races where user_id = ? and hc = 1').get(userId);
   return { ...normal, ...hard };
+}
+
+const parseShown = (raw) => {
+  try {
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+};
+
+function medalsOf(userId) {
+  const s = profileStats(userId);
+  s.avg = db.prepare('select coalesce(round(avg(cpm)), 0) as a from races where user_id = ? and hc = 0').get(userId).a;
+  const grants = new Map(db.prepare('select medal_id, count from user_medals where user_id = ?').all(userId).map((r) => [r.medal_id, r.count]));
+  const values = { races_total: s.races, cpm_max: s.best, cpm_avg: s.avg, hc_races: s.hcRaces, hc_best: s.hcBest };
+  return db.prepare('select * from medals order by pos, rowid').all().map((m) => {
+    const given = grants.get(m.id) || 0;
+    const earned = m.condition === 'manual' ? given > 0 : (values[m.condition] || 0) >= m.target;
+    return { id: m.id, name: m.name, desc: m.description, icon: m.icon, stackable: !!m.stackable, secret: !!m.secret, earned, count: earned && m.stackable ? Math.max(given, 1) : 1 };
+  }).filter((m) => m.earned || !m.secret);
 }
 
 function rankOf(userId) {
@@ -197,8 +232,10 @@ async function api(req, res, url) {
     const layout = clean(b.layout, 10);
     if (!/^[\p{L}\p{N} _.-]{1,15}$/u.test(name)) return send(res, 400, { error: 'El nombre tiene hasta 15 caracteres.' });
     if (layout && !['QWERTY', 'Dvorak', 'Colemak', 'Otro'].includes(layout)) return send(res, 400, { error: 'Distribución inválida.' });
-    db.prepare('update users set name = ?, bio = ?, country = ?, layout = ?, switches = ?, discord = ? where id = ?')
-      .run(name, clean(b.bio, 150), clean(b.country, 30), layout, clean(b.switches, 30), clean(b.discord, 32), me.id);
+    const earned = new Set(medalsOf(me.id).filter((m) => m.earned).map((m) => m.id));
+    const shown = Array.isArray(b.shown) ? [...new Set(b.shown)].filter((id) => earned.has(id)).slice(0, 6) : parseShown(me.shown);
+    db.prepare('update users set name = ?, bio = ?, country = ?, layout = ?, switches = ?, discord = ?, shown = ? where id = ?')
+      .run(name, clean(b.bio, 150), clean(b.country, 30), layout, clean(b.switches, 30), clean(b.discord, 32), JSON.stringify(shown), me.id);
     return send(res, 200, { user: publicUser(db.prepare('select * from users where id = ?').get(me.id)) });
   }
 
@@ -332,7 +369,7 @@ async function api(req, res, url) {
       avg: mean(normal.slice(0, 10)), avgAll: mean(normal),
       favorite: favorite ? favorite.text_id : null,
       rank: rankOf(user.id), hcRank: hcRankOf(user.id),
-      medals: medalList.map(([id, name, desc, test]) => ({ id, name, desc, earned: test(s) })),
+      verified: user.verified, shown: parseShown(user.shown), medals: medalsOf(user.id),
     });
   }
 

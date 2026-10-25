@@ -13,12 +13,22 @@
 <body>
 <header class="bar">
   <div class="bar-left">
-    <a class="logo" href="#" id="logo" aria-label="Inicio"><img src="img/mark.png" alt="" width="34" height="34"><span>type</span></a>
     <button class="pill" id="account"><span class="av" id="av">n</span><span class="who"><b id="who-name">Ingresar</b><small id="who-handle">Crear una cuenta</small></span></button>
     <div class="seg" id="units">
       <button data-unit="cpm">CPM</button>
       <button data-unit="wpm">WPM</button>
       <button data-unit="zen">ZEN</button>
+    </div>
+  </div>
+  <div class="bar-center">
+    <a class="wordmark" href="#" id="logo" aria-label="neanbit, inicio"><img class="wm-ondark" src="img/wordmark-ondark.svg" alt="neanbit"><img class="wm-onlight" src="img/wordmark-onlight.svg" alt="neanbit"></a>
+    <div class="pf-tools">
+      <div class="pf-search">
+        <input id="pf-search" type="search" placeholder="Buscar piloto por nombre o usuario" autocomplete="off">
+        <ul id="pf-results" hidden></ul>
+      </div>
+      <button id="pf-edit" hidden>Editar perfil</button>
+      <button id="pf-back">Volver</button>
     </div>
   </div>
   <div class="bar-right">
@@ -97,13 +107,6 @@
     <ol class="rank" id="s-words"></ol>
   </section>
   <section id="profile" hidden>
-    <div class="pf-top">
-      <div class="pf-search">
-        <input id="pf-search" type="search" placeholder="Buscar piloto por nombre o usuario" autocomplete="off">
-        <ul id="pf-results" hidden></ul>
-      </div>
-      <div class="pf-actions"><button id="pf-edit" hidden>Editar perfil</button><button id="pf-back">Volver</button></div>
-    </div>
     <div class="pf-grid">
       <aside class="pf-card">
         <div class="pf-avatar" id="pf-avatar"><span id="pf-initial"></span><em id="pf-badge" hidden></em></div>
@@ -118,7 +121,7 @@
         <div class="pf-stats" id="pf-stats"></div>
         <div class="pf-boxes">
           <div class="pf-box"><h3>Expediente</h3><dl id="pf-file"></dl></div>
-          <div class="pf-box"><h3>Medallas</h3><div class="pf-medals" id="pf-medals"></div></div>
+          <div class="pf-box"><h3>Medallas <button class="link" id="pf-allmedals">Ver todas</button></h3><div class="pf-medals" id="pf-medals"></div></div>
         </div>
         <div class="pf-box">
           <h3>Historial</h3>
@@ -148,21 +151,26 @@
     <h2>Tu cuenta</h2>
     <input id="me-name" placeholder="Nombre" maxlength="15" required>
     <textarea id="me-bio" placeholder="Biografía, hasta 150 caracteres" maxlength="150" rows="3"></textarea>
-    <input id="me-country" placeholder="País" maxlength="30">
+    <select id="me-country"></select>
     <select id="me-layout">
       <option value="">Distribución del teclado</option>
       <option>QWERTY</option><option>Dvorak</option><option>Colemak</option><option>Otro</option>
     </select>
     <input id="me-switches" placeholder="Teclado o switches" maxlength="30">
     <input id="me-discord" placeholder="Usuario de Discord" maxlength="32">
+    <h3>Medallas a lucir, hasta 6</h3>
+    <div class="pick-grid" id="me-medals"></div>
     <p id="me-error" role="alert"></p>
     <div class="modes">
       <button class="primary">Guardar</button>
-      <button type="button" id="me-profile">Ver mi perfil</button>
-      <button type="button" id="me-logout">Cerrar sesión</button>
       <button type="button" id="me-close">Cerrar</button>
     </div>
   </form>
+</dialog>
+<dialog id="medals">
+  <h2>Medallas</h2>
+  <ul class="medal-list" id="medals-list"></ul>
+  <div class="modes"><button id="medals-close">Cerrar</button></div>
 </dialog>
 <dialog id="news">
   <h2 id="news-title"></h2>

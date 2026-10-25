@@ -3,29 +3,34 @@ export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt
 
 const svg = (d) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const medalIcons = {
-  'primeros-pasos': '<path d="M7 5l11 7-11 7z"/>',
-  constante: '<path d="M5 8h14M5 12h14M5 16h14"/>',
-  ritmo: '<path d="M4 17a8 8 0 0 1 16 0M12 17l4-5"/>',
-  veloz: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>',
-  'sin-red': '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
-  'pulso-firme': '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
+  play: '<path d="M7 5l11 7-11 7z"/>',
+  rows: '<path d="M5 8h14M5 12h14M5 16h14"/>',
+  gauge: '<path d="M4 17a8 8 0 0 1 16 0M12 17l4-5"/>',
+  bolt: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>',
+  shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
 };
+const seal = '<path d="M12 3l2.4 1.8 3-.2 1 2.8 2.5 1.7-.9 2.9.9 2.9-2.5 1.7-1 2.8-3-.2L12 21l-2.4-1.8-3 .2-1-2.8-2.5-1.7.9-2.9-.9-2.9 2.5-1.7 1-2.8 3 .2z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>';
+const medalIcon = (m) => svg(medalIcons[m.icon] || '<rect x="6" y="6" width="12" height="12"/>');
+const countBadge = (m) => (m.stackable && m.count > 1 ? `<i class="count">${m.count}</i>` : '');
 const replayIcon = svg('<path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/>');
 
 function standing(p) {
   const normal = p.rank && p.rank <= 10 ? { text: '#' + p.rank, n: p.rank, hc: false } : null;
   const hard = p.hcRank && p.hcRank <= 10 ? { text: 'HC #' + p.hcRank, n: p.hcRank, hc: true } : null;
+  if (normal && hard && normal.n === 1 && hard.n === 1) return { text: '#1 | HC #1', n: 1, hc: false, dual: true };
   if (normal && hard) return hard.n < normal.n ? hard : normal;
   return normal || hard;
 }
 
 export function renderProfile(p, { speed, unit, textLabel, isMe }) {
   const rank = standing(p);
-  $('#pf-avatar').className = 'pf-avatar' + (rank ? ` tier-${rank.n <= 3 ? rank.n : 10}${rank.hc ? ' hc' : ''}` : '');
+  $('#pf-avatar').className = 'pf-avatar' + (rank ? (rank.dual ? ' tier-dual' : ` tier-${rank.n <= 3 ? rank.n : 10}${rank.hc ? ' hc' : ''}`) : '');
   $('#pf-initial').textContent = p.name.charAt(0).toUpperCase();
   $('#pf-badge').hidden = !rank;
   $('#pf-badge').textContent = rank ? rank.text : '';
-  $('#pf-name').textContent = p.name;
+  const mark = p.verified ? `<span class="vf" title="${p.verified === 2 ? 'Servidor' : 'Verificado'}">${svg(seal)}</span>` : '';
+  $('#pf-name').innerHTML = esc(p.name) + mark;
   $('#pf-handle').textContent = '@' + p.handle;
   $('#pf-edit').hidden = !isMe;
 
@@ -52,8 +57,14 @@ export function renderProfile(p, { speed, unit, textLabel, isMe }) {
     ['Récord Hardcore', p.hcBest ? `${speed(p.hcBest)} ${unit}` : '-'],
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
 
-  $('#pf-medals').innerHTML = p.medals.map((m) =>
-    `<div class="medal${m.earned ? '' : ' off'}" title="${esc(m.desc)}">${svg(medalIcons[m.id] || '')}<span>${esc(m.name)}</span></div>`
+  const earned = p.medals.filter((m) => m.earned);
+  const chosen = p.shown.map((id) => earned.find((m) => m.id === id)).filter(Boolean);
+  const shown = chosen.length ? chosen : earned.slice(0, 6);
+  $('#pf-medals').innerHTML = shown.length
+    ? shown.map((m) => `<div class="medal" title="${esc(m.desc)}">${medalIcon(m)}<span>${esc(m.name)}</span>${countBadge(m)}</div>`).join('')
+    : '<p class="note">Todavía no hay medallas.</p>';
+  $('#medals-list').innerHTML = p.medals.map((m) =>
+    `<li class="${m.earned ? '' : 'off'}">${medalIcon(m)}<div><b>${esc(m.name)}</b><small>${esc(m.desc)}</small></div>${m.earned ? countBadge(m) : ''}</li>`
   ).join('');
   $('#pf-th').textContent = 'Vel. ' + unit;
 }

@@ -39,6 +39,7 @@ async function loadCatalog() {
 }
 
 function show(name) {
+  document.body.classList.toggle('profile-view', name === 'profile');
   screens.forEach((s) => ($('#' + s).hidden = s !== name));
   if (name === 'race') typing.focus();
 }
@@ -303,6 +304,8 @@ document.addEventListener('profile', (e) => openProfile(e.detail));
 document.addEventListener('session', (e) => { state.me = e.detail ? e.detail.handle : null; });
 document.addEventListener('units', () => { if (!$('#profile').hidden) openProfile(view.handle); });
 $('#pf-back').onclick = goHome;
+$('#pf-allmedals').onclick = () => $('#medals').showModal();
+$('#medals-close').onclick = () => $('#medals').close();
 $('#pf-search').oninput = () => { clearTimeout(searchPilots.timer); searchPilots.timer = setTimeout(searchPilots, 250); };
 $('#pf-results').onclick = (e) => {
   const row = e.target.closest('li[data-handle]');
