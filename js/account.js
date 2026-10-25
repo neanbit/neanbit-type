@@ -34,12 +34,21 @@ async function openProfile(handle) {
       : '<li><small>Sin medallas todavía.</small></li>';
     $('#profile-body').innerHTML = `<h2>${esc(p.name)}</h2>
       <p class="note">@${esc(p.handle)}, desde ${new Date(p.since).toLocaleDateString('es-AR')}</p>
+      ${p.bio ? `<p>${esc(p.bio)}</p>` : ''}
+      ${[p.country, p.layout, p.switches].filter(Boolean).length ? `<p class="note">${[p.country, p.layout, p.switches].filter(Boolean).map(esc).join(', ')}</p>` : ''}
+      ${p.discord ? `<p class="note">Discord: ${esc(p.discord)}</p>` : ''}
       <div class="summary"><div><span>${p.races}</span><small>carreras</small></div>
         <div><span>${speed(p.best)}</span><small>récord</small></div>
         <div><span>${speed(p.avg)}</span><small>promedio</small></div></div>
       <ul class="medals">${medals}</ul>`;
     $('#profile').showModal();
   } catch {}
+}
+
+function openMe() {
+  for (const field of ['name', 'bio', 'country', 'layout', 'switches', 'discord']) $('#me-' + field).value = user[field] || '';
+  $('#me-error').textContent = '';
+  $('#me').showModal();
 }
 
 function setMode(register) {
@@ -52,10 +61,7 @@ function setMode(register) {
 }
 
 $('#account').onclick = async () => {
-  if (user) {
-    if (confirm('¿Cerrar sesión?')) { await api.logout().catch(() => {}); await refreshUser(); }
-    return;
-  }
+  if (user) return openMe();
   setMode(false);
   $('#auth').showModal();
 };
@@ -65,6 +71,26 @@ $('#board-scope').onchange = refreshRanking;
 $('#ranking').onclick = (e) => {
   const row = e.target.closest('li[data-handle]');
   if (row) openProfile(row.dataset.handle);
+};
+$('#me-close').onclick = () => $('#me').close();
+$('#me-profile').onclick = () => { $('#me').close(); openProfile(user.handle); };
+$('#me-logout').onclick = async () => {
+  await api.logout().catch(() => {});
+  $('#me').close();
+  await refreshUser();
+};
+$('#me-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const body = {};
+  for (const field of ['name', 'bio', 'country', 'layout', 'switches', 'discord']) body[field] = $('#me-' + field).value;
+  try {
+    await api.saveProfile(body);
+    $('#me').close();
+    await refreshUser();
+    refreshRanking();
+  } catch (err) {
+    $('#me-error').textContent = err.message;
+  }
 };
 $('#profile-close').onclick = () => $('#profile').close();
 

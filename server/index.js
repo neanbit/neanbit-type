@@ -4,6 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { scryptSync, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { seed } from './seed.js';
 
 const root = join(fileURLToPath(import.meta.url), '..', '..');
 const port = Number(process.env.PORT || 3000);
@@ -30,7 +31,41 @@ db.exec(`
   create table if not exists deaths (
     id integer primary key, user_id integer not null, text_id integer not null, at integer not null);
 `);
+db.exec('pragma journal_mode = wal; pragma busy_timeout = 5000;');
+for (const col of ['bio', 'country', 'layout', 'switches', 'discord']) {
+  try { db.exec(`alter table users add column ${col} text not null default ''`); } catch {}
+}
+db.exec(`
+  create table if not exists categories (
+    id integer primary key, name text unique not null, pos integer not null default 0);
+  create table if not exists texts (
+    id integer primary key, category_id integer not null, body text not null,
+    words integer not null, pos integer not null default 0, active integer not null default 1);
+  create table if not exists announcements (
+    id integer primary key, title text not null, body text not null,
+    at integer not null, active integer not null default 1);
+  create table if not exists settings (key text primary key, value text not null);
+`);
+seedTexts();
 if (admin) db.prepare("update users set role = 'admin' where handle = ?").run(admin);
+
+function seedTexts() {
+  if (db.prepare('select count(*) as n from texts').get().n) return;
+  const addCategory = db.prepare('insert into categories (name, pos) values (?, ?)');
+  const addText = db.prepare('insert into texts (id, category_id, body, words, pos) values (?, ?, ?, ?, ?)');
+  Object.entries(seed).forEach(([name, list], c) => {
+    const categoryId = Number(addCategory.run(name, c).lastInsertRowid);
+    list.forEach((body, i) => addText.run(c * 10 + i + 1, categoryId, body, body.split(/\s+/).length, i));
+  });
+}
+
+function maintenance() {
+  try {
+    return JSON.parse(db.prepare("select value from settings where key = 'maintenance'").get()?.value || '{}');
+  } catch {
+    return {};
+  }
+}
 
 const sha = (s) => createHash('sha256').update(s).digest('hex');
 const mime = { '.png': 'image/png', '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
@@ -109,12 +144,42 @@ function cookie(req, value, maxAge) {
   return `nt_session=${value}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure}`;
 }
 
-const publicUser = (u) => ({ handle: u.handle, name: u.name, role: u.role });
+const publicUser = (u) => ({
+  handle: u.handle, name: u.name, role: u.role,
+  bio: u.bio, country: u.country, layout: u.layout, switches: u.switches, discord: u.discord,
+});
 
 async function api(req, res, url) {
   const key = `${req.method} ${url.pathname}`;
   const me = sessionUser(req);
   const ip = req.headers['cf-connecting-ip'] || req.socket.remoteAddress;
+
+  if (key === 'GET /api/texts') {
+    const categories = db.prepare('select name from categories order by pos, id').all().map((c) => c.name);
+    const texts = db.prepare(`
+      select t.id, c.name as category, t.body as text
+      from texts t join categories c on c.id = t.category_id
+      where t.active = 1 order by c.pos, t.pos, t.id`).all();
+    return send(res, 200, { categories, texts });
+  }
+
+  if (key === 'GET /api/config') {
+    const announcement = db.prepare('select id, title, body from announcements where active = 1 order by at desc limit 1').get() || null;
+    return send(res, 200, { maintenance: maintenance(), announcement });
+  }
+
+  if (key === 'POST /api/profile') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    const b = await readBody(req);
+    const clean = (v, max) => String(v ?? '').trim().slice(0, max);
+    const name = clean(b.name, 15);
+    const layout = clean(b.layout, 10);
+    if (!/^[\p{L}\p{N} _.-]{1,15}$/u.test(name)) return send(res, 400, { error: 'El nombre tiene hasta 15 caracteres.' });
+    if (layout && !['QWERTY', 'Dvorak', 'Colemak', 'Otro'].includes(layout)) return send(res, 400, { error: 'Distribución inválida.' });
+    db.prepare('update users set name = ?, bio = ?, country = ?, layout = ?, switches = ?, discord = ? where id = ?')
+      .run(name, clean(b.bio, 150), clean(b.country, 30), layout, clean(b.switches, 30), clean(b.discord, 32), me.id);
+    return send(res, 200, { user: publicUser(db.prepare('select * from users where id = ?').get(me.id)) });
+  }
 
   if (key === 'GET /api/me') return send(res, 200, { user: me && publicUser(me) });
 
@@ -152,6 +217,7 @@ async function api(req, res, url) {
 
   if (key === 'POST /api/races') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para guardar la carrera.' });
+    if (maintenance().on && me.role !== 'admin') return send(res, 503, { error: 'Estamos en mantenimiento.' });
     const { textId, cpm, acc, hc = 0, chars, words } = await readBody(req);
     const valid = [textId, cpm, acc].every(Number.isInteger) && cpm >= 1 && cpm <= 1800 && acc >= 0 && acc <= 100 && (hc === 0 || hc === 1);
     if (!valid) return send(res, 400, { error: 'Resultado inválido.' });
@@ -203,7 +269,7 @@ async function api(req, res, url) {
     const s = profileStats(user.id);
     const recent = db.prepare('select cpm from races where user_id = ? and hc = 0 order by at desc limit 10').all(user.id);
     const avg = recent.length ? Math.round(recent.reduce((a, r) => a + r.cpm, 0) / recent.length) : 0;
-    return send(res, 200, { name: user.name, handle: user.handle, since: user.created, races: s.races, best: s.best, avg, hcBest: s.hcBest,
+    return send(res, 200, { name: user.name, handle: user.handle, since: user.created, bio: user.bio, country: user.country, layout: user.layout, switches: user.switches, discord: user.discord, races: s.races, best: s.best, avg, hcBest: s.hcBest,
       medals: medalList.filter(([, , , test]) => test(s)).map(([id, name, desc]) => ({ id, name, desc })) });
   }
 

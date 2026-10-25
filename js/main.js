@@ -1,11 +1,13 @@
 import { Engine } from './engine.js';
-import { texts, categories } from './texts.js';
 import { load, save } from './store.js';
 import './account.js';
+import './site.js';
 import { api } from './api.js';
 import { renderStats } from './stats.js';
 
 const $ = (sel) => document.querySelector(sel);
+let texts = [];
+let categories = [];
 const screens = ['home', 'pick', 'race', 'stats'];
 
 const state = {
@@ -25,6 +27,14 @@ const state = {
 const favs = new Set(load('favs', []));
 const typing = $('#typing');
 const target = $('#target');
+
+async function loadCatalog() {
+  try {
+    ({ texts, categories } = await api.texts());
+  } catch {
+    note('No se pudo cargar el catálogo de textos.');
+  }
+}
 
 function show(name) {
   screens.forEach((s) => ($('#' + s).hidden = s !== name));
@@ -86,6 +96,7 @@ function drawTarget() {
 }
 
 function startRace(text, mode = 'normal', ghost = 0) {
+  if (!text) return note('Todavía no hay textos cargados.');
   clearInterval(state.timer);
   state.text = text;
   state.mode = mode;
@@ -290,3 +301,4 @@ $('#theme').onchange = (e) => {
 
 applyPrefs();
 renderHome();
+loadCatalog();

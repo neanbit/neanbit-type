@@ -109,11 +109,38 @@
     </div>
   </form>
 </dialog>
+<dialog id="me">
+  <form id="me-form" method="dialog">
+    <h2>Tu cuenta</h2>
+    <input id="me-name" placeholder="Nombre" maxlength="15" required>
+    <textarea id="me-bio" placeholder="Biografía, hasta 150 caracteres" maxlength="150" rows="3"></textarea>
+    <input id="me-country" placeholder="País" maxlength="30">
+    <select id="me-layout">
+      <option value="">Distribución del teclado</option>
+      <option>QWERTY</option><option>Dvorak</option><option>Colemak</option><option>Otro</option>
+    </select>
+    <input id="me-switches" placeholder="Teclado o switches" maxlength="30">
+    <input id="me-discord" placeholder="Usuario de Discord" maxlength="32">
+    <p id="me-error" role="alert"></p>
+    <div class="modes">
+      <button class="primary">Guardar</button>
+      <button type="button" id="me-profile">Ver mi perfil</button>
+      <button type="button" id="me-logout">Cerrar sesión</button>
+      <button type="button" id="me-close">Cerrar</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="news">
+  <h2 id="news-title"></h2>
+  <p id="news-body"></p>
+  <div class="modes"><button class="primary" id="news-close">Entendido</button></div>
+</dialog>
 <dialog id="profile">
   <div id="profile-body"></div>
   <div class="modes"><button id="profile-close">Cerrar</button></div>
 </dialog>
 <p id="toast" role="status"></p>
+<div id="maint" hidden><h1>Mantenimiento</h1><p id="maint-msg"></p></div>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

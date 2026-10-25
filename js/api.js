@@ -11,6 +11,9 @@ async function call(path, body) {
 
 export const api = {
   me: () => call('/me'),
+  texts: () => call('/texts'),
+  config: () => call('/config'),
+  saveProfile: (body) => call('/profile', body),
   login: (handle, password) => call('/login', { handle, password }),
   register: (handle, name, password) => call('/register', { handle, name, password }),
   logout: () => call('/logout', {}),
