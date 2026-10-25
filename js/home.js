@@ -101,6 +101,7 @@ function drawHero() {
   $('#hero-title').textContent = me ? `Hola, ${me.name}` : 'Bienvenido';
   $('#invite').hidden = !!me;
   $('#practice-tag').hidden = !!me;
+  $('#duel-tag').hidden = !!me;
   $('#pulse').hidden = !(me && pulse);
 
   let sub = 'Corré una carrera y medite contra el resto del ranking.';

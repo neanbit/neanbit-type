@@ -1,11 +1,14 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
-import { scryptSync, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
+import { scrypt as scryptCb, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
+import { promisify } from 'node:util';
 import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { seed } from './seed.js';
+import { createDuels } from './duels.js';
 
+const scrypt = promisify(scryptCb);
 const root = join(fileURLToPath(import.meta.url), '..', '..');
 const port = Number(process.env.PORT || 3000);
 const admin = (process.env.NT_ADMIN || '').toLowerCase();
@@ -259,14 +262,14 @@ function hcRankOf(userId) {
   return rows.findIndex((r) => r.user_id === userId) + 1;
 }
 
-function hashPassword(password) {
+async function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
-  return `${salt}:${scryptSync(password, salt, 64).toString('hex')}`;
+  return `${salt}:${(await scrypt(password, salt, 64)).toString('hex')}`;
 }
 
-function checkPassword(password, stored) {
+async function checkPassword(password, stored) {
   const [salt, hash] = stored.split(':');
-  return timingSafeEqual(scryptSync(password, salt, 64), Buffer.from(hash, 'hex'));
+  return timingSafeEqual(await scrypt(password, salt, 64), Buffer.from(hash, 'hex'));
 }
 
 function sessionUser(req) {
@@ -357,10 +360,11 @@ async function api(req, res, url) {
     if (!/^[a-z0-9_]{3,15}$/.test(h)) return send(res, 400, { error: 'El usuario usa 3 a 15 letras, números o guion bajo.' });
     if (!/^[\p{L}\p{N} _.-]{1,15}$/u.test(name)) return send(res, 400, { error: 'El nombre tiene hasta 15 caracteres.' });
     if (typeof password !== 'string' || password.length < 8) return send(res, 400, { error: 'La contraseña necesita 8 caracteres o más.' });
+    const hash = await hashPassword(password);
     try {
       const role = h === admin ? 'admin' : 'user';
       const info = db.prepare('insert into users (handle, name, hash, role, created) values (?, ?, ?, ?, ?)')
-        .run(h, name.trim(), hashPassword(password), role, Date.now());
+        .run(h, name.trim(), hash, role, Date.now());
       return startSession(req, res, Number(info.lastInsertRowid), 201);
     } catch {
       return send(res, 409, { error: 'Ese usuario ya existe.' });
@@ -371,7 +375,7 @@ async function api(req, res, url) {
     if (limited(ip)) return send(res, 429, { error: 'Demasiados intentos, esperá un minuto.' });
     const { handle = '', password = '' } = await readBody(req);
     const user = db.prepare(`select ${userCols} from users where handle = ?`).get(String(handle).toLowerCase());
-    if (!user || typeof password !== 'string' || !checkPassword(password, user.hash))
+    if (!user || typeof password !== 'string' || !(await checkPassword(password, user.hash)))
       return send(res, 401, { error: 'Usuario o contraseña incorrectos.' });
     return startSession(req, res, user.id, 200);
   }
@@ -536,7 +540,9 @@ async function serveStatic(res, pathname) {
   }
 }
 
-http.createServer(async (req, res) => {
+const duels = createDuels({ db, sessionUser, maintenance, bump: () => { version++; }, saveErrors });
+
+const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname.startsWith('/api/')) await api(req, res, url);
@@ -547,4 +553,6 @@ http.createServer(async (req, res) => {
     console.error(err);
     send(res, 500, { error: 'Error interno.' });
   }
-}).listen(port, () => console.log(`neanbit type en http://localhost:${port}`));
+});
+server.on('upgrade', duels.upgrade);
+server.listen(port, () => console.log(`neanbit type en http://localhost:${port}`));

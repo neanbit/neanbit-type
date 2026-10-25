@@ -9,11 +9,12 @@ import { renderProfile, renderHistory } from './profile.js';
 import { openVitrina } from './vitrina.js';
 import { esc } from './ui.js';
 import { avatarInner } from './avatar.js';
+import { duel } from './duel.js';
 
 const $ = (sel) => document.querySelector(sel);
 let texts = [];
 let categories = [];
-const screens = ['home', 'pick', 'race', 'stats', 'profile'];
+const screens = ['home', 'pick', 'race', 'stats', 'profile', 'duel'];
 
 const state = {
   unit: load('unit', 'cpm'),
@@ -30,6 +31,7 @@ const state = {
   active: 0,
   text: null,
   timer: 0,
+  duel: null,
 };
 
 const favs = new Set(load('favs', []));
@@ -157,6 +159,7 @@ function startRace(text, mode = 'normal', ghost = 0) {
   state.text = text;
   state.mode = mode;
   state.ghost = ghost;
+  if (mode !== 'duel') state.duel = null;
   $('#r-ghost').style.width = '0';
   state.over = false;
   $('#result').classList.remove('dead');
@@ -170,21 +173,43 @@ function startRace(text, mode = 'normal', ghost = 0) {
   $('#r-live').textContent = '0';
   $('#r-bar').style.width = '0';
   typing.placeholder = 'Empezá a escribir para arrancar el reloj';
-  $('#r-ghostbtn').hidden = mode === 'hc' || mode === 'practice';
+  $('#r-ghostbtn').hidden = ['hc', 'practice', 'duel'].includes(mode);
   $('#r-liveacc').textContent = '100';
   $('#r-words').textContent = '0';
   $('#r-of').textContent = '/ ' + state.engine.words.length;
   $('#r-mode').textContent = modeNames[mode] || 'Carrera';
   $('#r-mode').dataset.mode = mode;
   $('#r-meta').textContent = raceMeta(text, mode, ghost);
+  const isDuel = mode === 'duel';
+  typing.disabled = isDuel;
+  if (isDuel) typing.placeholder = 'Esperá la largada';
+  $('#r-count').hidden = !isDuel;
+  $('#r-count').classList.remove('out');
+  $('#r-count').dataset.state = 'wait';
+  $('#r-count-n').textContent = '';
+  $('#r-legend').hidden = !isDuel;
+  $('#r-track').classList.toggle('duel', isDuel);
+  $('#r-forfeit').hidden = !isDuel;
+  $('#r-forfeit').textContent = 'Abandonar';
+  $('#r-again').hidden = isDuel;
+  $('#r-next-label').textContent = isDuel ? 'Otro duelo' : 'Siguiente';
+  $('#d-modal').hidden = true;
+  $('.hint').hidden = isDuel;
+  if (isDuel) {
+    $('#r-opp-name').textContent = state.duel.opp.name;
+    $('#r-count-vs').textContent = 'Contra ' + state.duel.opp.name;
+    $('#r-ghost').style.width = '0';
+    $('#d-bar-fill').style.width = '0';
+  }
   show('race');
   drawTarget();
 }
 
-const modeNames = { normal: 'Carrera', ghost: 'Contra tu récord', hc: 'Hardcore', practice: 'Entrenamiento' };
+const modeNames = { normal: 'Carrera', ghost: 'Contra tu récord', hc: 'Hardcore', practice: 'Entrenamiento', duel: 'Duelo' };
 
 function raceMeta(text, mode, ghost) {
   if (mode === 'practice') return 'Tus palabras difíciles';
+  if (mode === 'duel') return `Contra ${state.duel.opp.name}, ${text.text.split(' ').length} palabras`;
   const base = `#${text.id} ${text.category}, ${text.text.split(' ').length} palabras`;
   return mode === 'ghost' ? `${base}. Récord ${speed(ghost)} ${unitLabel()}` : base;
 }
@@ -314,6 +339,7 @@ function tick() {
 }
 
 function finish() {
+  if (state.mode === 'duel') return finishDuel();
   clearInterval(state.timer);
   state.over = true;
   const { engine } = state;
@@ -373,6 +399,7 @@ typing.addEventListener('input', () => {
   }
   drawTarget();
   tick();
+  if (state.mode === 'duel') duel.progress(engine.chars());
   if (engine.finished) finish();
 });
 
@@ -381,14 +408,16 @@ typing.addEventListener('blur', () => { if (state.engine && !state.over && !$('#
 
 document.addEventListener('keydown', (e) => {
   if ($('#race').hidden) return;
-  if (e.key === 'Tab') { e.preventDefault(); startRace(state.text, state.mode, state.ghost); }
-  else if (e.key === 'Escape') { clearInterval(state.timer); goHome(); }
-  else if (e.key === 'Enter' && state.over) startRace(nextText(), nextMode());
+  const inDuel = state.mode === 'duel';
+  if (e.key === 'Tab') { e.preventDefault(); if (!inDuel) startRace(state.text, state.mode, state.ghost); }
+  else if (e.key === 'Escape') { if (inDuel && !state.duel.ended && (state.duel.live || state.over)) return; clearInterval(state.timer); goHome(); }
+  else if (e.key === 'Enter' && state.over) { if (!inDuel) startRace(nextText(), nextMode()); else if (state.duel.ended) nextDuel(); }
 });
 
 function goHome() {
   clearInterval(state.timer);
   state.engine = null;
+  duel.close();
   show('home');
 }
 
@@ -397,14 +426,17 @@ $('#go-random').onclick = () => startRace(randomText());
 $('#go-pick').onclick = () => { renderPick(); show('pick'); };
 $('#pick-back').onclick = goHome;
 $('#logo').onclick = (e) => { e.preventDefault(); goHome(); };
-$('#r-next').onclick = () => startRace(nextText(), nextMode());
+$('#r-next').onclick = () => (state.mode === 'duel' ? nextDuel() : startRace(nextText(), nextMode()));
 $('#r-again').onclick = () => startRace(state.text, state.mode, state.ghost);
 $('#r-ghostbtn').onclick = startGhost;
 $('#go-hc').onclick = () => startRace(randomText(), 'hc');
 $('#go-practice').onclick = startPractice;
 $('#nav-stats').onclick = openStats;
 document.addEventListener('profile', (e) => openProfile(e.detail));
-document.addEventListener('session', (e) => { state.me = e.detail ? e.detail.handle : null; });
+document.addEventListener('session', (e) => {
+  state.me = e.detail ? e.detail.handle : null;
+  if (!e.detail) duel.close();
+});
 document.addEventListener('units', () => {
   if (!$('#profile').hidden) openProfile(view.handle);
   if (!$('#pick').hidden) renderPick();
@@ -506,6 +538,171 @@ $('#theme').onchange = (e) => {
   state.theme = e.target.value;
   save('theme', state.theme);
   applyPrefs();
+};
+
+function openDuel(queue = false) {
+  if (!state.me) {
+    note('Ingresá para jugar duelos.');
+    return $('#account').click();
+  }
+  clearInterval(state.timer);
+  state.engine = null;
+  show('duel');
+  duel.open({ queue });
+}
+
+function nextDuel() {
+  openDuel(true);
+}
+
+function startDuelRace(match) {
+  state.duel = { opp: match.opp, len: match.text.length, live: false, ended: false, oppCpm: 0 };
+  startRace({ id: match.textId, category: 'Duelo', text: match.text }, 'duel');
+}
+
+function setCount(label, kind = 'num') {
+  const box = $('#r-count');
+  const n = $('#r-count-n');
+  n.textContent = label;
+  box.dataset.state = kind;
+  box.classList.remove('tick');
+  void box.offsetWidth;
+  box.classList.add('tick');
+}
+
+function finishDuel() {
+  clearInterval(state.timer);
+  state.over = true;
+  const { engine } = state;
+  duel.finish({ acc: engine.accuracy(), chars: engine.missedChars, words: engine.missedWords });
+  $('#r-bar').style.width = '100%';
+  $('#r-forfeit').hidden = true;
+  $('#r-meta').textContent = raceMeta(state.text, 'duel', 0);
+  typing.blur();
+  showVerdict({
+    wait: true,
+    you: { cpm: engine.cpm(), acc: engine.accuracy(), ms: engine.elapsed() * 1000 },
+    opp: state.duel.oppCpm ? { cpm: state.duel.oppCpm } : null,
+    words: engine.words.length,
+    errors: engine.misses,
+  });
+}
+
+function showVerdict({ win = null, forfeit = false, wait = false, you = null, opp = null, words = null, errors = null }) {
+  const verdict = $('#d-verdict');
+  const name = state.duel ? state.duel.opp.name : 'Rival';
+  verdict.dataset.win = wait ? 'wait' : win === true ? 'win' : win === false ? 'lose' : 'draw';
+  verdict.classList.toggle('dnf', !you);
+  let title = 'Terminaste';
+  let sub = `Esperando a que ${name} termine…`;
+  if (!wait) {
+    title = win === true ? (forfeit ? 'Ganaste por abandono' : 'Ganaste') : win === false ? 'Perdiste' : 'Sin ganador';
+    if (win === null) sub = 'Nadie llegó a terminar el texto.';
+    else if (forfeit) sub = `${name} se desconectó antes de terminar.`;
+    else if (!you) sub = `${name} terminó y vos no llegaste a tiempo.`;
+    else if (opp) {
+      const gap = (Math.abs(you.ms - opp.ms) / 1000).toFixed(1);
+      sub = `${win ? 'Le sacaste' : 'Te sacó'} ${gap} s de ventaja.`;
+    } else sub = '';
+  }
+  $('#d-kicker').textContent = `Duelo contra ${name}`;
+  $('#d-title').textContent = title;
+  $('#d-sub').textContent = sub;
+  $('#d-opp-label').textContent = name;
+  $('#d-me').textContent = you ? speed(you.cpm) : '—';
+  $('#d-opp').textContent = opp ? speed(opp.cpm) : '—';
+  document.querySelectorAll('.d-u').forEach((el) => (el.textContent = unitLabel()));
+  if (you) {
+    $('#d-acc').textContent = you.acc + '%';
+    $('#d-time').textContent = (you.ms / 1000).toFixed(1) + ' s';
+  }
+  if (words !== null) $('#d-words').textContent = words;
+  if (errors !== null) $('#d-errs').textContent = errors;
+  $('#d-bar').hidden = !wait;
+  $('#d-actions').hidden = wait;
+  $('#d-modal').hidden = false;
+  verdict.classList.remove('pop');
+  void verdict.offsetWidth;
+  verdict.classList.add('pop');
+  if (!wait) $('#d-next').focus({ preventScroll: true });
+}
+
+document.addEventListener('duel-match', (e) => startDuelRace(e.detail));
+document.addEventListener('duel-count', (e) => {
+  if (state.mode === 'duel') setCount(String(e.detail.n));
+});
+document.addEventListener('duel-go', () => {
+  if (state.mode !== 'duel' || !state.engine) return;
+  state.duel.live = true;
+  state.engine.startedAt = performance.now();
+  clearInterval(state.timer);
+  state.timer = setInterval(tick, 100);
+  typing.disabled = false;
+  typing.placeholder = '';
+  setCount('Ya', 'go');
+  const box = $('#r-count');
+  setTimeout(() => {
+    if (state.mode !== 'duel') return;
+    box.classList.add('out');
+    typing.focus();
+    setTimeout(() => { if (state.mode === 'duel') box.hidden = true; }, 450);
+  }, 550);
+  typing.focus();
+});
+document.addEventListener('duel-opp', (e) => {
+  if (state.mode !== 'duel' || !state.duel) return;
+  const pct = Math.min(100, (e.detail.n / state.duel.len) * 100) + '%';
+  $('#r-ghost').style.width = pct;
+  $('#d-bar-fill').style.width = pct;
+});
+document.addEventListener('duel-opp_done', (e) => {
+  if (state.mode !== 'duel' || !state.duel) return;
+  state.duel.oppCpm = e.detail.cpm;
+  if (!state.over) $('#r-meta').textContent = `${state.duel.opp.name} ya terminó, con ${speed(e.detail.cpm)} ${unitLabel()}. Todavía llegás a tiempo.`;
+  else $('#d-opp').textContent = speed(e.detail.cpm);
+});
+document.addEventListener('duel-result', (e) => {
+  if (state.mode !== 'duel' || !state.duel) return;
+  const r = e.detail;
+  clearInterval(state.timer);
+  state.over = true;
+  state.duel.ended = true;
+  typing.blur();
+  typing.disabled = true;
+  $('#r-forfeit').hidden = true;
+  $('#r-count').hidden = true;
+  $('#r-meta').textContent = raceMeta(state.text, 'duel', 0);
+  if (r.you) document.dispatchEvent(new Event('race-saved'));
+  showVerdict({ win: r.win, forfeit: r.forfeit, you: r.you, opp: r.opp,
+    words: r.you ? state.text.text.split(' ').length : null,
+    errors: state.engine && r.you ? state.engine.misses : null });
+});
+document.addEventListener('duel-cancelled', () => {
+  note('Tu rival se fue antes de largar.');
+  openDuel();
+});
+document.addEventListener('duel-lost', () => {
+  if (state.mode !== 'duel') return;
+  clearInterval(state.timer);
+  state.over = true;
+  note('Se perdió la conexión con el duelo.');
+  openDuel();
+});
+document.addEventListener('duel-replaced', () => goHome());
+$('#go-duel').onclick = () => openDuel();
+$('#duel-back').onclick = goHome;
+$('#d-next').onclick = nextDuel;
+$('#d-home').onclick = goHome;
+$('#r-forfeit').onclick = () => {
+  const btn = $('#r-forfeit');
+  if (btn.dataset.sure) {
+    clearTimeout(btn.timer);
+    delete btn.dataset.sure;
+    return goHome();
+  }
+  btn.dataset.sure = '1';
+  btn.textContent = 'Confirmar abandono';
+  btn.timer = setTimeout(() => { delete btn.dataset.sure; btn.textContent = 'Abandonar'; }, 3000);
 };
 
 applyPrefs();
