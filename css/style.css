@@ -70,26 +70,9 @@ button.hard { border-color: var(--bad); color: var(--bad); }
 .cards small { color: var(--muted); }
 .star { position: absolute; top: .5rem; right: .6rem; border: 0; color: var(--ink); font-size: 1.2rem; padding: .2rem .4rem; }
 
-.hud { display: flex; justify-content: space-between; color: var(--muted); font-family: var(--mono); margin-top: .5rem; }
-.hud b { color: var(--text); font-weight: 500; font-size: 1.5rem; }
-.hud em { font-style: normal; }
 body.zen #r-live { filter: blur(8px); }
-.track { position: relative; height: 3px; background: var(--line); margin: .7rem 0 1.5rem; }
-.track i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); transition: width .2s ease-out; }
-#r-ghost { background: var(--muted); opacity: .6; }
-.text { font: 400 1.45rem/2.1 var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 1.5rem 1.75rem; color: var(--muted); }
-#typing { width: 100%; margin-top: 1rem; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 1rem; font: 400 1.2rem var(--mono); text-align: center; }
-#typing.err { border-color: var(--bad); }
-.hint { color: var(--muted); font-size: .82rem; text-align: center; }
 
-.result { margin-top: 1.5rem; padding: 2rem; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: var(--r); animation: rise .3s ease-out; }
-.result.dead { border-top-color: var(--bad); }
 .big { font: 500 clamp(3rem, 12vw, 5rem)/1 var(--mono); color: var(--ink); margin-bottom: .5rem; }
-.big em { font: 500 1rem var(--ui); font-style: normal; color: var(--muted); }
-.flag { display: inline-block; margin: 0 0 .8rem; padding: .15rem .6rem; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: .8rem; border-radius: var(--r); }
-.dead-msg { display: none; margin: 0 0 1.2rem; color: var(--bad); font-size: 1.3rem; font-weight: 600; }
-.result.dead .dead-msg { display: block; }
-.result.dead .big, .result.dead .line { display: none; }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
 
 dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: var(--r); padding: 1.5rem; width: min(92vw, 380px); }
@@ -107,7 +90,7 @@ dialog input { padding: .65rem .9rem; }
 kbd { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: 1px solid var(--line); border-radius: var(--r); font: 500 1rem var(--mono); background: color-mix(in srgb, var(--bad) calc(var(--h, 0) * 70%), var(--panel)); }
 
 @media (prefers-reduced-motion: reduce) { *, .result { animation: none !important; transition: none !important; } }
-@media (max-width: 560px) { .text { font-size: 1.1rem; padding: 1rem; } .summary { gap: 1.5rem; } }
+@media (max-width: 560px) { .summary { gap: 1.5rem; } }
 
 dialog input, dialog textarea, dialog select { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: .6rem .85rem; resize: none; }
 #me-error { margin: 0; min-height: 1.2em; color: var(--bad); font-size: .88rem; }

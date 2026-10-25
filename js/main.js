@@ -126,8 +126,24 @@ function startRace(text, mode = 'normal', ghost = 0) {
   $('#r-time').textContent = '0';
   $('#r-live').textContent = '0';
   $('#r-bar').style.width = '0';
+  typing.placeholder = 'Empezá a escribir para arrancar el reloj';
+  $('#r-ghostbtn').hidden = mode === 'hc' || mode === 'practice';
+  $('#r-liveacc').textContent = '100';
+  $('#r-words').textContent = '0';
+  $('#r-of').textContent = '/ ' + state.engine.words.length;
+  $('#r-mode').textContent = modeNames[mode] || 'Carrera';
+  $('#r-mode').dataset.mode = mode;
+  $('#r-meta').textContent = raceMeta(text, mode, ghost);
   show('race');
   drawTarget();
+}
+
+const modeNames = { normal: 'Carrera', ghost: 'Contra tu récord', hc: 'Hardcore', practice: 'Entrenamiento' };
+
+function raceMeta(text, mode, ghost) {
+  if (mode === 'practice') return 'Tus palabras difíciles';
+  const base = `#${text.id} ${text.category}, ${text.text.split(' ').length} palabras`;
+  return mode === 'ghost' ? `${base}. Récord ${speed(ghost)} ${unitLabel()}` : base;
 }
 
 function randomText() {
@@ -231,6 +247,7 @@ function die() {
   typing.blur();
   $('#r-flag').hidden = true;
   $('#result').classList.add('dead');
+  $('#r-deadinfo').textContent = `Llegaste a la palabra ${state.engine.index + 1} de ${state.engine.words.length}. En Hardcore un error termina la carrera.`;
   $('#result').hidden = false;
   document.dispatchEvent(new CustomEvent('death', { detail: { textId: state.text.id } }));
 }
@@ -239,6 +256,8 @@ function tick() {
   const { engine } = state;
   $('#r-time').textContent = Math.floor(engine.elapsed());
   $('#r-live').textContent = speed(engine.cpm());
+  $('#r-liveacc').textContent = engine.accuracy();
+  $('#r-words').textContent = engine.index;
   $('#r-bar').style.width = (engine.index / engine.words.length) * 100 + '%';
   if (state.ghost) {
     const ahead = (state.ghost / 60) * engine.elapsed() / state.text.text.length;
@@ -252,6 +271,8 @@ function finish() {
   const { engine } = state;
   const cpm = engine.cpm();
   const previous = state.history.length ? Math.max(...state.history.map((h) => h.cpm)) : 0;
+  const recent = state.history.slice(-10);
+  const base = recent.length ? recent.reduce((a, h) => a + h.cpm, 0) / recent.length : 0;
   if (state.mode === 'normal' || state.mode === 'ghost') {
     state.history = [...state.history, { id: state.text.id, cpm, acc: engine.accuracy(), at: Date.now() }].slice(-50);
     save('history', state.history);
@@ -265,6 +286,15 @@ function finish() {
   $('#r-bar').style.width = '100%';
   $('#r-flag').hidden = !(['normal', 'ghost'].includes(state.mode) && previous && cpm > previous);
   $('#r-acc').textContent = engine.accuracy() + '%';
+  $('#r-wcount').textContent = engine.words.length;
+  $('#r-errors').textContent = engine.misses;
+  const delta = $('#r-delta');
+  const gap = base && ['normal', 'ghost'].includes(state.mode) ? speed(cpm) - speed(base) : null;
+  delta.hidden = gap === null;
+  if (gap !== null) {
+    delta.className = 'delta ' + (gap >= 0 ? 'up' : 'down');
+    delta.textContent = gap === 0 ? 'Igual que tu promedio' : `${Math.abs(gap)} ${unitLabel()} ${gap > 0 ? 'sobre' : 'bajo'} tu promedio`;
+  }
   $('#r-total').textContent = engine.elapsed().toFixed(1);
   $('#r-guest').hidden = !!state.me;
   $('#result').hidden = false;
@@ -289,7 +319,10 @@ typing.addEventListener('input', () => {
   typing.value = res.typed;
   typing.classList.toggle('err', res.wrong);
   if (state.mode === 'hc' && res.wrong) return die();
-  if (first) state.timer = setInterval(tick, 100);
+  if (first) {
+    state.timer = setInterval(tick, 100);
+    typing.placeholder = '';
+  }
   drawTarget();
   tick();
   if (engine.finished) finish();

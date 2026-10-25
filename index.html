@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/profile.css">
 <link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/race.css">
 </head>
 <body>
 <header class="bar">
@@ -107,26 +108,45 @@
   </section>
 
   <section id="race" hidden>
+    <div class="race-top">
+      <span class="tag" id="r-mode">Carrera</span>
+      <span class="r-meta" id="r-meta"></span>
+    </div>
     <div class="hud">
-      <span><b id="r-time">0</b> s</span>
-      <span><b id="r-live">0</b> <em id="r-unit">CPM</em></span>
+      <div><small>Tiempo</small><b id="r-time">0</b><em>s</em></div>
+      <div class="hud-speed"><small>Velocidad</small><b id="r-live">0</b><em id="r-unit">CPM</em></div>
+      <div><small>Precisión</small><b id="r-liveacc">100</b><em>%</em></div>
+      <div><small>Palabras</small><b id="r-words">0</b><em id="r-of">/ 0</em></div>
     </div>
     <div class="track"><i id="r-ghost"></i><i id="r-bar"></i></div>
     <div class="text" id="target"></div>
-    <input id="typing" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Escribí acá">
-    <p class="hint">Tab reinicia, Esc vuelve al inicio</p>
+    <input id="typing" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Escribí acá" placeholder="Empezá a escribir para arrancar el reloj">
+    <p class="hint"><span class="key">Tab</span> reinicia <span class="key">Esc</span> vuelve al inicio</p>
 
     <div class="result" id="result" hidden>
-      <p class="dead-msg">Eliminado. En Hardcore un error termina la carrera.</p>
-      <p class="flag" id="r-flag" hidden>Nuevo récord personal</p>
-      <div class="big"><span id="r-speed">0</span> <em id="r-speed-unit">CPM</em></div>
-      <p class="line"><span id="r-acc">100%</span> de precisión en <span id="r-total">0</span> s</p>
+      <div class="dead-box">
+        <p class="dead-msg">Eliminado</p>
+        <p class="dead-info" id="r-deadinfo"></p>
+      </div>
+      <div class="res-head">
+        <div class="res-speed"><span id="r-speed">0</span><em id="r-speed-unit">CPM</em></div>
+        <div class="res-side">
+          <p class="flag" id="r-flag" hidden>Nuevo récord personal</p>
+          <p class="delta" id="r-delta" hidden></p>
+        </div>
+      </div>
+      <dl class="res-grid">
+        <div><dt>Precisión</dt><dd id="r-acc">100%</dd></div>
+        <div><dt>Tiempo</dt><dd><span id="r-total">0</span> s</dd></div>
+        <div><dt>Palabras</dt><dd id="r-wcount">0</dd></div>
+        <div><dt>Errores</dt><dd id="r-errors">0</dd></div>
+      </dl>
       <p class="note" id="r-guest" hidden>Ingresá para guardar esta carrera en tu historial.</p>
-      <div class="modes">
-        <button class="primary" id="r-next">Siguiente</button>
-        <button id="r-again">Repetir</button>
+      <div class="res-actions">
+        <button class="primary" id="r-next">Siguiente <span class="key">Enter</span></button>
+        <button id="r-again">Repetir <span class="key">Tab</span></button>
         <button id="r-ghostbtn">Contra mi récord</button>
-        <button id="r-home">Inicio</button>
+        <button id="r-home">Inicio <span class="key">Esc</span></button>
       </div>
     </div>
   </section>
