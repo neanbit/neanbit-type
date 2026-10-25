@@ -2,6 +2,7 @@ import { Engine } from './engine.js';
 import { load, save } from './store.js';
 import './account.js';
 import './site.js';
+import './home.js';
 import { api } from './api.js';
 import { renderStats } from './stats.js';
 import { renderProfile, renderHistory } from './profile.js';
@@ -37,6 +38,7 @@ const target = $('#target');
 async function loadCatalog() {
   try {
     ({ texts, categories } = await api.texts());
+    document.dispatchEvent(new CustomEvent('catalog', { detail: texts }));
   } catch {
     note('No se pudo cargar el catálogo de textos.');
   }
@@ -47,6 +49,7 @@ function show(name) {
   $('#more-menu').hidden = true;
   $('#units').classList.remove('open');
   screens.forEach((s) => ($('#' + s).hidden = s !== name));
+  if (name === 'home') document.dispatchEvent(new Event('home'));
   if (name === 'race') typing.focus();
 }
 
@@ -65,8 +68,6 @@ function applyPrefs() {
   $('#theme').value = state.theme;
   $('#r-unit').textContent = unitLabel();
   $('#r-speed-unit').textContent = unitLabel();
-  $('#th-speed').textContent = 'Vel. ' + unitLabel();
-  $('#th-avg').textContent = 'Promedio ' + unitLabel();
 }
 
 function renderPick() {
@@ -310,6 +311,7 @@ function goHome() {
   show('home');
 }
 
+document.addEventListener('play', (e) => startRace(texts.find((t) => t.id === e.detail)));
 $('#go-random').onclick = () => startRace(randomText());
 $('#go-pick').onclick = () => { renderPick(); show('pick'); };
 $('#pick-back').onclick = goHome;

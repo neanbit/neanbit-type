@@ -10,6 +10,7 @@
 <link rel="icon" href="img/mark.png">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/profile.css">
+<link rel="stylesheet" href="css/home.css">
 </head>
 <body>
 <header class="bar">
@@ -50,31 +51,50 @@
 
 <main>
   <section id="home">
-    <div class="strip" id="guest">
-      <span>Estás jugando como invitado: las carreras no se guardan ni suman al ranking.</span>
-      <button class="primary" id="guest-login">Ingresar o crear cuenta</button>
+    <div class="hero">
+      <div class="hero-main">
+        <p class="eyebrow" id="hero-date"></p>
+        <h1 id="hero-title">Bienvenido</h1>
+        <p class="hero-sub" id="hero-sub"></p>
+        <dl class="pulse" id="pulse" hidden>
+          <div><dt>Racha</dt><dd id="p-streak">0</dd><small id="p-streak-u">días</small></div>
+          <div><dt id="p-best-l">Mejor</dt><dd id="p-best">0</dd><small>marca personal</small></div>
+          <div><dt id="p-avg-l">Promedio</dt><dd id="p-avg">0</dd><small>últimas 10</small></div>
+          <div><dt>Hoy</dt><dd id="p-today">0</dd><small id="p-today-u">carreras</small></div>
+        </dl>
+        <div class="invite" id="invite">
+          <span>Estás como invitado: las carreras no se guardan ni suman al ranking.</span>
+          <button class="primary" id="invite-login">Ingresar o crear cuenta</button>
+        </div>
+      </div>
+      <aside class="daily" id="daily" hidden>
+        <small>Texto del día</small>
+        <p id="daily-text"></p>
+        <footer><span id="daily-meta"></span><button class="primary" id="daily-go">Correr este texto</button></footer>
+      </aside>
     </div>
-    <div class="modes-row">
-      <button class="mode primary" id="go-random"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l8 10h4M4 17h4l2-2.5M14 9.5L16 7h4M18 5l2 2-2 2M18 15l2 2-2 2"/></svg>Aleatorio</button>
-      <button class="mode" id="go-pick"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Personalizado</button>
-      <button class="mode" id="go-practice"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Entrenamiento</button>
-      <button class="mode hard" id="go-hc"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.01"/></svg>Hardcore</button>
-      <button class="mode" id="go-duel" disabled title="Próximamente"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>Duelos</button>
+
+    <div class="modes-grid">
+      <button class="mode primary" id="go-random"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l8 10h4M4 17h4l2-2.5M14 9.5L16 7h4M18 5l2 2-2 2M18 15l2 2-2 2"/></svg><span><b>Aleatorio</b><small>Un texto al azar, sin vueltas</small></span></button>
+      <button class="mode" id="go-pick"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span><b>Personalizado</b><small>Elegí categoría o texto</small></span></button>
+      <button class="mode" id="go-practice"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><span><b>Entrenamiento</b><small>Tus palabras difíciles</small></span><em class="lock-tag" id="practice-tag">Con cuenta</em></button>
+      <button class="mode hard" id="go-hc"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.01"/></svg><span><b>Hardcore</b><small>Un error y se acaba</small></span></button>
+      <button class="mode" id="go-duel" disabled title="Próximamente"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg><span><b>Duelos</b><small>1 contra 1 en vivo</small></span><em class="lock-tag">Pronto</em></button>
     </div>
-    <div class="panels">
-      <article class="panel">
-        <header><h2>Ranking de carreras</h2>
-          <select id="races-scope" aria-label="Período"><option value="today">Hoy</option><option value="all">Histórico</option></select>
-        </header>
-        <table class="table"><thead><tr><th>N°</th><th>Usuario</th><th id="th-speed">Vel.</th><th>Texto</th></tr></thead><tbody id="rank-races"></tbody></table>
-      </article>
-      <article class="panel">
-        <header><h2>Ranking de promedios</h2>
-          <select id="avg-scope" aria-label="Ventana"><option value="10">Últimas 10</option><option value="all">General</option></select>
-        </header>
-        <table class="table"><thead><tr><th>N°</th><th>Usuario</th><th id="th-avg">Promedio</th><th>Carreras</th></tr></thead><tbody id="rank-avg"></tbody></table>
-      </article>
-    </div>
+
+    <section class="board">
+      <header>
+        <div class="tabs" id="board-tabs">
+          <button data-b="races" class="on">Carreras</button>
+          <button data-b="avg">Promedios</button>
+          <button data-b="hc">Hardcore</button>
+        </div>
+        <div class="seg" id="board-scope"></div>
+      </header>
+      <ol class="rows" id="board-rows"></ol>
+      <p class="board-note" id="board-note"></p>
+    </section>
+    <p class="community" id="community"></p>
   </section>
 
   <section id="pick" hidden>

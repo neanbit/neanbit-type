@@ -424,9 +424,9 @@ async function api(req, res, url) {
   if (key === 'GET /api/races/top') {
     const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
     const rows = memo('top' + since, () => db.prepare(`
-      select u.handle, u.name, u.avatar_v as av, u.verified, r.cpm, r.text_id
+      select u.handle, u.name, u.avatar_v as av, u.verified, max(r.cpm) as cpm, r.text_id
       from races r join users u on u.id = r.user_id
-      where r.hc = 0 and r.at >= ? order by r.cpm desc, r.at limit 10`).all(since));
+      where r.hc = 0 and r.at >= ? group by u.id order by cpm desc, u.id limit 10`).all(since));
     let mine = null;
     if (me) {
       const best = db.prepare('select max(cpm) as c from races where user_id = ? and hc = 0 and at >= ?').get(me.id, since).c;

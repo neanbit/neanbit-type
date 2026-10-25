@@ -25,6 +25,7 @@ export const api = {
   userRaces: (handle, page) => call('/users/' + handle + '/races?page=' + page),
   searchUsers: (q) => call('/users?q=' + encodeURIComponent(q)),
   profile: (handle) => call('/users/' + handle),
+  home: () => call('/home?tz=' + new Date().getTimezoneOffset()),
   topRaces: (scope) => call('/races/top?scope=' + scope),
   averages: (window) => call('/ranking/average?window=' + window),
   ranking: (scope, hc) => call('/ranking?scope=' + scope + (hc ? '&mode=hc' : '')),
