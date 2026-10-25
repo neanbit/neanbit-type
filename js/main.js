@@ -4,11 +4,12 @@ import './account.js';
 import './site.js';
 import { api } from './api.js';
 import { renderStats } from './stats.js';
+import { renderProfile, renderHistory, esc } from './profile.js';
 
 const $ = (sel) => document.querySelector(sel);
 let texts = [];
 let categories = [];
-const screens = ['home', 'pick', 'race', 'stats'];
+const screens = ['home', 'pick', 'race', 'stats', 'profile'];
 
 const state = {
   unit: load('unit', 'cpm'),
@@ -20,6 +21,7 @@ const state = {
   over: false,
   errorWords: [],
   ghost: 0,
+  me: null,
   text: null,
   timer: 0,
 };
@@ -56,17 +58,8 @@ function applyPrefs() {
   $('#theme').value = state.theme;
   $('#r-unit').textContent = unitLabel();
   $('#r-speed-unit').textContent = unitLabel();
-}
-
-function renderHome() {
-  const all = state.history.map((h) => h.cpm);
-  const last = all.slice(-10);
-  $('#h-best').textContent = speed(all.length ? Math.max(...all) : 0);
-  $('#h-avg').textContent = speed(last.length ? Math.round(last.reduce((a, b) => a + b, 0) / last.length) : 0);
-  $('#h-count').textContent = all.length;
-  $('#h-list').innerHTML = state.history.slice(-5).reverse().map((h) =>
-    `<li><span>${new Date(h.at).toLocaleDateString('es-AR')}</span><span><b>${speed(h.cpm)}</b> ${unitLabel()}, ${h.acc}%</span></li>`
-  ).join('');
+  $('#th-speed').textContent = 'Vel. ' + unitLabel();
+  $('#th-avg').textContent = 'Promedio ' + unitLabel();
 }
 
 function renderPick() {
@@ -167,6 +160,41 @@ async function startPractice() {
   }
 }
 
+const view = { handle: null, page: 0 };
+
+function textLabel(id) {
+  const text = texts.find((t) => t.id === id);
+  return text ? `#${id} ${text.category}` : `#${id}`;
+}
+
+async function loadHistory() {
+  renderHistory(await api.userRaces(view.handle, view.page), view.page, { speed, textLabel });
+}
+
+async function openProfile(handle) {
+  try {
+    const data = await api.profile(handle);
+    view.handle = data.handle;
+    view.page = 0;
+    renderProfile(data, { speed, unit: unitLabel(), textLabel, isMe: data.handle === state.me });
+    show('profile');
+    await loadHistory();
+  } catch (err) {
+    note(err.message);
+  }
+}
+
+async function searchPilots() {
+  const query = $('#pf-search').value.trim();
+  const box = $('#pf-results');
+  if (query.length < 2) { box.hidden = true; return; }
+  const { rows } = await api.searchUsers(query).catch(() => ({ rows: [] }));
+  box.innerHTML = rows.length
+    ? rows.map((r) => `<li data-handle="${esc(r.handle)}"><span class="av sm">${esc(r.name.charAt(0).toUpperCase())}</span>${esc(r.name)} <small>@${esc(r.handle)}</small></li>`).join('')
+    : '<li class="none">No hay pilotos con ese nombre.</li>';
+  box.hidden = false;
+}
+
 async function openStats() {
   try {
     renderStats(await api.stats(), speed);
@@ -258,7 +286,6 @@ document.addEventListener('keydown', (e) => {
 function goHome() {
   clearInterval(state.timer);
   state.engine = null;
-  renderHome();
   show('home');
 }
 
@@ -271,7 +298,34 @@ $('#r-again').onclick = () => startRace(state.text, state.mode, state.ghost);
 $('#r-ghostbtn').onclick = startGhost;
 $('#go-hc').onclick = () => startRace(randomText(), 'hc');
 $('#go-practice').onclick = startPractice;
-$('#go-stats').onclick = openStats;
+$('#nav-stats').onclick = openStats;
+document.addEventListener('profile', (e) => openProfile(e.detail));
+document.addEventListener('session', (e) => { state.me = e.detail ? e.detail.handle : null; });
+document.addEventListener('units', () => { if (!$('#profile').hidden) openProfile(view.handle); });
+$('#pf-back').onclick = goHome;
+$('#pf-search').oninput = () => { clearTimeout(searchPilots.timer); searchPilots.timer = setTimeout(searchPilots, 250); };
+$('#pf-results').onclick = (e) => {
+  const row = e.target.closest('li[data-handle]');
+  if (!row) return;
+  $('#pf-results').hidden = true;
+  $('#pf-search').value = '';
+  openProfile(row.dataset.handle);
+};
+$('#pf-prev').onclick = () => { view.page--; loadHistory(); };
+$('#pf-next').onclick = () => { view.page++; loadHistory(); };
+$('#pf-tags').onclick = (e) => {
+  const copy = e.target.closest('[data-copy]');
+  if (copy) navigator.clipboard.writeText(copy.dataset.copy).then(() => note('Usuario de Discord copiado.')).catch(() => {});
+};
+$('#pf-history').onclick = (e) => {
+  const btn = e.target.closest('[data-ghost]');
+  if (!btn) return;
+  const text = texts.find((t) => t.id === Number(btn.dataset.ghost));
+  if (!text) return note('Ese texto ya no está disponible.');
+  startRace(text, 'ghost', Number(btn.dataset.cpm));
+};
+$('#nav-settings').onclick = () => $('#settings').showModal();
+$('#settings-close').onclick = () => $('#settings').close();
 $('#stats-back').onclick = goHome;
 $('#r-home').onclick = goHome;
 $('#search').oninput = renderPick;
@@ -291,7 +345,7 @@ $('#units').onclick = (e) => {
   state.unit = e.target.dataset.unit;
   save('unit', state.unit);
   applyPrefs();
-  renderHome();
+  document.dispatchEvent(new Event('units'));
 };
 $('#theme').onchange = (e) => {
   state.theme = e.target.value;
@@ -300,5 +354,4 @@ $('#theme').onchange = (e) => {
 };
 
 applyPrefs();
-renderHome();
 loadCatalog();

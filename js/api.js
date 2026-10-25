@@ -21,6 +21,10 @@ export const api = {
   death: (textId) => call('/deaths', { textId }),
   stats: () => call('/stats'),
   best: (textId) => call('/best?textId=' + textId),
+  userRaces: (handle, page) => call('/users/' + handle + '/races?page=' + page),
+  searchUsers: (q) => call('/users?q=' + encodeURIComponent(q)),
   profile: (handle) => call('/users/' + handle),
+  topRaces: (scope) => call('/races/top?scope=' + scope),
+  averages: (window) => call('/ranking/average?window=' + window),
   ranking: (scope, hc) => call('/ranking?scope=' + scope + (hc ? '&mode=hc' : '')),
 };

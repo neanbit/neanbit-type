@@ -10,39 +10,32 @@ let registering = false;
 
 async function refreshUser() {
   try { user = (await api.me()).user; } catch { user = null; }
-  $('#account').textContent = user ? user.name : 'Ingresar';
+  $('#who-name').textContent = user ? user.name : 'Ingresar';
+  $('#who-handle').textContent = user ? '@' + user.handle : 'Crear una cuenta';
+  $('#av').textContent = user ? user.name.charAt(0).toUpperCase() : 'n';
+  $('#nav-out').hidden = !user;
+  document.dispatchEvent(new CustomEvent('session', { detail: user }));
+  refreshRanking();
 }
+
+const viewProfile = (handle) => document.dispatchEvent(new CustomEvent('profile', { detail: handle }));
+const initial = (name) => esc(String(name).trim().charAt(0).toUpperCase());
+const mine = (r) => (user && user.handle === r.handle ? 'me' : '');
+const person = (r) => `<div class="who-cell"><span class="av sm">${initial(r.name)}</span>${esc(r.name)}</div>`;
+const emptyRow = (text) => `<tr><td colspan="4" class="empty">${text}</td></tr>`;
 
 export async function refreshRanking() {
-  const list = $('#ranking');
   try {
-    const scope = $('#board-scope').value;
-    const { rows } = await api.ranking(scope === 'hc' ? 'all' : scope, scope === 'hc');
-    list.innerHTML = rows.length
-      ? rows.map((r, i) => `<li data-handle="${esc(r.handle)}"><span>${i + 1}</span><span>${esc(r.name)}</span><b>${speed(r.cpm)}</b></li>`).join('')
-      : '<li>Todavía no hay carreras en el ranking.</li>';
+    const [top, avg] = await Promise.all([api.topRaces($('#races-scope').value), api.averages($('#avg-scope').value)]);
+    $('#rank-races').innerHTML = top.rows.length
+      ? top.rows.map((r, i) => `<tr data-handle="${esc(r.handle)}" class="${mine(r)}"><td>${i + 1}</td><td>${person(r)}</td><td><b>${speed(r.cpm)}</b></td><td>#${r.text_id}</td></tr>`).join('')
+      : emptyRow('Todavía no hay carreras en este período.');
+    $('#rank-avg').innerHTML = avg.rows.length
+      ? avg.rows.map((r, i) => `<tr data-handle="${esc(r.handle)}" class="${mine(r)}"><td>${i + 1}</td><td>${person(r)}</td><td><b>${speed(r.cpm)}</b></td><td>${r.races}</td></tr>`).join('')
+      : emptyRow('Todavía no hay promedios.');
   } catch {
-    list.innerHTML = '<li>El ranking necesita el servidor en marcha.</li>';
+    $('#rank-races').innerHTML = $('#rank-avg').innerHTML = emptyRow('El ranking necesita el servidor en marcha.');
   }
-}
-
-async function openProfile(handle) {
-  try {
-    const p = await api.profile(handle);
-    const medals = p.medals.length
-      ? p.medals.map((m) => `<li><b>${esc(m.name)}</b><small>${esc(m.desc)}</small></li>`).join('')
-      : '<li><small>Sin medallas todavía.</small></li>';
-    $('#profile-body').innerHTML = `<h2>${esc(p.name)}</h2>
-      <p class="note">@${esc(p.handle)}, desde ${new Date(p.since).toLocaleDateString('es-AR')}</p>
-      ${p.bio ? `<p>${esc(p.bio)}</p>` : ''}
-      ${[p.country, p.layout, p.switches].filter(Boolean).length ? `<p class="note">${[p.country, p.layout, p.switches].filter(Boolean).map(esc).join(', ')}</p>` : ''}
-      ${p.discord ? `<p class="note">Discord: ${esc(p.discord)}</p>` : ''}
-      <div class="summary"><div><span>${p.races}</span><small>carreras</small></div>
-        <div><span>${speed(p.best)}</span><small>récord</small></div>
-        <div><span>${speed(p.avg)}</span><small>promedio</small></div></div>
-      <ul class="medals">${medals}</ul>`;
-    $('#profile').showModal();
-  } catch {}
 }
 
 function openMe() {
@@ -67,13 +60,21 @@ $('#account').onclick = async () => {
 };
 $('#auth-switch').onclick = () => setMode(!registering);
 $('#auth-close').onclick = () => $('#auth').close();
-$('#board-scope').onchange = refreshRanking;
-$('#ranking').onclick = (e) => {
-  const row = e.target.closest('li[data-handle]');
-  if (row) openProfile(row.dataset.handle);
+for (const id of ['#rank-races', '#rank-avg']) {
+  $(id).onclick = (e) => {
+    const row = e.target.closest('tr[data-handle]');
+    if (row) viewProfile(row.dataset.handle);
+  };
+}
+$('#races-scope').onchange = $('#avg-scope').onchange = refreshRanking;
+$('#pf-edit').onclick = openMe;
+$('#nav-out').onclick = async () => {
+  await api.logout().catch(() => {});
+  await refreshUser();
 };
+document.addEventListener('units', refreshRanking);
 $('#me-close').onclick = () => $('#me').close();
-$('#me-profile').onclick = () => { $('#me').close(); openProfile(user.handle); };
+$('#me-profile').onclick = () => { $('#me').close(); viewProfile(user.handle); };
 $('#me-logout').onclick = async () => {
   await api.logout().catch(() => {});
   $('#me').close();
@@ -87,12 +88,11 @@ $('#me-form').onsubmit = async (e) => {
     await api.saveProfile(body);
     $('#me').close();
     await refreshUser();
-    refreshRanking();
+    if (!$('#profile').hidden) viewProfile(user.handle);
   } catch (err) {
     $('#me-error').textContent = err.message;
   }
 };
-$('#profile-close').onclick = () => $('#profile').close();
 
 $('#auth-form').onsubmit = async (e) => {
   e.preventDefault();
@@ -121,4 +121,3 @@ document.addEventListener('death', (e) => {
 });
 
 refreshUser();
-refreshRanking();

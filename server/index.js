@@ -59,6 +59,14 @@ function seedTexts() {
   });
 }
 
+function setting(key) {
+  try {
+    return JSON.parse(db.prepare('select value from settings where key = ?').get(key)?.value || 'null');
+  } catch {
+    return null;
+  }
+}
+
 function maintenance() {
   try {
     return JSON.parse(db.prepare("select value from settings where key = 'maintenance'").get()?.value || '{}');
@@ -121,6 +129,19 @@ function profileStats(userId) {
   return { ...normal, ...hard };
 }
 
+function rankOf(userId) {
+  const rows = db.prepare(`
+    select user_id, avg(cpm) as a, count(*) as c
+    from (select user_id, cpm, row_number() over (partition by user_id order by at desc) as rn from races where hc = 0)
+    where rn <= 10 group by user_id having c >= 5 order by a desc`).all();
+  return rows.findIndex((r) => r.user_id === userId) + 1;
+}
+
+function hcRankOf(userId) {
+  const rows = db.prepare('select user_id, max(cpm) as m from races where hc = 1 group by user_id order by m desc').all();
+  return rows.findIndex((r) => r.user_id === userId) + 1;
+}
+
 function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
   return `${salt}:${scryptSync(password, salt, 64).toString('hex')}`;
@@ -165,7 +186,7 @@ async function api(req, res, url) {
 
   if (key === 'GET /api/config') {
     const announcement = db.prepare('select id, title, body from announcements where active = 1 order by at desc limit 1').get() || null;
-    return send(res, 200, { maintenance: maintenance(), announcement });
+    return send(res, 200, { maintenance: maintenance(), announcement, info: setting('info') });
   }
 
   if (key === 'POST /api/profile') {
@@ -253,6 +274,27 @@ async function api(req, res, url) {
     return send(res, 200, { races, chars: top('c', 40), words: top('w', 20), deaths });
   }
 
+  if (key === 'GET /api/races/top') {
+    const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
+    const rows = db.prepare(`
+      select u.handle, u.name, r.cpm, r.text_id
+      from races r join users u on u.id = r.user_id
+      where r.hc = 0 and r.at >= ? order by r.cpm desc limit 10`).all(since);
+    return send(res, 200, { rows });
+  }
+
+  if (key === 'GET /api/ranking/average') {
+    const window = url.searchParams.get('window') === 'all' ? 1000000 : 10;
+    const rows = db.prepare(`
+      select u.handle, u.name, round(avg(x.cpm)) as cpm,
+        (select count(*) from races r where r.user_id = u.id and r.hc = 0) as races
+      from (select user_id, cpm, row_number() over (partition by user_id order by at desc) as rn
+            from races where hc = 0) x
+      join users u on u.id = x.user_id
+      where x.rn <= ? group by u.id order by cpm desc limit 10`).all(window);
+    return send(res, 200, { rows });
+  }
+
   if (key === 'GET /api/ranking') {
     const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
     const rows = db.prepare(`
@@ -262,15 +304,36 @@ async function api(req, res, url) {
     return send(res, 200, { rows });
   }
 
-  const profile = /^\/api\/users\/([a-z0-9_]{3,15})$/.exec(url.pathname);
-  if (req.method === 'GET' && profile) {
-    const user = db.prepare('select * from users where handle = ?').get(profile[1]);
+  if (key === 'GET /api/users') {
+    const q = String(url.searchParams.get('q') || '').toLowerCase().replace(/[^\p{L}\p{N}_ .-]/gu, '');
+    if (q.length < 2) return send(res, 200, { rows: [] });
+    const rows = db.prepare('select handle, name from users where handle like ? or lower(name) like ? limit 6').all(`%${q}%`, `%${q}%`);
+    return send(res, 200, { rows });
+  }
+
+  const route = /^\/api\/users\/([a-z0-9_]{3,15})(\/races)?$/.exec(url.pathname);
+  if (req.method === 'GET' && route) {
+    const user = db.prepare('select * from users where handle = ?').get(route[1]);
     if (!user) return send(res, 404, { error: 'No existe ese piloto.' });
+    if (route[2]) {
+      const page = Math.max(0, Number(url.searchParams.get('page')) || 0);
+      const rows = db.prepare('select cpm, text_id, at from races where user_id = ? and hc = 0 order by at desc limit 10 offset ?').all(user.id, page * 10);
+      const total = db.prepare('select count(*) as n from races where user_id = ? and hc = 0').get(user.id).n;
+      return send(res, 200, { rows, total });
+    }
     const s = profileStats(user.id);
-    const recent = db.prepare('select cpm from races where user_id = ? and hc = 0 order by at desc limit 10').all(user.id);
-    const avg = recent.length ? Math.round(recent.reduce((a, r) => a + r.cpm, 0) / recent.length) : 0;
-    return send(res, 200, { name: user.name, handle: user.handle, since: user.created, bio: user.bio, country: user.country, layout: user.layout, switches: user.switches, discord: user.discord, races: s.races, best: s.best, avg, hcBest: s.hcBest,
-      medals: medalList.filter(([, , , test]) => test(s)).map(([id, name, desc]) => ({ id, name, desc })) });
+    const normal = db.prepare('select cpm from races where user_id = ? and hc = 0 order by at desc').all(user.id);
+    const mean = (list) => (list.length ? Math.round(list.reduce((a, r) => a + r.cpm, 0) / list.length) : 0);
+    const favorite = db.prepare('select text_id from races where user_id = ? and hc = 0 group by text_id order by count(*) desc limit 1').get(user.id);
+    return send(res, 200, {
+      name: user.name, handle: user.handle, role: user.role, since: user.created,
+      bio: user.bio, country: user.country, layout: user.layout, switches: user.switches, discord: user.discord,
+      races: s.races, best: s.best, hcBest: s.hcBest,
+      avg: mean(normal.slice(0, 10)), avgAll: mean(normal),
+      favorite: favorite ? favorite.text_id : null,
+      rank: rankOf(user.id), hcRank: hcRankOf(user.id),
+      medals: medalList.map(([id, name, desc, test]) => ({ id, name, desc, earned: test(s) })),
+    });
   }
 
   send(res, 404, { error: 'No encontrado.' });
