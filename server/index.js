@@ -418,7 +418,12 @@ async function api(req, res, url) {
     const races = db.prepare('select cpm, acc, at, text_id, hc from races where user_id = ? and hc = 0 order by at desc limit 100').all(me.id).reverse();
     const top = (kind, n) => db.prepare('select key, n from errors where user_id = ? and kind = ? order by n desc limit ?').all(me.id, kind, n);
     const deaths = db.prepare('select count(*) as n from deaths where user_id = ?').get(me.id).n;
-    return send(res, 200, { races, chars: top('c', 40), words: top('w', 20), deaths });
+    const t = profileStats(me.id);
+    const agg = db.prepare('select coalesce(round(avg(acc)), 0) as acc, min(at) as since from races where user_id = ? and hc = 0').get(me.id);
+    return send(res, 200, {
+      races, chars: top('c', 40), words: top('w', 20), deaths,
+      totals: { races: t.races, best: t.best, hcRaces: t.hcRaces, hcBest: t.hcBest, acc: agg.acc, since: agg.since },
+    });
   }
 
   if (key === 'GET /api/races/top') {

@@ -12,16 +12,13 @@
 <link rel="stylesheet" href="css/profile.css">
 <link rel="stylesheet" href="css/home.css">
 <link rel="stylesheet" href="css/race.css">
+<link rel="stylesheet" href="css/pick.css">
+<link rel="stylesheet" href="css/stats.css">
 </head>
 <body>
 <header class="bar">
   <div class="bar-left">
     <button class="pill" id="account"><span class="av" id="av">n</span><span class="who"><b id="who-name">Ingresar</b><small id="who-handle">Crear una cuenta</small></span></button>
-    <div class="seg" id="units">
-      <button data-unit="cpm">CPM</button>
-      <button data-unit="wpm">WPM</button>
-      <button data-unit="zen">ZEN</button>
-    </div>
   </div>
   <div class="bar-center">
     <a class="wordmark" href="#" id="logo" aria-label="neanbit, inicio"><img class="wm-ondark" src="img/wordmark-ondark.svg" alt="neanbit"><img class="wm-onlight" src="img/wordmark-onlight.svg" alt="neanbit"></a>
@@ -42,7 +39,6 @@
       <button class="icon" id="nav-more" title="Menú" aria-label="Menú" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
       <div class="menu" id="more-menu" hidden>
         <button data-fwd="nav-info"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg>Información</button>
-        <button data-fwd="nav-stats"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Estadísticas</button>
         <button data-fwd="nav-settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Ajustes</button>
         <button data-fwd="nav-out" id="menu-out" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/></svg>Cerrar sesión</button>
       </div>
@@ -99,11 +95,25 @@
   </section>
 
   <section id="pick" hidden>
-    <div class="row">
-      <input id="search" type="search" placeholder="Buscar en los textos" autocomplete="off">
+    <header class="pick-head">
+      <div>
+        <p class="eyebrow">Modo personalizado</p>
+        <h2 class="pick-title">Elegí qué escribir</h2>
+      </div>
       <button id="pick-back">Volver</button>
+    </header>
+    <div class="pick-tools">
+      <input id="search" type="search" placeholder="Buscar una palabra o frase" autocomplete="off">
+      <div class="seg" id="len">
+        <button data-len="" class="on">Todas</button>
+        <button data-len="s">Cortas</button>
+        <button data-len="m">Medias</button>
+        <button data-len="l">Largas</button>
+      </div>
+      <button id="pick-random"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l8 10h4M4 17h4l2-2.5M14 9.5L16 7h4M18 5l2 2-2 2M18 15l2 2-2 2"/></svg>Una al azar</button>
     </div>
     <div class="chips" id="chips"></div>
+    <p class="pick-count" id="pick-count"></p>
     <ul class="cards" id="cards"></ul>
   </section>
 
@@ -151,14 +161,49 @@
     </div>
   </section>
   <section id="stats" hidden>
-    <div class="row"><h2>Tus estadísticas</h2><button id="stats-back">Volver</button></div>
-    <div class="summary" id="s-cards"></div>
-    <h3>Evolución de las últimas 30 carreras</h3>
-    <div class="chart" id="s-chart"></div>
-    <h3>Teclas donde más fallás</h3>
-    <div class="keys" id="s-keys"></div>
-    <h3>Palabras que más te cuestan</h3>
-    <ol class="rank" id="s-words"></ol>
+    <header class="pick-head">
+      <div>
+        <p class="eyebrow" id="s-since">Tu rendimiento</p>
+        <h2 class="pick-title">Estadísticas</h2>
+      </div>
+      <button id="stats-back">Volver</button>
+    </header>
+    <div id="s-empty" class="s-empty" hidden>
+      <p>Todavía no hay carreras guardadas. Corré una y acá vas a ver cómo evolucionás.</p>
+      <button class="primary" id="s-first">Correr una carrera</button>
+    </div>
+    <div id="s-body">
+      <div class="kpis" id="s-cards"></div>
+
+      <section class="s-block">
+        <header><h3>Evolución</h3>
+          <div class="seg" id="s-range"><button data-n="30" class="on">Últimas 30</button><button data-n="100">Últimas 100</button></div>
+        </header>
+        <div class="chart" id="s-chart"></div>
+        <p class="legend"><i class="l-line"></i>Carrera <i class="l-avg"></i>Media móvil de 5 <i class="l-rec"></i>Récord</p>
+      </section>
+
+      <div class="s-two">
+        <section class="s-block">
+          <header><h3>Actividad, 14 días</h3></header>
+          <div class="days" id="s-days"></div>
+        </section>
+        <section class="s-block">
+          <header><h3>Velocidad por categoría</h3></header>
+          <ul class="cats" id="s-cats"></ul>
+        </section>
+      </div>
+
+      <section class="s-block">
+        <header><h3>Teclas donde más fallás</h3></header>
+        <div class="kb" id="s-keys"></div>
+      </section>
+
+      <section class="s-block">
+        <header><h3>Palabras que más te cuestan</h3><button id="s-train">Entrenar estos errores</button></header>
+        <ol class="crit" id="s-words"></ol>
+      </section>
+    </div>
   </section>
   <section id="profile" hidden data-accent="ambar">
     <header class="pf-hero" id="pf-hero" data-banner="liso" data-shape="cuadrada">
@@ -359,6 +404,13 @@
       <option value="carbon">Carbón</option>
     </select>
   </label>
+  <div class="field">Unidad de velocidad
+    <div class="unit-pick" id="units">
+      <button data-unit="cpm"><b>CPM</b><small>caracteres por minuto</small></button>
+      <button data-unit="wpm"><b>WPM</b><small>palabras por minuto</small></button>
+      <button data-unit="zen"><b>ZEN</b><small>sin mostrar la velocidad</small></button>
+    </div>
+  </div>
   <p class="note">Tab reinicia la carrera, Esc vuelve al inicio y Enter pasa a la siguiente.</p>
   <div class="modes"><button id="settings-close">Cerrar</button></div>
 </dialog>

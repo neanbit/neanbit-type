@@ -4,7 +4,7 @@ import './account.js';
 import './site.js';
 import './home.js';
 import { api } from './api.js';
-import { renderStats } from './stats.js';
+import { renderStats, redrawStats } from './stats.js';
 import { renderProfile, renderHistory } from './profile.js';
 import { openVitrina } from './vitrina.js';
 import { esc } from './ui.js';
@@ -20,6 +20,7 @@ const state = {
   theme: ['neanbit', 'claro', 'carbon'].includes(load('theme', '')) ? load('theme', '') : 'neanbit',
   history: load('history', []),
   category: null,
+  length: '',
   engine: null,
   mode: 'normal',
   over: false,
@@ -47,7 +48,6 @@ async function loadCatalog() {
 function show(name) {
   document.body.classList.toggle('profile-view', name === 'profile');
   $('#more-menu').hidden = true;
-  $('#units').classList.remove('open');
   screens.forEach((s) => ($('#' + s).hidden = s !== name));
   if (name === 'home') document.dispatchEvent(new Event('home'));
   if (name === 'race') typing.focus();
@@ -70,17 +70,60 @@ function applyPrefs() {
   $('#r-speed-unit').textContent = unitLabel();
 }
 
-function renderPick() {
+const star = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9-4.3-4.1 5.9-.8z"/></svg>';
+const words = (t) => t.text.split(' ').length;
+
+function lengthCuts() {
+  const sorted = texts.map(words).sort((a, b) => a - b);
+  return [sorted[Math.floor(sorted.length / 3)] || 0, sorted[Math.floor((sorted.length * 2) / 3)] || 0];
+}
+
+function lengthOf(t, cuts) {
+  const n = words(t);
+  return n < cuts[0] ? 's' : n < cuts[1] ? 'm' : 'l';
+}
+
+function highlight(text, query) {
+  if (!query) return esc(text);
+  const lower = text.toLowerCase();
+  let out = '';
+  let from = 0;
+  for (let at = lower.indexOf(query); at > -1; at = lower.indexOf(query, from)) {
+    out += esc(text.slice(from, at)) + '<mark>' + esc(text.slice(at, at + query.length)) + '</mark>';
+    from = at + query.length;
+  }
+  return out + esc(text.slice(from));
+}
+
+function pickList() {
   const query = $('#search').value.trim().toLowerCase();
+  const cuts = lengthCuts();
+  const base = texts.filter((t) => (!query || t.text.toLowerCase().includes(query)) && (!state.length || lengthOf(t, cuts) === state.length));
+  const list = base.filter((t) => !state.category || (state.category === 'Favoritos' ? favs.has(t.id) : t.category === state.category));
+  return { query, base, list };
+}
+
+function renderPick() {
+  const { query, base, list } = pickList();
+  const count = (c) => base.filter((t) => (c === 'Todos' ? true : c === 'Favoritos' ? favs.has(t.id) : t.category === c)).length;
   $('#chips').innerHTML = ['Todos', 'Favoritos', ...categories].map((c) =>
-    `<button data-cat="${c}" class="${(state.category || 'Todos') === c ? 'on' : ''}">${c}</button>`
+    `<button data-cat="${esc(c)}" class="${(state.category || 'Todos') === c ? 'on' : ''}">${esc(c)}<i>${count(c)}</i></button>`
   ).join('');
-  const list = texts.filter((t) =>
-    (!state.category || (state.category === 'Favoritos' ? favs.has(t.id) : t.category === state.category)) && (!query || t.text.toLowerCase().includes(query))
-  );
+  document.querySelectorAll('#len button').forEach((b) => b.classList.toggle('on', b.dataset.len === state.length));
+  $('#pick-count').textContent = `${list.length} ${list.length === 1 ? 'texto' : 'textos'}`;
+  $('#pick-random').disabled = !list.length;
+
+  const best = new Map();
+  for (const h of state.history) best.set(h.id, Math.max(best.get(h.id) || 0, h.cpm));
   $('#cards').innerHTML = list.length
-    ? list.map((t) => `<li data-id="${t.id}"><button class="star" data-fav="${t.id}" aria-label="Favorito">${favs.has(t.id) ? '★' : '☆'}</button><p>${t.text}</p><small>${t.text.split(' ').length} palabras, ${t.category}</small></li>`).join('')
-    : '<li>No hay textos que coincidan con la búsqueda.</li>';
+    ? list.map((t) => {
+      const mine = best.get(t.id);
+      return `<li data-id="${t.id}"><div class="c-top"><span class="c-id">#${t.id}</span><span class="c-cat">${esc(t.category)}</span>`
+        + `<button class="star${favs.has(t.id) ? ' on' : ''}" data-fav="${t.id}" aria-label="Favorito" aria-pressed="${favs.has(t.id)}">${star}</button></div>`
+        + `<p>${highlight(t.text, query)}</p>`
+        + `<div class="c-foot"><span>${words(t)} palabras</span>${mine ? `<span class="c-best">Tu mejor: <b>${speed(mine)}</b> ${unitLabel()}</span>` : ''}</div></li>`;
+    }).join('')
+    : `<li class="none">${state.category === 'Favoritos' && !favs.size ? 'Todavía no marcaste favoritos. Tocá la estrella de un texto para guardarlo.' : 'No hay textos que coincidan con esa búsqueda.'}</li>`;
 }
 
 function drawTarget() {
@@ -232,9 +275,14 @@ async function searchPilots() {
   box.hidden = false;
 }
 
+function statsKit() {
+  const category = (id) => texts.find((t) => t.id === id)?.category;
+  return { speed, unit: unitLabel(), category };
+}
+
 async function openStats() {
   try {
-    renderStats(await api.stats(), speed);
+    renderStats(await api.stats(), statsKit());
     show('stats');
   } catch (err) {
     note(err.message);
@@ -357,7 +405,11 @@ $('#go-practice').onclick = startPractice;
 $('#nav-stats').onclick = openStats;
 document.addEventListener('profile', (e) => openProfile(e.detail));
 document.addEventListener('session', (e) => { state.me = e.detail ? e.detail.handle : null; });
-document.addEventListener('units', () => { if (!$('#profile').hidden) openProfile(view.handle); });
+document.addEventListener('units', () => {
+  if (!$('#profile').hidden) openProfile(view.handle);
+  if (!$('#pick').hidden) renderPick();
+  if (!$('#stats').hidden) redrawStats(statsKit());
+});
 $('#pf-back').onclick = goHome;
 $('#nav-more').onclick = () => {
   const menu = $('#more-menu');
@@ -372,7 +424,6 @@ $('#more-menu').onclick = (e) => {
 };
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.gear-wrap')) $('#more-menu').hidden = true;
-  if (!e.target.closest('#units')) $('#units').classList.remove('open');
 });
 $('#pf-allmedals').onclick = openVitrina;
 $('#pf-medals').onclick = (e) => {
@@ -418,27 +469,34 @@ $('#pf-history').onclick = (e) => {
 $('#nav-settings').onclick = () => $('#settings').showModal();
 $('#settings-close').onclick = () => $('#settings').close();
 $('#stats-back').onclick = goHome;
+$('#s-first').onclick = () => startRace(randomText());
+$('#s-train').onclick = startPractice;
 $('#r-home').onclick = goHome;
 $('#search').oninput = renderPick;
 $('#chips').onclick = (e) => {
-  const cat = e.target.dataset.cat;
+  const cat = e.target.closest('[data-cat]')?.dataset.cat;
   if (!cat) return;
   state.category = cat === 'Todos' ? null : cat;
   renderPick();
 };
+$('#len').onclick = (e) => {
+  if (e.target.dataset.len === undefined) return;
+  state.length = e.target.dataset.len;
+  renderPick();
+};
+$('#pick-random').onclick = () => {
+  const { list } = pickList();
+  if (list.length) startRace(list[Math.floor(Math.random() * list.length)]);
+};
 $('#cards').onclick = (e) => {
-  if (e.target.dataset.fav) return toggleFav(Number(e.target.dataset.fav));
+  const fav = e.target.closest('[data-fav]');
+  if (fav) return toggleFav(Number(fav.dataset.fav));
   const card = e.target.closest('li[data-id]');
   if (card) startRace(texts.find((t) => t.id === Number(card.dataset.id)));
 };
 $('#units').onclick = (e) => {
-  const unit = e.target.dataset.unit;
-  if (!unit) return;
-  if (unit === state.unit) {
-    $('#units').classList.toggle('open');
-    return;
-  }
-  $('#units').classList.remove('open');
+  const unit = e.target.closest('[data-unit]')?.dataset.unit;
+  if (!unit || unit === state.unit) return;
   state.unit = unit;
   save('unit', unit);
   applyPrefs();
