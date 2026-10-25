@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Poppins:wght@400;500;600;700&display=swap">
 <link rel="icon" href="img/mark.png">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/profile.css">
 </head>
 <body>
 <header class="bar">
@@ -27,7 +28,6 @@
         <input id="pf-search" type="search" placeholder="Buscar piloto por nombre o usuario" autocomplete="off">
         <ul id="pf-results" hidden></ul>
       </div>
-      <button id="pf-edit" hidden>Editar perfil</button>
       <button id="pf-back">Volver</button>
     </div>
   </div>
@@ -120,25 +120,37 @@
     <h3>Palabras que más te cuestan</h3>
     <ol class="rank" id="s-words"></ol>
   </section>
-  <section id="profile" hidden>
-    <div class="pf-grid">
-      <aside class="pf-card">
+  <section id="profile" hidden data-accent="ambar">
+    <header class="pf-hero" id="pf-hero" data-banner="liso" data-shape="cuadrada">
+      <div class="pf-banner" aria-hidden="true"></div>
+      <div class="pf-id">
         <div class="pf-avatar" id="pf-avatar"><span id="pf-initial"></span><em id="pf-badge" hidden></em></div>
-        <h2 id="pf-name"></h2>
-        <p class="pf-handle" id="pf-handle"></p>
-        <div class="pf-tags" id="pf-tags"></div>
-        <h3>Biografía</h3>
-        <p class="pf-bio" id="pf-bio"></p>
-        <div id="pf-setup-wrap"><h3>Hardware y setup</h3><div class="pf-tags" id="pf-setup"></div></div>
+        <div class="pf-head">
+          <h2 id="pf-name"></h2>
+          <p class="pf-title" id="pf-title" hidden></p>
+          <p class="pf-handle" id="pf-handle"></p>
+          <div class="pf-tags" id="pf-tags"></div>
+        </div>
+        <div class="pf-actions">
+          <button class="primary" id="pf-edit" hidden>Editar perfil</button>
+          <button id="pf-statslink" hidden>Ver estadísticas</button>
+        </div>
+      </div>
+    </header>
+    <div class="pf-grid">
+      <aside class="pf-side">
+        <div class="pf-box"><h3>Biografía</h3><p class="pf-bio" id="pf-bio"></p></div>
+        <div class="pf-box" id="pf-setup-wrap"><h3>Hardware y setup</h3><div class="pf-tags" id="pf-setup"></div></div>
+        <div class="pf-box"><h3>Expediente</h3><dl id="pf-file"></dl></div>
       </aside>
       <div class="pf-main">
         <div class="pf-stats" id="pf-stats"></div>
-        <div class="pf-boxes">
-          <div class="pf-box"><h3>Expediente</h3><dl id="pf-file"></dl></div>
-          <div class="pf-box"><h3>Medallas <button class="link" id="pf-allmedals">Ver todas</button></h3><div class="pf-medals" id="pf-medals"></div></div>
+        <div class="pf-box">
+          <h3>Medallas <small id="pf-medal-count"></small><button class="link" id="pf-allmedals">Ver vitrina completa</button></h3>
+          <div class="pf-medals" id="pf-medals"></div>
         </div>
         <div class="pf-box">
-          <h3>Historial <button class="link" id="pf-statslink" hidden>Ver estadísticas</button></h3>
+          <h3>Historial</h3>
           <table class="table plain"><thead><tr><th id="pf-th">Vel.</th><th>Texto</th><th>Fecha</th><th></th></tr></thead><tbody id="pf-history"></tbody></table>
           <div class="pager"><button id="pf-prev">Anterior</button><span id="pf-page"></span><button id="pf-next">Siguiente</button></div>
         </div>
@@ -160,30 +172,106 @@
     </div>
   </form>
 </dialog>
-<dialog id="me">
-  <form id="me-form" method="dialog">
-    <h2>Tu cuenta</h2>
-    <div class="modes">
-      <button type="button" id="me-photo-btn">Cambiar foto</button>
-      <button type="button" id="me-photo-del">Quitar foto</button>
-      <input type="file" id="me-photo" accept="image/*" hidden>
+<dialog id="me" class="wide">
+  <form id="me-form" class="ed" method="dialog">
+    <header class="ed-head">
+      <h2>Editar perfil</h2>
+      <button type="button" class="ghost" id="me-close" aria-label="Cerrar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </header>
+    <div class="ed-body">
+      <nav class="ed-tabs" role="tablist" aria-label="Secciones del perfil" aria-orientation="vertical">
+        <button type="button" role="tab" data-tab="identidad" aria-selected="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5"/></svg>Identidad</button>
+        <button type="button" role="tab" data-tab="setup" aria-selected="false" tabindex="-1"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="11"/><path d="M7 11h.01M11 11h.01M15 11h.01M7 15h10"/></svg>Setup</button>
+        <button type="button" role="tab" data-tab="insignias" aria-selected="false" tabindex="-1"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"/></svg>Insignias<i id="ed-count">0/6</i></button>
+        <button type="button" role="tab" data-tab="estilo" aria-selected="false" tabindex="-1"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4-1 10-10-3-3L5 16z"/><path d="M14 7l3 3"/></svg>Estilo</button>
+      </nav>
+      <div class="ed-panels">
+        <section class="ed-panel" data-panel="identidad">
+          <div class="ed-photo">
+            <div class="av big" id="me-av"></div>
+            <div>
+              <div class="modes">
+                <button type="button" id="me-photo-btn">Cambiar foto</button>
+                <button type="button" id="me-photo-del">Quitar foto</button>
+              </div>
+              <p class="note">Se recorta cuadrada. La foto se guarda al instante.</p>
+              <input type="file" id="me-photo" accept="image/*" hidden>
+            </div>
+          </div>
+          <label class="fld">Nombre para mostrar <em data-count="name"></em>
+            <input id="me-name" maxlength="15" required>
+          </label>
+          <label class="fld">Título <em data-count="title"></em>
+            <input id="me-title" maxlength="28" placeholder="Una línea que te describa">
+          </label>
+          <label class="fld">Biografía <em data-count="bio"></em>
+            <textarea id="me-bio" maxlength="150" rows="3" placeholder="Contá algo sobre vos"></textarea>
+          </label>
+          <label class="fld">País
+            <select id="me-country"></select>
+          </label>
+        </section>
+        <section class="ed-panel" data-panel="setup" hidden>
+          <div class="fld">Distribución del teclado
+            <div class="chips-row" id="ed-layouts"></div>
+          </div>
+          <label class="fld">Teclado o switches
+            <input id="me-switches" maxlength="30" placeholder="Ej.: Keychron Q1, switches marrones">
+          </label>
+          <label class="fld">Usuario de Discord
+            <input id="me-discord" maxlength="32" placeholder="usuario">
+          </label>
+          <label class="fld">Sitio web
+            <input id="me-website" maxlength="80" inputmode="url" placeholder="tusitio.com">
+          </label>
+        </section>
+        <section class="ed-panel" data-panel="insignias" hidden>
+          <h3>Tu vitrina</h3>
+          <p class="note">La primera va junto a tu nombre. Arrastralas o usá las flechas para ordenarlas.</p>
+          <div class="slots" id="ed-slots"></div>
+          <h3>Obtenidas</h3>
+          <div class="pool" id="ed-pool"></div>
+          <p class="note" id="ed-locked-wrap">Te faltan <b id="ed-locked-n">0</b> por desbloquear. <button type="button" class="link plain" id="ed-vitrina">Ver cómo conseguirlas</button></p>
+        </section>
+        <section class="ed-panel" data-panel="estilo" hidden>
+          <div class="fld">Color del perfil <em id="ed-accent-name"></em>
+            <div class="swatches" id="ed-accents"></div>
+          </div>
+          <div class="fld">Fondo de la cabecera
+            <div class="opts" id="ed-banners"></div>
+          </div>
+          <div class="fld">Forma de la foto
+            <div class="opts" id="ed-shapes"></div>
+          </div>
+        </section>
+      </div>
+      <aside class="ed-side" aria-label="Vista previa">
+        <h3>Vista previa</h3>
+        <div class="pv" id="ed-preview" data-accent="ambar" data-shape="cuadrada">
+          <i class="pf-banner" data-banner="liso"></i>
+          <div class="pv-id">
+            <div class="pf-avatar" id="pv-avatar"></div>
+            <b id="pv-name"></b>
+            <p class="pf-title" id="pv-title" hidden></p>
+            <p class="pf-handle" id="pv-handle"></p>
+          </div>
+          <div class="pf-tags" id="pv-tags"></div>
+          <p class="pf-bio" id="pv-bio"></p>
+          <div class="pv-medals" id="pv-medals"></div>
+        </div>
+      </aside>
     </div>
-    <input id="me-name" placeholder="Nombre" maxlength="15" required>
-    <textarea id="me-bio" placeholder="Biografía, hasta 150 caracteres" maxlength="150" rows="3"></textarea>
-    <select id="me-country"></select>
-    <select id="me-layout">
-      <option value="">Distribución del teclado</option>
-      <option>QWERTY</option><option>Dvorak</option><option>Colemak</option><option>Otro</option>
-    </select>
-    <input id="me-switches" placeholder="Teclado o switches" maxlength="30">
-    <input id="me-discord" placeholder="Usuario de Discord" maxlength="32">
-    <h3>Medallas a lucir, hasta 6</h3>
-    <div class="pick-grid" id="me-medals"></div>
-    <p id="me-error" role="alert"></p>
-    <div class="modes">
-      <button class="primary">Guardar</button>
-      <button type="button" id="me-close">Cerrar</button>
-    </div>
+    <footer class="ed-foot">
+      <p id="me-error" role="alert"></p>
+      <div class="ed-confirm" id="ed-confirm" hidden>
+        <span>Tenés cambios sin guardar.</span>
+        <button type="button" id="ed-keep">Seguir editando</button>
+        <button type="button" class="bad" id="ed-discard">Descartar</button>
+      </div>
+      <span class="ed-dirty" id="ed-dirty" hidden>Cambios sin guardar</span>
+      <button type="button" id="me-cancel">Cancelar</button>
+      <button class="primary">Guardar cambios</button>
+    </footer>
   </form>
 </dialog>
 <dialog id="crop">
@@ -198,10 +286,24 @@
   <p id="preview-body" class="preview-body"></p>
   <div class="modes"><button class="primary" id="preview-play">Jugar este texto</button><button id="preview-close">Cerrar</button></div>
 </dialog>
-<dialog id="medals">
-  <h2>Medallas</h2>
-  <ul class="medal-list" id="medals-list"></ul>
-  <div class="modes"><button id="medals-close">Cerrar</button></div>
+<dialog id="medals" class="wide">
+  <div class="vt">
+    <header class="vt-head">
+      <div>
+        <h2>Vitrina de medallas</h2>
+        <div class="vt-meter"><i id="vt-fill"></i></div>
+        <p class="note" id="vt-count"></p>
+      </div>
+      <button type="button" class="ghost" id="medals-close" aria-label="Cerrar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </header>
+    <div class="seg vt-filter" id="vt-filter">
+      <button type="button" class="on" data-f="all">Todas <i id="vt-all"></i></button>
+      <button type="button" data-f="got">Obtenidas <i id="vt-got"></i></button>
+      <button type="button" data-f="miss">Bloqueadas <i id="vt-miss"></i></button>
+    </div>
+    <div class="vt-body" id="medals-list"></div>
+    <p class="note vt-secret" id="vt-secret"></p>
+  </div>
 </dialog>
 <dialog id="news">
   <h2 id="news-title"></h2>

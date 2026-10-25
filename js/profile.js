@@ -1,13 +1,8 @@
 import { avatarInner } from './avatar.js';
+import { $, esc, svg, icons, medalImg, countBadge } from './ui.js';
+import { setVitrina } from './vitrina.js';
 
-const $ = (sel) => document.querySelector(sel);
-export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-
-const svg = (d) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
-const seal = '<path d="M12 3l2.4 1.8 3-.2 1 2.8 2.5 1.7-.9 2.9.9 2.9-2.5 1.7-1 2.8-3-.2L12 21l-2.4-1.8-3 .2-1-2.8-2.5-1.7.9-2.9-.9-2.9 2.5-1.7 1-2.8 3 .2z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>';
-const medalIcon = (m) => `<img src="img/medals/${esc(m.icon)}.svg" alt="" loading="lazy">`;
-const countBadge = (m) => (m.stackable && m.count > 1 ? `<i class="count">${m.count}</i>` : '');
-const replayIcon = svg('<path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/>');
+export { esc };
 
 function standing(p) {
   const normal = p.rank && p.rank <= 10 ? { text: '#' + p.rank, n: p.rank, hc: false } : null;
@@ -17,24 +12,43 @@ function standing(p) {
   return normal || hard;
 }
 
+const siteName = (href) => {
+  try { return new URL(href).hostname.replace(/^www\./, ''); } catch { return href; }
+};
+
 export function renderProfile(p, { speed, unit, textLabel, isMe }) {
   const rank = standing(p);
+  const earned = p.medals.filter((m) => m.earned);
+  const chosen = p.shown.map((id) => earned.find((m) => m.id === id)).filter(Boolean);
+  const shown = chosen.length ? chosen : earned.slice(0, 6);
+
+  const root = $('#profile');
+  root.dataset.accent = p.accent || 'ambar';
+  $('#pf-hero .pf-banner').dataset.banner = p.banner || 'liso';
+  $('#pf-hero').dataset.shape = p.shape || 'cuadrada';
+
   $('#pf-avatar').className = 'pf-avatar' + (rank ? (rank.dual ? ' tier-dual' : ` tier-${rank.n <= 3 ? rank.n : 10}${rank.hc ? ' hc' : ''}`) : '');
   $('#pf-initial').innerHTML = avatarInner(p);
-  $('#pf-statslink').hidden = !isMe;
   $('#pf-badge').hidden = !rank;
   $('#pf-badge').textContent = rank ? rank.text : '';
-  const mark = p.verified ? `<span class="vf" title="${p.verified === 2 ? 'Servidor' : 'Verificado'}">${svg(seal)}</span>` : '';
-  $('#pf-name').innerHTML = esc(p.name) + mark;
+
+  const mark = p.verified ? `<span class="vf" title="${p.verified === 2 ? 'Servidor' : 'Verificado'}">${svg(icons.seal)}</span>` : '';
+  const star = chosen[0] ? `<span class="feat" title="${esc(chosen[0].name)}">${medalImg(chosen[0])}</span>` : '';
+  $('#pf-name').innerHTML = `${esc(p.name)}${mark}${star}`;
+  $('#pf-title').textContent = p.title || '';
+  $('#pf-title').hidden = !p.title;
   $('#pf-handle').textContent = '@' + p.handle;
   $('#pf-edit').hidden = !isMe;
+  $('#pf-statslink').hidden = !isMe;
 
   const tags = [`<span class="tag accent">${p.role === 'admin' ? 'Admin' : 'Piloto'}</span>`];
   if (p.country) tags.push(`<span class="tag">${esc(p.country)}</span>`);
   if (p.discord) tags.push(`<button class="tag" data-copy="${esc(p.discord)}" title="Copiar usuario">Discord: ${esc(p.discord)}</button>`);
+  if (p.website) tags.push(`<a class="tag" href="${esc(p.website)}" target="_blank" rel="noopener noreferrer nofollow">${esc(siteName(p.website))} ${svg(icons.link)}</a>`);
   $('#pf-tags').innerHTML = tags.join('');
 
   $('#pf-bio').textContent = p.bio || 'Este piloto todavía no escribió su historia.';
+  $('#pf-bio').classList.toggle('blank', !p.bio);
   const setup = [p.layout, p.switches].filter(Boolean);
   $('#pf-setup-wrap').hidden = !setup.length;
   $('#pf-setup').innerHTML = setup.map((s) => `<span class="tag">${esc(s)}</span>`).join('');
@@ -53,22 +67,21 @@ export function renderProfile(p, { speed, unit, textLabel, isMe }) {
     ['Eliminaciones en Hardcore', p.deaths],
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
 
-  const earned = p.medals.filter((m) => m.earned);
-  const chosen = p.shown.map((id) => earned.find((m) => m.id === id)).filter(Boolean);
-  const shown = chosen.length ? chosen : earned.slice(0, 6);
-  $('#pf-medals').innerHTML = shown.length
-    ? shown.map((m) => `<div class="medal" title="${esc(m.desc)}">${medalIcon(m)}<span>${esc(m.name)}</span>${countBadge(m)}</div>`).join('')
-    : '<p class="note">Todavía no hay medallas.</p>';
-  $('#medals-list').innerHTML = p.medals.map((m) =>
-    `<li class="${m.earned ? '' : 'off'}">${medalIcon(m)}<div><b>${esc(m.name)}</b><small>${esc(m.desc)}</small></div>${m.earned ? countBadge(m) : ''}</li>`
-  ).join('');
+  const slots = shown.map((m) => `<button type="button" class="medal" data-open="vitrina" title="${esc(m.desc)}">${medalImg(m)}<span>${esc(m.name)}</span>${countBadge(m)}</button>`);
+  if (isMe && earned.length) {
+    while (slots.length < 6) slots.push(`<button type="button" class="medal empty" data-open="editor" title="Elegir medallas para lucir">${svg(icons.plus)}<span>Libre</span></button>`);
+  }
+  $('#pf-medals').innerHTML = slots.length ? slots.join('') : '<p class="note">Todavía no hay medallas.</p>';
+  $('#pf-medal-count').textContent = `${earned.length} de ${p.medals.length}`;
+
+  setVitrina(p.medals, p.secretLeft);
   $('#pf-th').textContent = 'Vel. ' + unit;
 }
 
 export function renderHistory({ rows, total }, page, { speed, textLabel }) {
   $('#pf-history').innerHTML = rows.length
     ? rows.map((r) => `<tr><td><b>${speed(r.cpm)}</b></td><td><button class="link plain" data-text="${r.text_id}">${esc(textLabel(r.text_id))}</button></td><td>${new Date(r.at).toLocaleDateString('es-AR')}</td>
-        <td><button class="ghost" data-ghost="${r.text_id}" data-cpm="${r.cpm}" title="Competir contra esta marca" aria-label="Competir contra esta marca">${replayIcon}</button></td></tr>`).join('')
+        <td><button class="ghost" data-ghost="${r.text_id}" data-cpm="${r.cpm}" title="Competir contra esta marca" aria-label="Competir contra esta marca">${svg(icons.replay)}</button></td></tr>`).join('')
     : '<tr><td colspan="4" class="empty">Todavía no hay carreras.</td></tr>';
   const pages = Math.max(1, Math.ceil(total / 10));
   $('#pf-page').textContent = `Página ${page + 1} de ${pages}`;

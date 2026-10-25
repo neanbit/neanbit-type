@@ -4,7 +4,9 @@ import './account.js';
 import './site.js';
 import { api } from './api.js';
 import { renderStats } from './stats.js';
-import { renderProfile, renderHistory, esc } from './profile.js';
+import { renderProfile, renderHistory } from './profile.js';
+import { openVitrina } from './vitrina.js';
+import { esc } from './ui.js';
 import { avatarInner } from './avatar.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -337,8 +339,13 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('.gear-wrap')) $('#more-menu').hidden = true;
   if (!e.target.closest('#units')) $('#units').classList.remove('open');
 });
-$('#pf-allmedals').onclick = () => $('#medals').showModal();
-$('#medals-close').onclick = () => $('#medals').close();
+$('#pf-allmedals').onclick = openVitrina;
+$('#pf-medals').onclick = (e) => {
+  const slot = e.target.closest('[data-open]');
+  if (!slot) return;
+  if (slot.dataset.open === 'editor') document.dispatchEvent(new CustomEvent('edit-profile', { detail: 'insignias' }));
+  else openVitrina();
+};
 $('#pf-search').oninput = () => { clearTimeout(searchPilots.timer); searchPilots.timer = setTimeout(searchPilots, 250); };
 $('#pf-results').onclick = (e) => {
   const row = e.target.closest('li[data-handle]');

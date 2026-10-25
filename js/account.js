@@ -1,14 +1,21 @@
 import { api } from './api.js';
 import { load } from './store.js';
 import { avatarInner } from './avatar.js';
-import { openCrop } from './crop.js';
+import { initEditor, openEditor } from './editor.js';
+import { $, esc } from './ui.js';
 
-const $ = (sel) => document.querySelector(sel);
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const speed = (cpm) => (load('unit', 'cpm') === 'wpm' ? Math.round(cpm / 5) : cpm);
 
 let user = null;
 let registering = false;
+
+initEditor({
+  user: () => user,
+  saved: async () => {
+    await refreshUser();
+    if (!$('#profile').hidden) viewProfile(user.handle);
+  },
+});
 
 async function refreshUser() {
   try { user = (await api.me()).user; } catch { user = null; }
@@ -41,33 +48,6 @@ export async function refreshRanking() {
   }
 }
 
-const countries = ['Argentina', 'Bolivia', 'Chile', 'Colombia', 'Costa Rica', 'Cuba', 'Ecuador', 'El Salvador', 'España', 'Estados Unidos', 'Guatemala', 'Honduras', 'México', 'Nicaragua', 'Panamá', 'Paraguay', 'Perú', 'República Dominicana', 'Uruguay', 'Venezuela', 'Otro país'];
-$('#me-country').innerHTML = '<option value="">País, opcional</option>' + countries.map((c) => `<option>${c}</option>`).join('');
-
-let picker = { medals: [], order: [] };
-
-function drawPicker() {
-  $('#me-medals').innerHTML = picker.medals.length
-    ? picker.medals.map((m) => {
-        const at = picker.order.indexOf(m.id);
-        return `<button type="button" class="pick${at > -1 ? ' on' : ''}" data-id="${esc(m.id)}"><img src="img/medals/${esc(m.icon)}.svg" alt="">${esc(m.name)}${at > -1 ? `<i class="count">${at + 1}</i>` : ''}</button>`;
-      }).join('')
-    : '<p class="note">Todavía no ganaste medallas para lucir.</p>';
-}
-
-async function openMe() {
-  for (const field of ['name', 'bio', 'country', 'layout', 'switches', 'discord']) $('#me-' + field).value = user[field] || '';
-  $('#me-error').textContent = '';
-  try {
-    const p = await api.profile(user.handle);
-    picker = { medals: p.medals.filter((m) => m.earned), order: [...p.shown] };
-  } catch {
-    picker = { medals: [], order: [] };
-  }
-  drawPicker();
-  $('#me').showModal();
-}
-
 function setMode(register) {
   registering = register;
   $('#auth-title').textContent = register ? 'Crear cuenta' : 'Ingresar';
@@ -91,57 +71,13 @@ for (const id of ['#rank-races', '#rank-avg']) {
   };
 }
 $('#races-scope').onchange = $('#avg-scope').onchange = refreshRanking;
-$('#pf-edit').onclick = openMe;
+$('#pf-edit').onclick = () => openEditor();
 $('#guest-login').onclick = () => $('#account').click();
-$('#me-photo-btn').onclick = () => $('#me-photo').click();
-$('#me-photo').onchange = (e) => {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  if (!file.type.startsWith('image/')) { $('#me-error').textContent = 'Elegí un archivo de imagen.'; return; }
-  openCrop(file, (image) => savePhoto(image));
-};
-$('#me-photo-del').onclick = () => savePhoto(null);
-
-async function savePhoto(image) {
-  try {
-    await api.saveAvatar(image);
-    await refreshUser();
-    if (!$('#profile').hidden) viewProfile(user.handle);
-  } catch (err) {
-    $('#me-error').textContent = err.message;
-  }
-}
 $('#nav-out').onclick = async () => {
   await api.logout().catch(() => {});
   await refreshUser();
 };
 document.addEventListener('units', refreshRanking);
-$('#me-close').onclick = () => $('#me').close();
-$('#me-medals').onclick = (e) => {
-  const id = e.target.closest('[data-id]')?.dataset.id;
-  if (!id) return;
-  const at = picker.order.indexOf(id);
-  if (at > -1) picker.order.splice(at, 1);
-  else if (picker.order.length < 6) picker.order.push(id);
-  else $('#me-error').textContent = 'Podés lucir hasta 6 medallas.';
-  drawPicker();
-};
-$('#me-form').onsubmit = async (e) => {
-  e.preventDefault();
-  const body = {};
-  for (const field of ['name', 'bio', 'country', 'layout', 'switches', 'discord']) body[field] = $('#me-' + field).value;
-  body.shown = picker.order;
-  try {
-    await api.saveProfile(body);
-    $('#me').close();
-    await refreshUser();
-    if (!$('#profile').hidden) viewProfile(user.handle);
-  } catch (err) {
-    $('#me-error').textContent = err.message;
-  }
-};
-
 $('#auth-form').onsubmit = async (e) => {
   e.preventDefault();
   const handle = $('#auth-handle').value.trim();

@@ -36,8 +36,11 @@ try { db.exec("alter table users add column avatar text not null default ''"); }
 try { db.exec('alter table users add column avatar_v integer not null default 0'); } catch {}
 try { db.exec('alter table users add column verified integer not null default 0'); } catch {}
 try { db.exec("alter table users add column shown text not null default '[]'"); } catch {}
-for (const col of ['bio', 'country', 'layout', 'switches', 'discord']) {
+for (const col of ['bio', 'country', 'layout', 'switches', 'discord', 'title', 'website']) {
   try { db.exec(`alter table users add column ${col} text not null default ''`); } catch {}
+}
+for (const [col, def] of [['accent', 'ambar'], ['banner', 'liso'], ['shape', 'cuadrada']]) {
+  try { db.exec(`alter table users add column ${col} text not null default '${def}'`); } catch {}
 }
 db.exec(`
   create table if not exists categories (
@@ -115,6 +118,7 @@ function maintenance() {
   }
 }
 
+const userCols = 'id, handle, name, hash, role, created, avatar_v, verified, shown, bio, country, layout, switches, discord, title, website, accent, banner, shape';
 const sha = (s) => createHash('sha256').update(s).digest('hex');
 const mime = { '.png': 'image/png', '.svg': 'image/svg+xml', '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
 const hits = new Map();
@@ -160,6 +164,21 @@ function profileStats(userId) {
   return { ...normal, ...hard };
 }
 
+const accents = ['ambar', 'celeste', 'menta', 'rosa', 'violeta', 'lima', 'hielo'];
+const banners = ['liso', 'rejilla', 'diagonal', 'puntos', 'teclas', 'ondas'];
+const shapes = ['cuadrada', 'redondeada', 'circulo'];
+const oneOf = (value, list) => (list.includes(value) ? value : list[0]);
+function cleanSite(raw) {
+  const text = String(raw ?? '').trim();
+  if (!text) return '';
+  try {
+    const url = new URL(/^https?:\/\//i.test(text) ? text : 'https://' + text);
+    if (!/^https?:$/.test(url.protocol) || !url.hostname.includes('.') || url.href.length > 80) return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
 const parseShown = (raw) => {
   try {
     const list = JSON.parse(raw);
@@ -169,6 +188,7 @@ const parseShown = (raw) => {
   }
 };
 
+const medalGroups = { races_total: 'Constancia', cpm_max: 'Velocidad', cpm_avg: 'Promedio', hc_races: 'Hardcore', hc_best: 'Hardcore', manual: 'Especiales' };
 function medalsOf(userId) {
   const s = profileStats(userId);
   s.avg = db.prepare('select coalesce(round(avg(cpm)), 0) as a from races where user_id = ? and hc = 0').get(userId).a;
@@ -177,8 +197,53 @@ function medalsOf(userId) {
   return db.prepare('select * from medals order by pos, rowid').all().map((m) => {
     const given = grants.get(m.id) || 0;
     const earned = m.condition === 'manual' ? given > 0 : (values[m.condition] || 0) >= m.target;
-    return { id: m.id, name: m.name, desc: m.description, icon: m.icon, stackable: !!m.stackable, secret: !!m.secret, earned, count: earned && m.stackable ? Math.max(given, 1) : 1 };
+    const manual = m.condition === 'manual';
+    return {
+      id: m.id, name: m.name, desc: m.description, icon: m.icon, stackable: !!m.stackable, secret: !!m.secret, earned,
+      count: earned && m.stackable ? Math.max(given, 1) : 1,
+      group: medalGroups[m.condition] || 'Especiales',
+      target: manual ? 0 : m.target, value: manual ? 0 : Math.min(values[m.condition] || 0, m.target),
+    };
   }).filter((m) => m.earned || !m.secret);
+}
+
+const minForAverage = 5;
+const cache = new Map();
+let version = 0;
+function memo(key, make, ttl = 20000) {
+  const hit = cache.get(key);
+  if (hit && hit.v === version && Date.now() - hit.at < ttl) return hit.data;
+  const data = make();
+  cache.set(key, { v: version, at: Date.now(), data });
+  return data;
+}
+
+function averages(window) {
+  return db.prepare(`
+    select u.handle, u.name, u.avatar_v as av, u.verified, round(avg(x.cpm)) as cpm, count(*) as races
+    from (select user_id, cpm, row_number() over (partition by user_id order by at desc) as rn
+          from races where hc = 0) x
+    join users u on u.id = x.user_id
+    where x.rn <= ? group by u.id having count(*) >= ? order by cpm desc, u.id`).all(window, minForAverage);
+}
+
+function homeSummary(userId, tz) {
+  const day = (t) => Math.floor((t - tz * 60000) / 86400000);
+  const today = day(Date.now());
+  const rows = db.prepare('select cpm, at from races where user_id = ? and hc = 0 order by at desc').all(userId);
+  const days = new Set(rows.map((r) => day(r.at)));
+  let streak = 0;
+  for (let d = days.has(today) ? today : today - 1; days.has(d); d--) streak++;
+  const last = rows.slice(0, 10);
+  const todayRows = rows.filter((r) => day(r.at) === today);
+  return {
+    races: rows.length,
+    best: rows.reduce((m, r) => Math.max(m, r.cpm), 0),
+    avg: last.length ? Math.round(last.reduce((a, r) => a + r.cpm, 0) / last.length) : 0,
+    today: todayRows.length,
+    todayBest: todayRows.reduce((m, r) => Math.max(m, r.cpm), 0),
+    streak, streakToday: days.has(today),
+  };
 }
 
 function rankOf(userId) {
@@ -208,7 +273,7 @@ function sessionUser(req) {
   const token = /(?:^|; )nt_session=([a-f0-9]{64})/.exec(req.headers.cookie || '')?.[1];
   if (!token) return null;
   return db.prepare(
-    'select u.* from sessions s join users u on u.id = s.user_id where s.token = ? and s.expires > ?'
+    `select ${userCols} from sessions s join users u on u.id = s.user_id where s.token = ? and s.expires > ?`
   ).get(sha(token), Date.now()) || null;
 }
 
@@ -220,6 +285,7 @@ function cookie(req, value, maxAge) {
 const publicUser = (u) => ({
   handle: u.handle, name: u.name, role: u.role, av: u.avatar_v,
   bio: u.bio, country: u.country, layout: u.layout, switches: u.switches, discord: u.discord,
+  title: u.title, website: u.website, accent: u.accent, banner: u.banner, shape: u.shape,
 });
 
 async function api(req, res, url) {
@@ -269,13 +335,17 @@ async function api(req, res, url) {
     const clean = (v, max) => String(v ?? '').trim().slice(0, max);
     const name = clean(b.name, 15);
     const layout = clean(b.layout, 10);
+    const website = cleanSite(b.website);
+    if (website === null) return send(res, 400, { error: 'El sitio web no es una dirección válida.' });
     if (!/^[\p{L}\p{N} _.-]{1,15}$/u.test(name)) return send(res, 400, { error: 'El nombre tiene hasta 15 caracteres.' });
     if (layout && !['QWERTY', 'Dvorak', 'Colemak', 'Otro'].includes(layout)) return send(res, 400, { error: 'Distribución inválida.' });
     const earned = new Set(medalsOf(me.id).filter((m) => m.earned).map((m) => m.id));
     const shown = Array.isArray(b.shown) ? [...new Set(b.shown)].filter((id) => earned.has(id)).slice(0, 6) : parseShown(me.shown);
-    db.prepare('update users set name = ?, bio = ?, country = ?, layout = ?, switches = ?, discord = ?, shown = ? where id = ?')
-      .run(name, clean(b.bio, 150), clean(b.country, 30), layout, clean(b.switches, 30), clean(b.discord, 32), JSON.stringify(shown), me.id);
-    return send(res, 200, { user: publicUser(db.prepare('select * from users where id = ?').get(me.id)) });
+    db.prepare(`update users set name = ?, bio = ?, country = ?, layout = ?, switches = ?, discord = ?, shown = ?,
+      title = ?, website = ?, accent = ?, banner = ?, shape = ? where id = ?`)
+      .run(name, clean(b.bio, 150), clean(b.country, 30), layout, clean(b.switches, 30), clean(b.discord, 32), JSON.stringify(shown),
+        clean(b.title, 28), website, oneOf(b.accent, accents), oneOf(b.banner, banners), oneOf(b.shape, shapes), me.id);
+    return send(res, 200, { user: publicUser(db.prepare(`select ${userCols} from users where id = ?`).get(me.id)) });
   }
 
   if (key === 'GET /api/me') return send(res, 200, { user: me && publicUser(me) });
@@ -300,7 +370,7 @@ async function api(req, res, url) {
   if (key === 'POST /api/login') {
     if (limited(ip)) return send(res, 429, { error: 'Demasiados intentos, esperá un minuto.' });
     const { handle = '', password = '' } = await readBody(req);
-    const user = db.prepare('select * from users where handle = ?').get(String(handle).toLowerCase());
+    const user = db.prepare(`select ${userCols} from users where handle = ?`).get(String(handle).toLowerCase());
     if (!user || typeof password !== 'string' || !checkPassword(password, user.hash))
       return send(res, 401, { error: 'Usuario o contraseña incorrectos.' });
     return startSession(req, res, user.id, 200);
@@ -322,6 +392,7 @@ async function api(req, res, url) {
     if (Date.now() - last < 3000) return send(res, 429, { error: 'Demasiado rápido.' });
     db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc) values (?, ?, ?, ?, ?, ?)')
       .run(me.id, textId, cpm, acc, Date.now(), hc);
+    version++;
     saveErrors(me.id, 'c', chars);
     saveErrors(me.id, 'w', words);
     return send(res, 201, { ok: true });
@@ -352,32 +423,48 @@ async function api(req, res, url) {
 
   if (key === 'GET /api/races/top') {
     const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
-    const rows = db.prepare(`
-      select u.handle, u.name, u.avatar_v as av, r.cpm, r.text_id
+    const rows = memo('top' + since, () => db.prepare(`
+      select u.handle, u.name, u.avatar_v as av, u.verified, r.cpm, r.text_id
       from races r join users u on u.id = r.user_id
-      where r.hc = 0 and r.at >= ? order by r.cpm desc limit 10`).all(since);
-    return send(res, 200, { rows });
+      where r.hc = 0 and r.at >= ? order by r.cpm desc, r.at limit 10`).all(since));
+    let mine = null;
+    if (me) {
+      const best = db.prepare('select max(cpm) as c from races where user_id = ? and hc = 0 and at >= ?').get(me.id, since).c;
+      if (best) mine = { pos: 1 + db.prepare('select count(distinct user_id) as n from races where hc = 0 and at >= ? and cpm > ?').get(since, best).n, cpm: best };
+    }
+    return send(res, 200, { rows, me: mine });
   }
 
   if (key === 'GET /api/ranking/average') {
     const window = url.searchParams.get('window') === 'all' ? 1000000 : 10;
-    const rows = db.prepare(`
-      select u.handle, u.name, u.avatar_v as av, round(avg(x.cpm)) as cpm,
-        (select count(*) from races r where r.user_id = u.id and r.hc = 0) as races
-      from (select user_id, cpm, row_number() over (partition by user_id order by at desc) as rn
-            from races where hc = 0) x
-      join users u on u.id = x.user_id
-      where x.rn <= ? group by u.id order by cpm desc limit 10`).all(window);
-    return send(res, 200, { rows });
+    const all = memo('avg' + window, () => averages(window));
+    const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
+    return send(res, 200, { rows: all.slice(0, 10), me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null, min: minForAverage });
   }
 
   if (key === 'GET /api/ranking') {
     const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
-    const rows = db.prepare(`
-      select u.handle, u.name, max(r.cpm) as cpm, count(*) as races
+    const hc = url.searchParams.get('mode') === 'hc' ? 1 : 0;
+    const all = memo(`rank${hc}-${since}`, () => db.prepare(`
+      select u.handle, u.name, u.avatar_v as av, u.verified, max(r.cpm) as cpm, count(*) as races
       from races r join users u on u.id = r.user_id
-      where r.at >= ? and r.hc = ? group by u.id order by cpm desc limit 20`).all(since, url.searchParams.get('mode') === 'hc' ? 1 : 0);
-    return send(res, 200, { rows });
+      where r.at >= ? and r.hc = ? group by u.id order by cpm desc, u.id`).all(since, hc));
+    const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
+    return send(res, 200, { rows: all.slice(0, 10), me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null });
+  }
+
+  if (key === 'GET /api/home') {
+    const tz = Math.max(-840, Math.min(840, Number(url.searchParams.get('tz')) || 0));
+    const dayStart = Date.now() - 86400000;
+    const community = memo('community', () => ({
+      users: db.prepare('select count(*) as n from users').get().n,
+      today: db.prepare('select count(*) as n from races where at >= ?').get(dayStart).n,
+    }));
+    const ids = memo('textids', () => db.prepare('select id from texts where active = 1 order by id').all().map((t) => t.id), 60000);
+    const dayNumber = Math.floor((Date.now() - tz * 60000) / 86400000);
+    const daily = ids.length ? ids[dayNumber % ids.length] : null;
+    const pulse = me ? { ...homeSummary(me.id, tz), rank: rankOf(me.id), hcRank: hcRankOf(me.id) } : null;
+    return send(res, 200, { community, daily, pulse, min: minForAverage });
   }
 
   if (key === 'GET /api/users') {
@@ -389,7 +476,7 @@ async function api(req, res, url) {
 
   const route = /^\/api\/users\/([a-z0-9_]{3,15})(\/races)?$/.exec(url.pathname);
   if (req.method === 'GET' && route) {
-    const user = db.prepare('select * from users where handle = ?').get(route[1]);
+    const user = db.prepare(`select ${userCols} from users where handle = ?`).get(route[1]);
     if (!user) return send(res, 404, { error: 'No existe ese piloto.' });
     if (route[2]) {
       const page = Math.max(0, Number(url.searchParams.get('page')) || 0);
@@ -398,6 +485,8 @@ async function api(req, res, url) {
       return send(res, 200, { rows, total });
     }
     const s = profileStats(user.id);
+    const medals = medalsOf(user.id);
+    const secretLeft = db.prepare('select count(*) as n from medals where secret = 1').get().n - medals.filter((m) => m.secret).length;
     const normal = db.prepare('select cpm from races where user_id = ? and hc = 0 order by at desc').all(user.id);
     const mean = (list) => (list.length ? Math.round(list.reduce((a, r) => a + r.cpm, 0) / list.length) : 0);
     const favorite = db.prepare('select text_id from races where user_id = ? and hc = 0 group by text_id order by count(*) desc limit 1').get(user.id);
@@ -405,11 +494,12 @@ async function api(req, res, url) {
       name: user.name, handle: user.handle, role: user.role, since: user.created, av: user.avatar_v,
       deaths: db.prepare('select count(*) as n from deaths where user_id = ?').get(user.id).n,
       bio: user.bio, country: user.country, layout: user.layout, switches: user.switches, discord: user.discord,
+      title: user.title, website: user.website, accent: user.accent, banner: user.banner, shape: user.shape,
       races: s.races, best: s.best, hcBest: s.hcBest,
       avg: mean(normal.slice(0, 10)), avgAll: mean(normal),
       favorite: favorite ? favorite.text_id : null,
       rank: rankOf(user.id), hcRank: hcRankOf(user.id),
-      verified: user.verified, shown: parseShown(user.shown), medals: medalsOf(user.id),
+      verified: user.verified, shown: parseShown(user.shown), medals, secretLeft,
     });
   }
 
@@ -421,7 +511,7 @@ function startSession(req, res, userId, status) {
   db.prepare('delete from sessions where expires < ?').run(Date.now());
   db.prepare('insert into sessions (token, user_id, expires) values (?, ?, ?)')
     .run(sha(token), userId, Date.now() + 30 * 86400000);
-  const user = db.prepare('select * from users where id = ?').get(userId);
+  const user = db.prepare(`select ${userCols} from users where id = ?`).get(userId);
   send(res, status, { user: publicUser(user) }, { 'set-cookie': cookie(req, token, 30 * 86400) });
 }
 
@@ -442,11 +532,12 @@ async function serveStatic(res, pathname) {
 }
 
 http.createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://localhost');
   try {
+    const url = new URL(req.url, 'http://localhost');
     if (url.pathname.startsWith('/api/')) await api(req, res, url);
     else await serveStatic(res, url.pathname);
   } catch (err) {
+    if (err instanceof TypeError && err.code === 'ERR_INVALID_URL') return send(res, 400, { error: 'Pedido inválido.' });
     if (err.message === 'json' || err.message === 'big') return send(res, 400, { error: 'Pedido inválido.' });
     console.error(err);
     send(res, 500, { error: 'Error interno.' });
