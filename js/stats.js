@@ -1,3 +1,5 @@
+import { api } from './api.js';
+
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const rows = [['qwertyuiop', 0], ['asdfghjklñ', .5], ['zxcvbnm', 1.1]];
@@ -5,6 +7,7 @@ const rows = [['qwertyuiop', 0], ['asdfghjklñ', .5], ['zxcvbnm', 1.1]];
 let data = null;
 let kit = null;
 let range = 30;
+let mode = 'all';
 
 const avg = (list) => (list.length ? list.reduce((a, v) => a + v, 0) / list.length : 0);
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -17,7 +20,14 @@ function kpis() {
   const before = cpm.length > 10 ? avg(cpm.slice(-20, -10)) : 0;
   const gap = before ? speed(Math.round(last)) - speed(Math.round(before)) : null;
   const trend = gap === null ? '' : `<em class="${gap >= 0 ? 'up' : 'down'}">${gap >= 0 ? '+' : ''}${gap} vs las 10 anteriores</em>`;
-  const cards = [
+  const d = data.duel;
+  const cards = mode === 'duel' ? [
+    ['Duelos', d.total, `${plural(d.wins, 'ganado', 'ganados')}, ${plural(d.losses, 'perdido', 'perdidos')}`, ''],
+    ['Victorias', d.rate + '%', 'de tus duelos', ''],
+    ['Racha', d.streak, `${d.streak === 1 ? 'victoria seguida' : 'victorias seguidas'}, mejor ${d.bestStreak}`, ''],
+    ['Récord', speed(d.best), unit + ' en duelo', ''],
+    ['Promedio', speed(d.avg), `${unit}, precisión ${d.acc}%`, ''],
+  ] : [
     ['Carreras', totals.races, 'en total', ''],
     ['Récord', speed(totals.best), unit, ''],
     ['Promedio', speed(Math.round(last)), `${unit}, últimas 10`, trend],
@@ -116,23 +126,46 @@ function words() {
   $('#s-train').hidden = data.words.length < 5;
 }
 
+function duels() {
+  const list = data.duel.recent;
+  $('#s-duel-list').innerHTML = list.map((r) => {
+    const label = r.win === null ? 'Sin ganador' : r.win ? (r.forfeit ? 'Ganado por abandono' : 'Ganado') : 'Perdido';
+    const mine = r.cpm === null ? '-' : kit.speed(r.cpm);
+    const theirs = r.rcpm === null ? '-' : kit.speed(r.rcpm);
+    return `<li class="${r.win ? 'won' : ''}"><b>${label}</b><span>contra ${esc(r.name)}</span><em>${mine} vs ${theirs} ${kit.unit}</em><small>${new Date(r.at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</small></li>`;
+  }).join('');
+}
+
 function draw() {
-  const empty = !data.totals.races;
+  const duel = mode === 'duel';
+  const empty = !data.totals.races && !(duel && data.duel.total);
+  document.querySelectorAll('#s-mode button').forEach((b) => b.classList.toggle('on', b.dataset.m === mode));
   $('#s-empty').hidden = !empty;
   $('#s-body').hidden = empty;
+  $('#s-empty-text').textContent = duel
+    ? 'Todavía no jugaste duelos. Desafiá a alguien desde Duelos y acá vas a ver tus resultados.'
+    : 'Todavía no hay carreras guardadas. Corré una y acá vas a ver cómo evolucionás.';
+  $('#s-first').hidden = duel;
   $('#s-since').textContent = data.totals.since
-    ? `Corriendo desde el ${new Date(data.totals.since).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}`
-    : 'Tu rendimiento';
+    ? `${duel ? 'Duelos' : 'Corriendo'} desde el ${new Date(data.totals.since).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}`
+    : (duel ? 'Tus duelos' : 'Tu rendimiento');
   if (empty) return;
+  document.querySelectorAll('#s-body .g-only').forEach((el) => { el.hidden = duel; });
+  $('#s-duel').hidden = !duel;
   kpis();
   chart();
   days();
   categories();
-  keyboard();
-  words();
+  if (duel) {
+    duels();
+  } else {
+    keyboard();
+    words();
+  }
 }
 
 export function renderStats(payload, helpers) {
+  mode = 'all';
   data = payload;
   kit = helpers;
   draw();
@@ -150,4 +183,15 @@ $('#s-range').onclick = (e) => {
   range = n;
   document.querySelectorAll('#s-range button').forEach((b) => b.classList.toggle('on', Number(b.dataset.n) === n));
   chart();
+};
+
+$('#s-mode').onclick = async (e) => {
+  const m = e.target.dataset.m;
+  if (!m || m === mode || !data) return;
+  try {
+    const next = await api.stats(m);
+    mode = m;
+    data = next;
+    draw();
+  } catch {}
 };

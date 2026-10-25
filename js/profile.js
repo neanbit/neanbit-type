@@ -16,7 +16,47 @@ const siteName = (href) => {
   try { return new URL(href).hostname.replace(/^www\./, ''); } catch { return href; }
 };
 
-export function renderProfile(p, { speed, unit, textLabel, isMe }) {
+let duelView = false;
+let duelFor = null;
+let lastDuel = null;
+
+function duelScope(p, opts) {
+  const { speed, unit } = opts;
+  if (duelFor !== p.handle) { duelFor = p.handle; duelView = false; }
+  lastDuel = { p, opts };
+  if (!$('#pf-scope')) {
+    const seg = document.createElement('div');
+    seg.className = 'seg d-seg';
+    seg.id = 'pf-scope';
+    seg.innerHTML = '<button data-m="all">General</button><button data-m="duel">Duelos</button>';
+    seg.onclick = (e) => {
+      const m = e.target.dataset.m;
+      if (!m || (m === 'duel') === duelView) return;
+      duelView = m === 'duel';
+      renderProfile(lastDuel.p, lastDuel.opts);
+    };
+    $('#pf-stats').before(seg);
+  }
+  document.querySelectorAll('#pf-scope button').forEach((b) => b.classList.toggle('on', (b.dataset.m === 'duel') === duelView));
+  if (!duelView || !p.duels) return;
+  const d = p.duels;
+  $('#pf-stats').innerHTML = [
+    ['Duelos', d.total, ''],
+    ['Victorias', d.wins, ''],
+    ['% ganados', d.rate + '%', ''],
+    ['Mejor en duelo', d.best ? speed(d.best) : 0, 'hot'],
+  ].map(([label, value, cls]) => `<div class="${cls}"><small>${label}</small><b>${value}</b></div>`).join('');
+  $('#pf-file').innerHTML = [
+    ['Derrotas', d.losses],
+    ['Racha actual', d.streak],
+    ['Mejor racha', d.bestStreak],
+    ['Ganados por abandono', d.byForfeit],
+    ['Promedio en duelo', d.avg ? `${speed(d.avg)} ${unit}` : '-'],
+  ].map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
+}
+
+export function renderProfile(p, opts) {
+  const { speed, unit, textLabel, isMe } = opts;
   const rank = standing(p);
   const earned = p.medals.filter((m) => m.earned);
   const chosen = p.shown.map((id) => earned.find((m) => m.id === id)).filter(Boolean);
@@ -66,6 +106,8 @@ export function renderProfile(p, { speed, unit, textLabel, isMe }) {
     ['Récord Hardcore', p.hcBest ? `${speed(p.hcBest)} ${unit}` : '-'],
     ['Eliminaciones en Hardcore', p.deaths],
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
+
+  duelScope(p, opts);
 
   const slots = shown.map((m) => `<button type="button" class="medal" data-open="vitrina" title="${esc(m.desc)}">${medalImg(m)}<span>${esc(m.name)}</span>${countBadge(m)}</button>`);
   if (isMe && earned.length) {

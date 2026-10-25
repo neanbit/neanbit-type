@@ -3,7 +3,7 @@ import { load } from './store.js';
 import { avatarInner } from './avatar.js';
 import { $, esc, svg, icons } from './ui.js';
 
-const scope = { races: 'today', avg: '10', hc: 'today' };
+const scope = { races: 'today', avg: '10', hc: 'today', duels: 'all' };
 const cache = {};
 let current = 'races';
 let me = null;
@@ -42,6 +42,14 @@ const boards = {
     empty: 'Nadie corrió en Hardcore todavía.',
     miss: 'Todavía no corriste en Hardcore en este período.',
   },
+  duels: {
+    scopes: [['today', '24 h'], ['all', 'Histórico']],
+    load: (v) => api.duelRanking(v),
+    sub: (r) => (r.duels ? `${plural(r.duels, 'duelo', 'duelos')}, ${Math.round((r.wins / r.duels) * 100)}% ganados` : 'Tus victorias'),
+    val: (r) => r.wins,
+    empty: 'Nadie ganó un duelo en este período.',
+    miss: 'Todavía no ganaste un duelo en este período.',
+  },
 };
 
 function row(board, r, pos, own) {
@@ -49,7 +57,7 @@ function row(board, r, pos, own) {
   return `<li data-handle="${esc(r.handle)}" class="${own ? 'me' : ''}"><span class="pos">${pos}</span>`
     + `<span class="av sm">${avatarInner(r)}</span>`
     + `<span class="nm"><b>${esc(r.name)}</b>${seal}<small>${esc(board.sub(r))}</small></span>`
-    + `<span class="val">${speed(r.cpm)}</span></li>`;
+    + `<span class="val">${board.val ? board.val(r) : speed(r.cpm)}</span></li>`;
 }
 
 function drawBoard() {
@@ -71,7 +79,7 @@ function drawBoard() {
     ? data.rows.map((r, i) => row(board, r, i + 1, i === mine)).join('')
     : `<li class="none">${board.empty}</li>`;
   if (me && data.me && mine < 0) {
-    html += '<li class="gap" aria-hidden="true"></li>' + row(board, { ...me, cpm: data.me.cpm }, data.me.pos, true);
+    html += '<li class="gap" aria-hidden="true"></li>' + row(board, { ...me, ...data.me }, data.me.pos, true);
   } else if (me && !data.me && data.rows.length) {
     note.textContent = typeof board.miss === 'function' ? board.miss() : board.miss;
   }

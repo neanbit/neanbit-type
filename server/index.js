@@ -167,6 +167,37 @@ function profileStats(userId) {
   return { ...normal, ...hard };
 }
 
+function duelSummary(userId, recent = 0) {
+  const rows = db.prepare(`
+    select d.winner_id, d.forfeit, d.at, u.handle, u.name,
+      case when d.a_id = ? then d.a_cpm else d.b_cpm end as cpm,
+      case when d.a_id = ? then d.a_acc else d.b_acc end as acc,
+      case when d.a_id = ? then d.b_cpm else d.a_cpm end as rcpm
+    from duels d join users u on u.id = case when d.a_id = ? then d.b_id else d.a_id end
+    where d.a_id = ? or d.b_id = ? order by d.at desc, d.id desc`).all(userId, userId, userId, userId, userId, userId);
+  const wins = rows.filter((r) => r.winner_id === userId);
+  const speeds = rows.map((r) => r.cpm).filter((v) => v !== null);
+  const accs = rows.map((r) => r.acc).filter((v) => v !== null);
+  let streak = 0;
+  while (streak < rows.length && rows[streak].winner_id === userId) streak++;
+  let best = 0, run = 0;
+  for (const r of [...rows].reverse()) { run = r.winner_id === userId ? run + 1 : 0; best = Math.max(best, run); }
+  const mean = (list) => (list.length ? Math.round(list.reduce((a, v) => a + v, 0) / list.length) : 0);
+  const out = {
+    total: rows.length, wins: wins.length, byForfeit: wins.filter((r) => r.forfeit).length,
+    losses: rows.filter((r) => r.winner_id && r.winner_id !== userId).length,
+    rate: rows.length ? Math.round((wins.length / rows.length) * 100) : 0,
+    streak, bestStreak: best, best: Math.max(0, ...speeds), avg: mean(speeds), acc: mean(accs),
+  };
+  if (recent) {
+    out.recent = rows.slice(0, recent).map((r) => ({
+      handle: r.handle, name: r.name, win: r.winner_id ? r.winner_id === userId : null,
+      forfeit: !!r.forfeit, cpm: r.cpm, rcpm: r.rcpm, at: r.at,
+    }));
+  }
+  return out;
+}
+
 const accents = ['ambar', 'celeste', 'menta', 'rosa', 'violeta', 'lima', 'hielo'];
 const banners = ['liso', 'rejilla', 'diagonal', 'puntos', 'teclas', 'ondas'];
 const shapes = ['cuadrada', 'redondeada', 'circulo'];
@@ -419,11 +450,18 @@ async function api(req, res, url) {
 
   if (key === 'GET /api/stats') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
-    const races = db.prepare('select cpm, acc, at, text_id, hc from races where user_id = ? and hc = 0 order by at desc limit 100').all(me.id).reverse();
+    const duelMode = url.searchParams.get('mode') === 'duel';
+    const races = db.prepare(`select cpm, acc, at, text_id, hc from races where user_id = ? and hc = 0 and duel ${duelMode ? '>' : '>='} 0 order by at desc limit 100`).all(me.id).reverse();
     const top = (kind, n) => db.prepare('select key, n from errors where user_id = ? and kind = ? order by n desc limit ?').all(me.id, kind, n);
     const deaths = db.prepare('select count(*) as n from deaths where user_id = ?').get(me.id).n;
     const t = profileStats(me.id);
-    const agg = db.prepare('select coalesce(round(avg(acc)), 0) as acc, min(at) as since from races where user_id = ? and hc = 0').get(me.id);
+    const agg = db.prepare(`select coalesce(round(avg(acc)), 0) as acc, min(at) as since, count(*) as n, coalesce(max(cpm), 0) as best from races where user_id = ? and hc = 0 and duel ${duelMode ? '>' : '>='} 0`).get(me.id);
+    if (duelMode) {
+      return send(res, 200, {
+        races, chars: [], words: [], deaths: 0, duel: duelSummary(me.id, 8),
+        totals: { races: agg.n, best: agg.best, hcRaces: 0, hcBest: 0, acc: agg.acc, since: agg.since },
+      });
+    }
     return send(res, 200, {
       races, chars: top('c', 40), words: top('w', 20), deaths,
       totals: { races: t.races, best: t.best, hcRaces: t.hcRaces, hcBest: t.hcBest, acc: agg.acc, since: agg.since },
@@ -460,6 +498,18 @@ async function api(req, res, url) {
       where r.at >= ? and r.hc = ? group by u.id order by cpm desc, u.id`).all(since, hc));
     const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
     return send(res, 200, { rows: all.slice(0, 10), me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null });
+  }
+
+  if (key === 'GET /api/ranking/duels') {
+    const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
+    const all = memo('duels-' + since, () => db.prepare(`
+      select u.handle, u.name, u.avatar_v as av, u.verified,
+        sum(case when p.winner_id = u.id then 1 else 0 end) as wins, count(*) as duels
+      from (select a_id as uid, winner_id, at from duels union all select b_id, winner_id, at from duels) p
+      join users u on u.id = p.uid where p.at >= ?
+      group by u.id having wins > 0 order by wins desc, (wins * 1.0 / count(*)) desc, u.id`).all(since));
+    const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
+    return send(res, 200, { rows: all.slice(0, 10), me: at > -1 ? { pos: at + 1, wins: all[at].wins, duels: all[at].duels } : null });
   }
 
   if (key === 'GET /api/home') {
@@ -509,6 +559,7 @@ async function api(req, res, url) {
       favorite: favorite ? favorite.text_id : null,
       rank: rankOf(user.id), hcRank: hcRankOf(user.id),
       verified: user.verified, shown: parseShown(user.shown), medals, secretLeft,
+      duels: duelSummary(user.id),
     });
   }
 

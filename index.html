@@ -86,6 +86,7 @@
           <button data-b="races" class="on">Carreras</button>
           <button data-b="avg">Promedios</button>
           <button data-b="hc">Hardcore</button>
+          <button data-b="duels">Duelos</button>
         </div>
         <div class="seg" id="board-scope"></div>
       </header>
@@ -233,8 +234,9 @@
       </div>
       <button id="stats-back">Volver</button>
     </header>
+    <div class="seg d-seg" id="s-mode"><button data-m="all" class="on">General</button><button data-m="duel">Duelos</button></div>
     <div id="s-empty" class="s-empty" hidden>
-      <p>Todavía no hay carreras guardadas. Corré una y acá vas a ver cómo evolucionás.</p>
+      <p id="s-empty-text">Todavía no hay carreras guardadas. Corré una y acá vas a ver cómo evolucionás.</p>
       <button class="primary" id="s-first">Correr una carrera</button>
     </div>
     <div id="s-body">
@@ -259,12 +261,17 @@
         </section>
       </div>
 
-      <section class="s-block">
+      <section class="s-block" id="s-duel" hidden>
+        <header><h3>Últimos duelos</h3></header>
+        <ul class="d-recent" id="s-duel-list"></ul>
+      </section>
+
+      <section class="s-block g-only">
         <header><h3>Teclas donde más fallás</h3></header>
         <div class="kb" id="s-keys"></div>
       </section>
 
-      <section class="s-block">
+      <section class="s-block g-only">
         <header><h3>Palabras que más te cuestan</h3><button id="s-train">Entrenar estos errores</button></header>
         <ol class="crit" id="s-words"></ol>
       </section>

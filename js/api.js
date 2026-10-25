@@ -20,7 +20,7 @@ export const api = {
   logout: () => call('/logout', {}),
   sendRace: (body) => call('/races', body),
   death: (textId) => call('/deaths', { textId }),
-  stats: () => call('/stats'),
+  stats: (mode) => call('/stats' + (mode === 'duel' ? '?mode=duel' : '')),
   best: (textId) => call('/best?textId=' + textId),
   userRaces: (handle, page) => call('/users/' + handle + '/races?page=' + page),
   searchUsers: (q) => call('/users?q=' + encodeURIComponent(q)),
@@ -28,5 +28,6 @@ export const api = {
   home: () => call('/home?tz=' + new Date().getTimezoneOffset()),
   topRaces: (scope) => call('/races/top?scope=' + scope),
   averages: (window) => call('/ranking/average?window=' + window),
+  duelRanking: (scope) => call('/ranking/duels?scope=' + scope),
   ranking: (scope, hc) => call('/ranking?scope=' + scope + (hc ? '&mode=hc' : '')),
 };
