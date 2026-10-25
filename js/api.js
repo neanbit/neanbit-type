@@ -11,6 +11,7 @@ async function call(path, body) {
 
 export const api = {
   me: () => call('/me'),
+  saveAvatar: (image) => call('/avatar', { image }),
   texts: () => call('/texts'),
   config: () => call('/config'),
   saveProfile: (body) => call('/profile', body),

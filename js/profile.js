@@ -1,17 +1,11 @@
+import { avatarInner } from './avatar.js';
+
 const $ = (sel) => document.querySelector(sel);
 export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 const svg = (d) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
-const medalIcons = {
-  play: '<path d="M7 5l11 7-11 7z"/>',
-  rows: '<path d="M5 8h14M5 12h14M5 16h14"/>',
-  gauge: '<path d="M4 17a8 8 0 0 1 16 0M12 17l4-5"/>',
-  bolt: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>',
-  shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
-  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
-};
 const seal = '<path d="M12 3l2.4 1.8 3-.2 1 2.8 2.5 1.7-.9 2.9.9 2.9-2.5 1.7-1 2.8-3-.2L12 21l-2.4-1.8-3 .2-1-2.8-2.5-1.7.9-2.9-.9-2.9 2.5-1.7 1-2.8 3 .2z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>';
-const medalIcon = (m) => svg(medalIcons[m.icon] || '<rect x="6" y="6" width="12" height="12"/>');
+const medalIcon = (m) => `<img src="img/medals/${esc(m.icon)}.svg" alt="" loading="lazy">`;
 const countBadge = (m) => (m.stackable && m.count > 1 ? `<i class="count">${m.count}</i>` : '');
 const replayIcon = svg('<path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/>');
 
@@ -26,7 +20,8 @@ function standing(p) {
 export function renderProfile(p, { speed, unit, textLabel, isMe }) {
   const rank = standing(p);
   $('#pf-avatar').className = 'pf-avatar' + (rank ? (rank.dual ? ' tier-dual' : ` tier-${rank.n <= 3 ? rank.n : 10}${rank.hc ? ' hc' : ''}`) : '');
-  $('#pf-initial').textContent = p.name.charAt(0).toUpperCase();
+  $('#pf-initial').innerHTML = avatarInner(p);
+  $('#pf-statslink').hidden = !isMe;
   $('#pf-badge').hidden = !rank;
   $('#pf-badge').textContent = rank ? rank.text : '';
   const mark = p.verified ? `<span class="vf" title="${p.verified === 2 ? 'Servidor' : 'Verificado'}">${svg(seal)}</span>` : '';
@@ -55,6 +50,7 @@ export function renderProfile(p, { speed, unit, textLabel, isMe }) {
     ['Registrado desde', new Date(p.since).toLocaleDateString('es-AR')],
     ['Texto favorito', p.favorite ? textLabel(p.favorite) : '-'],
     ['Récord Hardcore', p.hcBest ? `${speed(p.hcBest)} ${unit}` : '-'],
+    ['Eliminaciones en Hardcore', p.deaths],
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
 
   const earned = p.medals.filter((m) => m.earned);
@@ -71,7 +67,7 @@ export function renderProfile(p, { speed, unit, textLabel, isMe }) {
 
 export function renderHistory({ rows, total }, page, { speed, textLabel }) {
   $('#pf-history').innerHTML = rows.length
-    ? rows.map((r) => `<tr><td><b>${speed(r.cpm)}</b></td><td>${esc(textLabel(r.text_id))}</td><td>${new Date(r.at).toLocaleDateString('es-AR')}</td>
+    ? rows.map((r) => `<tr><td><b>${speed(r.cpm)}</b></td><td><button class="link plain" data-text="${r.text_id}">${esc(textLabel(r.text_id))}</button></td><td>${new Date(r.at).toLocaleDateString('es-AR')}</td>
         <td><button class="ghost" data-ghost="${r.text_id}" data-cpm="${r.cpm}" title="Competir contra esta marca" aria-label="Competir contra esta marca">${replayIcon}</button></td></tr>`).join('')
     : '<tr><td colspan="4" class="empty">Todavía no hay carreras.</td></tr>';
   const pages = Math.max(1, Math.ceil(total / 10));

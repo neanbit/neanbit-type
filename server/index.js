@@ -32,6 +32,8 @@ db.exec(`
     id integer primary key, user_id integer not null, text_id integer not null, at integer not null);
 `);
 db.exec('pragma journal_mode = wal; pragma busy_timeout = 5000;');
+try { db.exec("alter table users add column avatar text not null default ''"); } catch {}
+try { db.exec('alter table users add column avatar_v integer not null default 0'); } catch {}
 try { db.exec('alter table users add column verified integer not null default 0'); } catch {}
 try { db.exec("alter table users add column shown text not null default '[]'"); } catch {}
 for (const col of ['bio', 'country', 'layout', 'switches', 'discord']) {
@@ -60,16 +62,31 @@ seedMedals();
 if (admin) db.prepare("update users set role = 'admin' where handle = ?").run(admin);
 
 function seedMedals() {
-  if (db.prepare('select count(*) as n from medals').get().n) return;
-  const add = db.prepare('insert into medals (id, name, description, icon, condition, target, pos) values (?, ?, ?, ?, ?, ?, ?)');
+  const add = db.prepare('insert or ignore into medals (id, name, description, icon, condition, target, stackable, secret, pos) values (?, ?, ?, ?, ?, ?, ?, ?, ?)');
   [
-    ['primeros-pasos', 'Primeros pasos', 'Completar una carrera', 'play', 'races_total', 1],
-    ['constante', 'Constante', 'Completar 50 carreras', 'rows', 'races_total', 50],
-    ['ritmo', 'Ritmo', 'Llegar a 300 CPM', 'gauge', 'cpm_max', 300],
-    ['veloz', 'Veloz', 'Llegar a 450 CPM', 'bolt', 'cpm_max', 450],
-    ['sin-red', 'Sin red', 'Terminar 5 carreras en Hardcore', 'shield', 'hc_races', 5],
-    ['pulso-firme', 'Pulso firme', 'Llegar a 250 CPM en Hardcore', 'target', 'hc_best', 250],
-  ].forEach((m, i) => add.run(...m, i));
+    ['primeros-pasos', 'Primeros pasos', 'Completar una carrera', 'races_total', 1],
+    ['calentando', 'Calentando', 'Completar 10 carreras', 'races_total', 10],
+    ['constante', 'Constante', 'Completar 50 carreras', 'races_total', 50],
+    ['veterano', 'Veterano', 'Completar 250 carreras', 'races_total', 250],
+    ['leyenda-viva', 'Leyenda viva', 'Completar 1000 carreras', 'races_total', 1000],
+    ['ritmo', 'Ritmo', 'Llegar a 300 CPM', 'cpm_max', 300],
+    ['veloz', 'Veloz', 'Llegar a 450 CPM', 'cpm_max', 450],
+    ['relampago', 'Relámpago', 'Llegar a 600 CPM', 'cpm_max', 600],
+    ['sonico', 'Sónico', 'Llegar a 800 CPM', 'cpm_max', 800],
+    ['imparable', 'Imparable', 'Llegar a 1000 CPM', 'cpm_max', 1000],
+    ['estable', 'Estable', 'Promedio general de 250 CPM', 'cpm_avg', 250],
+    ['metronomo', 'Metrónomo', 'Promedio general de 400 CPM', 'cpm_avg', 400],
+    ['maquina', 'Máquina', 'Promedio general de 600 CPM', 'cpm_avg', 600],
+    ['sin-red', 'Sin red', 'Terminar 5 carreras en Hardcore', 'hc_races', 5],
+    ['superviviente', 'Superviviente', 'Terminar 25 carreras en Hardcore', 'hc_races', 25],
+    ['pulso-firme', 'Pulso firme', 'Llegar a 250 CPM en Hardcore', 'hc_best', 250],
+    ['sangre-fria', 'Sangre fría', 'Llegar a 500 CPM en Hardcore', 'hc_best', 500],
+    ['fundador', 'Fundador', 'Estuvo desde el principio', 'manual', 0],
+    ['campeon', 'Campeón', 'Ganar un torneo', 'manual', 0],
+    ['probador', 'Probador', 'Ayudó a encontrar errores', 'manual', 0],
+  ].forEach(([id, name, desc, cond, target], i) =>
+    add.run(id, name, desc, id, cond, target, id === 'campeon' ? 1 : 0, id === 'probador' ? 1 : 0, i));
+  db.exec("update medals set icon = id where icon in ('play', 'rows', 'gauge', 'bolt', 'shield', 'target')");
 }
 
 function seedTexts() {
@@ -107,12 +124,12 @@ function send(res, status, data, headers = {}) {
   res.end(JSON.stringify(data));
 }
 
-function readBody(req) {
+function readBody(req, limit = 10000) {
   return new Promise((ok, fail) => {
     let raw = '';
     req.on('data', (chunk) => {
       raw += chunk;
-      if (raw.length > 10000) { fail(new Error('big')); req.destroy(); }
+      if (raw.length > limit) { fail(new Error('big')); req.destroy(); }
     });
     req.on('end', () => {
       try { ok(raw ? JSON.parse(raw) : {}); } catch { fail(new Error('json')); }
@@ -201,7 +218,7 @@ function cookie(req, value, maxAge) {
 }
 
 const publicUser = (u) => ({
-  handle: u.handle, name: u.name, role: u.role,
+  handle: u.handle, name: u.name, role: u.role, av: u.avatar_v,
   bio: u.bio, country: u.country, layout: u.layout, switches: u.switches, discord: u.discord,
 });
 
@@ -209,6 +226,28 @@ async function api(req, res, url) {
   const key = `${req.method} ${url.pathname}`;
   const me = sessionUser(req);
   const ip = req.headers['cf-connecting-ip'] || req.socket.remoteAddress;
+
+  const photo = /^\/api\/avatar\/([a-z0-9_]{3,15})$/.exec(url.pathname);
+  if (req.method === 'GET' && photo) {
+    const row = db.prepare('select avatar from users where handle = ?').get(photo[1]);
+    if (!row || !row.avatar) { res.writeHead(404); return res.end(); }
+    res.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' });
+    return res.end(Buffer.from(row.avatar, 'base64'));
+  }
+
+  if (key === 'POST /api/avatar') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    const { image } = await readBody(req, 120000);
+    const prefix = 'data:image/jpeg;base64,';
+    if (image === null) {
+      db.prepare("update users set avatar = '', avatar_v = 0 where id = ?").run(me.id);
+      return send(res, 200, { ok: true });
+    }
+    if (typeof image !== 'string' || !image.startsWith(prefix) || image.length > 100000 || !/^[A-Za-z0-9+/=]+$/.test(image.slice(prefix.length)))
+      return send(res, 400, { error: 'La imagen no es válida.' });
+    db.prepare('update users set avatar = ?, avatar_v = ? where id = ?').run(image.slice(prefix.length), Date.now(), me.id);
+    return send(res, 200, { ok: true });
+  }
 
   if (key === 'GET /api/texts') {
     const categories = db.prepare('select name from categories order by pos, id').all().map((c) => c.name);
@@ -314,7 +353,7 @@ async function api(req, res, url) {
   if (key === 'GET /api/races/top') {
     const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
     const rows = db.prepare(`
-      select u.handle, u.name, r.cpm, r.text_id
+      select u.handle, u.name, u.avatar_v as av, r.cpm, r.text_id
       from races r join users u on u.id = r.user_id
       where r.hc = 0 and r.at >= ? order by r.cpm desc limit 10`).all(since);
     return send(res, 200, { rows });
@@ -323,7 +362,7 @@ async function api(req, res, url) {
   if (key === 'GET /api/ranking/average') {
     const window = url.searchParams.get('window') === 'all' ? 1000000 : 10;
     const rows = db.prepare(`
-      select u.handle, u.name, round(avg(x.cpm)) as cpm,
+      select u.handle, u.name, u.avatar_v as av, round(avg(x.cpm)) as cpm,
         (select count(*) from races r where r.user_id = u.id and r.hc = 0) as races
       from (select user_id, cpm, row_number() over (partition by user_id order by at desc) as rn
             from races where hc = 0) x
@@ -344,7 +383,7 @@ async function api(req, res, url) {
   if (key === 'GET /api/users') {
     const q = String(url.searchParams.get('q') || '').toLowerCase().replace(/[^\p{L}\p{N}_ .-]/gu, '');
     if (q.length < 2) return send(res, 200, { rows: [] });
-    const rows = db.prepare('select handle, name from users where handle like ? or lower(name) like ? limit 6').all(`%${q}%`, `%${q}%`);
+    const rows = db.prepare('select handle, name, avatar_v as av from users where handle like ? or lower(name) like ? limit 6').all(`%${q}%`, `%${q}%`);
     return send(res, 200, { rows });
   }
 
@@ -363,7 +402,8 @@ async function api(req, res, url) {
     const mean = (list) => (list.length ? Math.round(list.reduce((a, r) => a + r.cpm, 0) / list.length) : 0);
     const favorite = db.prepare('select text_id from races where user_id = ? and hc = 0 group by text_id order by count(*) desc limit 1').get(user.id);
     return send(res, 200, {
-      name: user.name, handle: user.handle, role: user.role, since: user.created,
+      name: user.name, handle: user.handle, role: user.role, since: user.created, av: user.avatar_v,
+      deaths: db.prepare('select count(*) as n from deaths where user_id = ?').get(user.id).n,
       bio: user.bio, country: user.country, layout: user.layout, switches: user.switches, discord: user.discord,
       races: s.races, best: s.best, hcBest: s.hcBest,
       avg: mean(normal.slice(0, 10)), avgAll: mean(normal),
@@ -387,7 +427,7 @@ function startSession(req, res, userId, status) {
 
 async function serveStatic(res, pathname) {
   const clean = pathname === '/' ? '/index.html' : pathname;
-  if (!/^\/(index\.html|css\/[\w.-]+|js\/[\w.-]+|img\/[\w.-]+)$/.test(clean)) {
+  if (!/^\/(index\.html|css\/[\w.-]+|js\/[\w.-]+|img\/(?:medals\/)?[\w.-]+)$/.test(clean)) {
     res.writeHead(404);
     return res.end('No encontrado');
   }

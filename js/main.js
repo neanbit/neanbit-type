@@ -5,6 +5,7 @@ import './site.js';
 import { api } from './api.js';
 import { renderStats } from './stats.js';
 import { renderProfile, renderHistory, esc } from './profile.js';
+import { avatarInner } from './avatar.js';
 
 const $ = (sel) => document.querySelector(sel);
 let texts = [];
@@ -22,6 +23,7 @@ const state = {
   errorWords: [],
   ghost: 0,
   me: null,
+  active: 0,
   text: null,
   timer: 0,
 };
@@ -40,6 +42,8 @@ async function loadCatalog() {
 
 function show(name) {
   document.body.classList.toggle('profile-view', name === 'profile');
+  $('#more-menu').hidden = true;
+  $('#units').classList.remove('open');
   screens.forEach((s) => ($('#' + s).hidden = s !== name));
   if (name === 'race') typing.focus();
 }
@@ -78,15 +82,27 @@ function renderPick() {
 
 function drawTarget() {
   const { engine } = state;
-  [...target.children].forEach((el, i) => {
-    el.className = 'w' + (i < engine.index ? ' done' : i === engine.index ? ' on' : '');
-    if (i !== engine.index) return;
-    const word = engine.words[i];
-    const ok = engine.matched(typing.value.slice(0, word.length));
-    const typed = typing.value.slice(0, word.length + 4);
-    const bad = Math.max(0, typed.length - ok);
-    el.innerHTML = `<span class="ok">${word.slice(0, ok)}</span><i class="caret"></i><span class="bad">${word.slice(ok, ok + bad)}</span>${word.slice(ok + bad)}`;
+  const words = target.children;
+  const previous = words[state.active];
+  if (previous && state.active !== engine.index) {
+    previous.textContent = engine.words[state.active];
+    previous.className = 'w done';
+  }
+  state.active = engine.index;
+  const el = words[engine.index];
+  if (!el) return;
+
+  const word = engine.words[engine.index];
+  const typed = typing.value.slice(0, word.length + 4);
+  const ok = engine.matched(typed);
+  const letters = word.split('').map((ch, i) => {
+    const cls = i < ok ? 'ok' : i < typed.length ? 'bad' : i === typed.length ? 'next' : '';
+    return `<span class="${cls}">${esc(ch)}</span>`;
   });
+  const extra = typed.length > word.length ? `<span class="bad extra">${esc(typed.slice(word.length))}</span>` : '';
+  const ready = ok === word.length && typed.length === word.length && !engine.isLast;
+  el.className = 'w on' + (ready ? ' ready' : '');
+  el.innerHTML = letters.join('') + extra;
 }
 
 function startRace(text, mode = 'normal', ghost = 0) {
@@ -102,6 +118,7 @@ function startRace(text, mode = 'normal', ghost = 0) {
   target.replaceChildren(...state.engine.words.map((w) => Object.assign(document.createElement('span'), { className: 'w', textContent: w })));
   typing.value = '';
   typing.className = '';
+  state.active = 0;
   $('#result').hidden = true;
   $('#r-time').textContent = '0';
   $('#r-live').textContent = '0';
@@ -191,7 +208,7 @@ async function searchPilots() {
   if (query.length < 2) { box.hidden = true; return; }
   const { rows } = await api.searchUsers(query).catch(() => ({ rows: [] }));
   box.innerHTML = rows.length
-    ? rows.map((r) => `<li data-handle="${esc(r.handle)}"><span class="av sm">${esc(r.name.charAt(0).toUpperCase())}</span>${esc(r.name)} <small>@${esc(r.handle)}</small></li>`).join('')
+    ? rows.map((r) => `<li data-handle="${esc(r.handle)}"><span class="av sm">${avatarInner(r)}</span>${esc(r.name)} <small>@${esc(r.handle)}</small></li>`).join('')
     : '<li class="none">No hay pilotos con ese nombre.</li>';
   box.hidden = false;
 }
@@ -246,6 +263,7 @@ function finish() {
   $('#r-flag').hidden = !(['normal', 'ghost'].includes(state.mode) && previous && cpm > previous);
   $('#r-acc').textContent = engine.accuracy() + '%';
   $('#r-total').textContent = engine.elapsed().toFixed(1);
+  $('#r-guest').hidden = !!state.me;
   $('#result').hidden = false;
   typing.blur();
 
@@ -304,6 +322,21 @@ document.addEventListener('profile', (e) => openProfile(e.detail));
 document.addEventListener('session', (e) => { state.me = e.detail ? e.detail.handle : null; });
 document.addEventListener('units', () => { if (!$('#profile').hidden) openProfile(view.handle); });
 $('#pf-back').onclick = goHome;
+$('#nav-more').onclick = () => {
+  const menu = $('#more-menu');
+  menu.hidden = !menu.hidden;
+  $('#nav-more').setAttribute('aria-expanded', String(!menu.hidden));
+};
+$('#more-menu').onclick = (e) => {
+  const item = e.target.closest('[data-fwd]');
+  if (!item) return;
+  $('#more-menu').hidden = true;
+  document.getElementById(item.dataset.fwd).click();
+};
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.gear-wrap')) $('#more-menu').hidden = true;
+  if (!e.target.closest('#units')) $('#units').classList.remove('open');
+});
 $('#pf-allmedals').onclick = () => $('#medals').showModal();
 $('#medals-close').onclick = () => $('#medals').close();
 $('#pf-search').oninput = () => { clearTimeout(searchPilots.timer); searchPilots.timer = setTimeout(searchPilots, 250); };
@@ -320,7 +353,20 @@ $('#pf-tags').onclick = (e) => {
   const copy = e.target.closest('[data-copy]');
   if (copy) navigator.clipboard.writeText(copy.dataset.copy).then(() => note('Usuario de Discord copiado.')).catch(() => {});
 };
+$('#pf-statslink').onclick = openStats;
+$('#preview-close').onclick = () => $('#preview').close();
 $('#pf-history').onclick = (e) => {
+  const link = e.target.closest('[data-text]');
+  if (link) {
+    const text = texts.find((t) => t.id === Number(link.dataset.text));
+    if (!text) return note('Ese texto ya no está disponible.');
+    $('#preview-title').textContent = textLabel(text.id);
+    $('#preview-meta').textContent = `${text.text.split(' ').length} palabras`;
+    $('#preview-body').textContent = text.text;
+    $('#preview-play').onclick = () => { $('#preview').close(); startRace(text); };
+    $('#preview').showModal();
+    return;
+  }
   const btn = e.target.closest('[data-ghost]');
   if (!btn) return;
   const text = texts.find((t) => t.id === Number(btn.dataset.ghost));
@@ -344,9 +390,15 @@ $('#cards').onclick = (e) => {
   if (card) startRace(texts.find((t) => t.id === Number(card.dataset.id)));
 };
 $('#units').onclick = (e) => {
-  if (!e.target.dataset.unit) return;
-  state.unit = e.target.dataset.unit;
-  save('unit', state.unit);
+  const unit = e.target.dataset.unit;
+  if (!unit) return;
+  if (unit === state.unit) {
+    $('#units').classList.toggle('open');
+    return;
+  }
+  $('#units').classList.remove('open');
+  state.unit = unit;
+  save('unit', unit);
   applyPrefs();
   document.dispatchEvent(new Event('units'));
 };

@@ -1,5 +1,7 @@
 import { api } from './api.js';
 import { load } from './store.js';
+import { avatarInner } from './avatar.js';
+import { openCrop } from './crop.js';
 
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -12,16 +14,17 @@ async function refreshUser() {
   try { user = (await api.me()).user; } catch { user = null; }
   $('#who-name').textContent = user ? user.name : 'Ingresar';
   $('#who-handle').textContent = user ? '@' + user.handle : 'Crear una cuenta';
-  $('#av').textContent = user ? user.name.charAt(0).toUpperCase() : 'n';
+  $('#av').innerHTML = user ? avatarInner(user) : 'n';
+  $('#guest').hidden = !!user;
   $('#nav-out').hidden = !user;
+  $('#menu-out').hidden = !user;
   document.dispatchEvent(new CustomEvent('session', { detail: user }));
   refreshRanking();
 }
 
 const viewProfile = (handle) => document.dispatchEvent(new CustomEvent('profile', { detail: handle }));
-const initial = (name) => esc(String(name).trim().charAt(0).toUpperCase());
 const mine = (r) => (user && user.handle === r.handle ? 'me' : '');
-const person = (r) => `<div class="who-cell"><span class="av sm">${initial(r.name)}</span>${esc(r.name)}</div>`;
+const person = (r) => `<div class="who-cell"><span class="av sm">${avatarInner(r)}</span>${esc(r.name)}</div>`;
 const emptyRow = (text) => `<tr><td colspan="4" class="empty">${text}</td></tr>`;
 
 export async function refreshRanking() {
@@ -47,7 +50,7 @@ function drawPicker() {
   $('#me-medals').innerHTML = picker.medals.length
     ? picker.medals.map((m) => {
         const at = picker.order.indexOf(m.id);
-        return `<button type="button" class="pick${at > -1 ? ' on' : ''}" data-id="${esc(m.id)}">${esc(m.name)}${at > -1 ? `<i class="count">${at + 1}</i>` : ''}</button>`;
+        return `<button type="button" class="pick${at > -1 ? ' on' : ''}" data-id="${esc(m.id)}"><img src="img/medals/${esc(m.icon)}.svg" alt="">${esc(m.name)}${at > -1 ? `<i class="count">${at + 1}</i>` : ''}</button>`;
       }).join('')
     : '<p class="note">Todavía no ganaste medallas para lucir.</p>';
 }
@@ -89,6 +92,26 @@ for (const id of ['#rank-races', '#rank-avg']) {
 }
 $('#races-scope').onchange = $('#avg-scope').onchange = refreshRanking;
 $('#pf-edit').onclick = openMe;
+$('#guest-login').onclick = () => $('#account').click();
+$('#me-photo-btn').onclick = () => $('#me-photo').click();
+$('#me-photo').onchange = (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { $('#me-error').textContent = 'Elegí un archivo de imagen.'; return; }
+  openCrop(file, (image) => savePhoto(image));
+};
+$('#me-photo-del').onclick = () => savePhoto(null);
+
+async function savePhoto(image) {
+  try {
+    await api.saveAvatar(image);
+    await refreshUser();
+    if (!$('#profile').hidden) viewProfile(user.handle);
+  } catch (err) {
+    $('#me-error').textContent = err.message;
+  }
+}
 $('#nav-out').onclick = async () => {
   await api.logout().catch(() => {});
   await refreshUser();
