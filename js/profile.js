@@ -35,7 +35,7 @@ function duelScope(p, opts) {
       duelView = m === 'duel';
       renderProfile(lastDuel.p, lastDuel.opts);
     };
-    $('#pf-stats').before(seg);
+    $('.pf-actions').prepend(seg);
   }
   document.querySelectorAll('#pf-scope button').forEach((b) => b.classList.toggle('on', (b.dataset.m === 'duel') === duelView));
   if (!duelView || !p.duels) return;

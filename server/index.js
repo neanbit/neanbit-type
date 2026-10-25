@@ -583,7 +583,7 @@ async function serveStatic(res, pathname) {
   }
   try {
     const file = await readFile(join(root, clean));
-    res.writeHead(200, { 'content-type': mime[extname(clean)] || 'application/octet-stream' });
+    res.writeHead(200, { 'content-type': mime[extname(clean)] || 'application/octet-stream', 'cache-control': 'no-cache' });
     res.end(file);
   } catch {
     res.writeHead(404);
