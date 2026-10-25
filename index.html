@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es" data-theme="neanbit">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>neanbit type</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Poppins:wght@400;500;600;700&display=swap">
+<link rel="icon" href="img/mark.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="bar">
+  <a class="logo" href="#" id="logo"><img src="img/mark.png" alt="" width="28" height="28"><span>type</span></a>
+  <div class="tools">
+    <button id="account">Ingresar</button>
+    <div class="seg" id="units">
+      <button data-unit="cpm">CPM</button>
+      <button data-unit="wpm">WPM</button>
+      <button data-unit="zen">Zen</button>
+    </div>
+    <select id="theme" aria-label="Tema">
+      <option value="neanbit">neanbit</option>
+      <option value="claro">Claro</option>
+      <option value="carbon">Carbón</option>
+    </select>
+  </div>
+</header>
+
+<main>
+  <section id="home">
+    <h1>Escribí rápido, sin mirar el teclado.</h1>
+    <div class="modes">
+      <button class="primary" id="go-random">Carrera aleatoria</button>
+      <button id="go-pick">Elegir texto</button>
+      <button class="hard" id="go-hc">Hardcore</button>
+      <button id="go-practice">Entrenar errores</button>
+      <button id="go-stats">Estadísticas</button>
+    </div>
+    <div class="summary">
+      <div><span id="h-best">0</span><small>récord</small></div>
+      <div><span id="h-avg">0</span><small>promedio, últimas 10</small></div>
+      <div><span id="h-count">0</span><small>carreras</small></div>
+    </div>
+    <div class="board">
+      <div class="row"><h2>Ranking</h2>
+        <select id="board-scope"><option value="today">Hoy</option><option value="all">Histórico</option><option value="hc">Hardcore</option></select>
+      </div>
+      <ol class="rank" id="ranking"></ol>
+    </div>
+    <ol class="history" id="h-list"></ol>
+  </section>
+
+  <section id="pick" hidden>
+    <div class="row">
+      <input id="search" type="search" placeholder="Buscar en los textos" autocomplete="off">
+      <button id="pick-back">Volver</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <ul class="cards" id="cards"></ul>
+  </section>
+
+  <section id="race" hidden>
+    <div class="hud">
+      <span><b id="r-time">0</b> s</span>
+      <span><b id="r-live">0</b> <em id="r-unit">CPM</em></span>
+    </div>
+    <div class="track"><i id="r-ghost"></i><i id="r-bar"></i></div>
+    <div class="text" id="target"></div>
+    <input id="typing" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Escribí acá">
+    <p class="hint">Tab reinicia, Esc vuelve al inicio</p>
+
+    <div class="result" id="result" hidden>
+      <p class="dead-msg">Eliminado. En Hardcore un error termina la carrera.</p>
+      <p class="flag" id="r-flag" hidden>Nuevo récord personal</p>
+      <div class="big"><span id="r-speed">0</span> <em id="r-speed-unit">CPM</em></div>
+      <p class="line"><span id="r-acc">100%</span> de precisión en <span id="r-total">0</span> s</p>
+      <div class="modes">
+        <button class="primary" id="r-next">Siguiente</button>
+        <button id="r-again">Repetir</button>
+        <button id="r-ghostbtn">Contra mi récord</button>
+        <button id="r-home">Inicio</button>
+      </div>
+    </div>
+  </section>
+  <section id="stats" hidden>
+    <div class="row"><h2>Tus estadísticas</h2><button id="stats-back">Volver</button></div>
+    <div class="summary" id="s-cards"></div>
+    <h3>Evolución de las últimas 30 carreras</h3>
+    <div class="chart" id="s-chart"></div>
+    <h3>Teclas donde más fallás</h3>
+    <div class="keys" id="s-keys"></div>
+    <h3>Palabras que más te cuestan</h3>
+    <ol class="rank" id="s-words"></ol>
+  </section>
+</main>
+<dialog id="auth">
+  <form id="auth-form" method="dialog">
+    <h2 id="auth-title">Ingresar</h2>
+    <input id="auth-handle" placeholder="Usuario" autocomplete="username" required>
+    <input id="auth-name" placeholder="Nombre para mostrar" maxlength="15" hidden>
+    <input id="auth-pass" type="password" placeholder="Contraseña" autocomplete="current-password" required>
+    <p id="auth-error" role="alert"></p>
+    <div class="modes">
+      <button class="primary" id="auth-submit">Ingresar</button>
+      <button type="button" id="auth-switch">Crear una cuenta</button>
+      <button type="button" id="auth-close">Cerrar</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="profile">
+  <div id="profile-body"></div>
+  <div class="modes"><button id="profile-close">Cerrar</button></div>
+</dialog>
+<p id="toast" role="status"></p>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
