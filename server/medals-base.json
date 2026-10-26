@@ -1,0 +1,185 @@
+[
+ {
+  "id": "primeros-pasos",
+  "name": "Primeros pasos",
+  "description": "Completar una carrera",
+  "icon": "primeros-pasos",
+  "tier": "bronce",
+  "condition": "races_total",
+  "target": 1
+ },
+ {
+  "id": "calentando",
+  "name": "Calentando",
+  "description": "Completar 10 carreras",
+  "icon": "calentando",
+  "tier": "bronce",
+  "condition": "races_total",
+  "target": 10
+ },
+ {
+  "id": "constante",
+  "name": "Constante",
+  "description": "Completar 50 carreras",
+  "icon": "constante",
+  "tier": "gris",
+  "condition": "races_total",
+  "target": 50
+ },
+ {
+  "id": "veterano",
+  "name": "Veterano",
+  "description": "Completar 250 carreras",
+  "icon": "veterano",
+  "tier": "oro",
+  "condition": "races_total",
+  "target": 250
+ },
+ {
+  "id": "leyenda-viva",
+  "name": "Leyenda viva",
+  "description": "Completar 1000 carreras",
+  "icon": "leyenda-viva",
+  "tier": "oro",
+  "condition": "races_total",
+  "target": 1000
+ },
+ {
+  "id": "ritmo",
+  "name": "Ritmo",
+  "description": "Llegar a 300 CPM",
+  "icon": "ritmo",
+  "tier": "bronce",
+  "condition": "cpm_max",
+  "target": 300
+ },
+ {
+  "id": "veloz",
+  "name": "Veloz",
+  "description": "Llegar a 450 CPM",
+  "icon": "veloz",
+  "tier": "gris",
+  "condition": "cpm_max",
+  "target": 450
+ },
+ {
+  "id": "relampago",
+  "name": "Relámpago",
+  "description": "Llegar a 600 CPM",
+  "icon": "relampago",
+  "tier": "oro",
+  "condition": "cpm_max",
+  "target": 600
+ },
+ {
+  "id": "sonico",
+  "name": "Sónico",
+  "description": "Llegar a 800 CPM",
+  "icon": "sonico",
+  "tier": "oro",
+  "condition": "cpm_max",
+  "target": 800
+ },
+ {
+  "id": "imparable",
+  "name": "Imparable",
+  "description": "Llegar a 1000 CPM",
+  "icon": "imparable",
+  "tier": "oro",
+  "condition": "cpm_max",
+  "target": 1000
+ },
+ {
+  "id": "estable",
+  "name": "Estable",
+  "description": "Promedio general de 250 CPM",
+  "icon": "estable",
+  "tier": "bronce",
+  "condition": "cpm_avg",
+  "target": 250
+ },
+ {
+  "id": "metronomo",
+  "name": "Metrónomo",
+  "description": "Promedio general de 400 CPM",
+  "icon": "metronomo",
+  "tier": "gris",
+  "condition": "cpm_avg",
+  "target": 400
+ },
+ {
+  "id": "maquina",
+  "name": "Máquina",
+  "description": "Promedio general de 600 CPM",
+  "icon": "maquina",
+  "tier": "oro",
+  "condition": "cpm_avg",
+  "target": 600
+ },
+ {
+  "id": "sin-red",
+  "name": "Sin red",
+  "description": "Terminar 5 carreras en Hardcore",
+  "icon": "sin-red",
+  "tier": "coral",
+  "condition": "hc_races",
+  "target": 5
+ },
+ {
+  "id": "superviviente",
+  "name": "Superviviente",
+  "description": "Terminar 25 carreras en Hardcore",
+  "icon": "superviviente",
+  "tier": "coral",
+  "condition": "hc_races",
+  "target": 25
+ },
+ {
+  "id": "pulso-firme",
+  "name": "Pulso firme",
+  "description": "Llegar a 250 CPM en Hardcore",
+  "icon": "pulso-firme",
+  "tier": "coral",
+  "condition": "hc_best",
+  "target": 250
+ },
+ {
+  "id": "sangre-fria",
+  "name": "Sangre fría",
+  "description": "Llegar a 500 CPM en Hardcore",
+  "icon": "sangre-fria",
+  "tier": "coral",
+  "condition": "hc_best",
+  "target": 500
+ },
+ {
+  "id": "fundador",
+  "name": "Fundador",
+  "description": "Estuvo desde el principio",
+  "icon": "fundador",
+  "tier": "blanco",
+  "condition": "manual",
+  "target": 0
+ },
+ {
+  "id": "campeon",
+  "name": "Campeón",
+  "description": "Ganar un torneo",
+  "icon": "campeon",
+  "tier": "oro",
+  "condition": "manual",
+  "target": 0,
+  "stackable": true,
+  "tourney": true
+ },
+ {
+  "id": "probador",
+  "name": "Probador",
+  "description": "Ayudó a encontrar errores",
+  "icon": "probador",
+  "tier": "blanco",
+  "condition": "manual",
+  "target": 0,
+  "secret": true
+ }
+]

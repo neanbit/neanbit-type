@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { scrypt as scryptCb, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
@@ -7,6 +8,7 @@ import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { seed } from './seed.js';
 import { createDuels } from './duels.js';
+import { CONDITIONS, ensureMedalSchema, groupOf, loadIcons, medalFile, medalValues, tierOf } from './medals.js';
 
 const scrypt = promisify(scryptCb);
 const root = join(fileURLToPath(import.meta.url), '..', '..');
@@ -64,36 +66,11 @@ db.exec(`
     primary key (user_id, medal_id));
 `);
 seedTexts();
-seedMedals();
+// Las medallas viven en la tabla `medals` (se crean y editan desde el panel). Solo una base nueva arranca con medals-base.json.
+db.exec("update medals set icon = id where icon in ('play', 'rows', 'gauge', 'bolt', 'shield', 'target')");
+ensureMedalSchema(db, JSON.parse(readFileSync(join(root, 'server', 'medals-base.json'), 'utf8')));
+const medalIcons = loadIcons(join(root, 'server', 'medal-icons'));
 if (admin) db.prepare("update users set role = 'admin' where handle = ?").run(admin);
-
-function seedMedals() {
-  const add = db.prepare('insert or ignore into medals (id, name, description, icon, condition, target, stackable, secret, pos) values (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-  [
-    ['primeros-pasos', 'Primeros pasos', 'Completar una carrera', 'races_total', 1],
-    ['calentando', 'Calentando', 'Completar 10 carreras', 'races_total', 10],
-    ['constante', 'Constante', 'Completar 50 carreras', 'races_total', 50],
-    ['veterano', 'Veterano', 'Completar 250 carreras', 'races_total', 250],
-    ['leyenda-viva', 'Leyenda viva', 'Completar 1000 carreras', 'races_total', 1000],
-    ['ritmo', 'Ritmo', 'Llegar a 300 CPM', 'cpm_max', 300],
-    ['veloz', 'Veloz', 'Llegar a 450 CPM', 'cpm_max', 450],
-    ['relampago', 'Relámpago', 'Llegar a 600 CPM', 'cpm_max', 600],
-    ['sonico', 'Sónico', 'Llegar a 800 CPM', 'cpm_max', 800],
-    ['imparable', 'Imparable', 'Llegar a 1000 CPM', 'cpm_max', 1000],
-    ['estable', 'Estable', 'Promedio general de 250 CPM', 'cpm_avg', 250],
-    ['metronomo', 'Metrónomo', 'Promedio general de 400 CPM', 'cpm_avg', 400],
-    ['maquina', 'Máquina', 'Promedio general de 600 CPM', 'cpm_avg', 600],
-    ['sin-red', 'Sin red', 'Terminar 5 carreras en Hardcore', 'hc_races', 5],
-    ['superviviente', 'Superviviente', 'Terminar 25 carreras en Hardcore', 'hc_races', 25],
-    ['pulso-firme', 'Pulso firme', 'Llegar a 250 CPM en Hardcore', 'hc_best', 250],
-    ['sangre-fria', 'Sangre fría', 'Llegar a 500 CPM en Hardcore', 'hc_best', 500],
-    ['fundador', 'Fundador', 'Estuvo desde el principio', 'manual', 0],
-    ['campeon', 'Campeón', 'Ganar un torneo', 'manual', 0],
-    ['probador', 'Probador', 'Ayudó a encontrar errores', 'manual', 0],
-  ].forEach(([id, name, desc, cond, target], i) =>
-    add.run(id, name, desc, id, cond, target, id === 'campeon' ? 1 : 0, id === 'probador' ? 1 : 0, i));
-  db.exec("update medals set icon = id where icon in ('play', 'rows', 'gauge', 'bolt', 'shield', 'target')");
-}
 
 function seedTexts() {
   if (db.prepare('select count(*) as n from texts').get().n) return;
@@ -222,21 +199,21 @@ const parseShown = (raw) => {
   }
 };
 
-const medalGroups = { races_total: 'Constancia', cpm_max: 'Velocidad', cpm_avg: 'Promedio', hc_races: 'Hardcore', hc_best: 'Hardcore', manual: 'Especiales' };
 function medalsOf(userId) {
-  const s = profileStats(userId);
-  s.avg = db.prepare('select coalesce(round(avg(cpm)), 0) as a from races where user_id = ? and hc = 0').get(userId).a;
+  const rows = db.prepare('select * from medals order by pos, rowid').all();
   const grants = new Map(db.prepare('select medal_id, count from user_medals where user_id = ?').all(userId).map((r) => [r.medal_id, r.count]));
-  const values = { races_total: s.races, cpm_max: s.best, cpm_avg: s.avg, hc_races: s.hcRaces, hc_best: s.hcBest };
-  return db.prepare('select * from medals order by pos, rowid').all().map((m) => {
+  const values = medalValues(db, userId, new Set(rows.map((m) => m.condition)));
+  return rows.map((m) => {
+    const manual = m.condition === 'manual' || !Object.hasOwn(CONDITIONS, m.condition);
     const given = grants.get(m.id) || 0;
-    const earned = m.condition === 'manual' ? given > 0 : (values[m.condition] || 0) >= m.target;
-    const manual = m.condition === 'manual';
+    const have = manual ? 0 : values[m.condition] || 0;
+    const earned = manual ? given > 0 : have >= m.target;
+    const tier = tierOf(m.tier);
     return {
-      id: m.id, name: m.name, desc: m.description, icon: m.icon, stackable: !!m.stackable, secret: !!m.secret, earned,
+      id: m.id, name: m.name, desc: m.description, icon: `${m.icon}--${tier}`, tier, stackable: !!m.stackable, secret: !!m.secret, earned,
       count: earned && m.stackable ? Math.max(given, 1) : 1,
-      group: medalGroups[m.condition] || 'Especiales',
-      target: manual ? 0 : m.target, value: manual ? 0 : Math.min(values[m.condition] || 0, m.target),
+      group: groupOf(m.condition),
+      target: manual ? 0 : m.target, value: manual ? 0 : Math.min(have, m.target),
     };
   }).filter((m) => m.earned || !m.secret);
 }
@@ -604,8 +581,16 @@ function versioned(clean, file) {
   return file;
 }
 
-async function serveStatic(res, pathname) {
+async function serveStatic(req, res, pathname) {
   const clean = pathname === '/' ? '/index.html' : pathname;
+  const art = /^\/img\/medals\/([\w-]+\.svg)$/.exec(clean);
+  if (art) {
+    const f = medalFile(medalIcons, db, art[1]);
+    if (!f) { res.writeHead(404); return res.end('No encontrado'); }
+    if (req.headers['if-none-match'] === f.etag) { res.writeHead(304, { etag: f.etag, 'cache-control': 'no-cache' }); return res.end(); }
+    res.writeHead(200, { 'content-type': 'image/svg+xml', etag: f.etag, 'cache-control': 'no-cache' });
+    return res.end(f.body);
+  }
   if (!/^\/(index\.html|css\/[\w.-]+|js\/[\w.-]+|img\/(?:medals\/)?[\w.-]+)$/.test(clean)) {
     res.writeHead(404);
     return res.end('No encontrado');
@@ -626,7 +611,7 @@ const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname.startsWith('/api/')) await api(req, res, url);
-    else await serveStatic(res, url.pathname);
+    else await serveStatic(req, res, url.pathname);
   } catch (err) {
     if (err instanceof TypeError && err.code === 'ERR_INVALID_URL') return send(res, 400, { error: 'Pedido inválido.' });
     if (err.message === 'json' || err.message === 'big') return send(res, 400, { error: 'Pedido inválido.' });
