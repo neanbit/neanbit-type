@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
 import { scrypt as scryptCb, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
@@ -575,6 +575,35 @@ function startSession(req, res, userId, status) {
   send(res, status, { user: publicUser(user) }, { 'set-cookie': cookie(req, token, 30 * 86400) });
 }
 
+// Versión del front: un hash del contenido de index.html, css/ y js/. Se agrega como ?v=... a cada
+// archivo que carga la página, así que cada actualización cambia todas las direcciones y ninguna
+// copia vieja (del navegador o de Cloudflare) puede reutilizarse.
+async function buildVersion() {
+  const hash = createHash('sha1');
+  for (const dir of ['', 'css', 'js']) {
+    const names = (await readdir(join(root, dir))).filter((n) => dir || n === 'index.html').sort();
+    for (const name of names) {
+      try {
+        hash.update(name);
+        hash.update(await readFile(join(root, dir, name)));
+      } catch {}
+    }
+  }
+  return hash.digest('hex').slice(0, 10);
+}
+const frontVersion = await buildVersion();
+
+function versioned(clean, file) {
+  const ext = extname(clean);
+  if (ext === '.html') {
+    return file.toString('utf8').replace(/(src|href)="((?:js|css)\/[\w.-]+)"/g, `$1="$2?v=${frontVersion}"`);
+  }
+  if (ext === '.js') {
+    return file.toString('utf8').replace(/(\b(?:from|import)\s*)(['"])(\.\/[\w.-]+\.js)\2/g, `$1$2$3?v=${frontVersion}$2`);
+  }
+  return file;
+}
+
 async function serveStatic(res, pathname) {
   const clean = pathname === '/' ? '/index.html' : pathname;
   if (!/^\/(index\.html|css\/[\w.-]+|js\/[\w.-]+|img\/(?:medals\/)?[\w.-]+)$/.test(clean)) {
@@ -584,7 +613,7 @@ async function serveStatic(res, pathname) {
   try {
     const file = await readFile(join(root, clean));
     res.writeHead(200, { 'content-type': mime[extname(clean)] || 'application/octet-stream', 'cache-control': 'no-cache' });
-    res.end(file);
+    res.end(versioned(clean, file));
   } catch {
     res.writeHead(404);
     res.end('No encontrado');
