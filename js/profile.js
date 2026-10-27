@@ -16,43 +16,65 @@ const siteName = (href) => {
   try { return new URL(href).hostname.replace(/^www\./, ''); } catch { return href; }
 };
 
-let duelView = false;
-let duelFor = null;
-let lastDuel = null;
+let scopeView = 'all';
+let scopeFor = null;
+let lastScope = null;
 
+const bestRoundText = (b) => (b.champion ? 'Campeón' : ['Finalista', 'Semifinales', 'Cuartos de final', 'Octavos de final'][b.rounds - b.round] || `Ronda ${b.round}`);
+
+// Selector General | Duelos | Torneos en la fila de botones del héroe. En Duelos y Torneos cambian las tarjetas y el expediente.
 function duelScope(p, opts) {
   const { speed, unit } = opts;
-  if (duelFor !== p.handle) { duelFor = p.handle; duelView = false; }
-  lastDuel = { p, opts };
+  if (scopeFor !== p.handle) { scopeFor = p.handle; scopeView = 'all'; }
+  lastScope = { p, opts };
   if (!$('#pf-scope')) {
     const seg = document.createElement('div');
     seg.className = 'seg d-seg';
     seg.id = 'pf-scope';
-    seg.innerHTML = '<button data-m="all">General</button><button data-m="duel">Duelos</button>';
+    seg.innerHTML = '<button data-m="all">General</button><button data-m="duel">Duelos</button><button data-m="tourney">Torneos</button>';
     seg.onclick = (e) => {
       const m = e.target.dataset.m;
-      if (!m || (m === 'duel') === duelView) return;
-      duelView = m === 'duel';
-      renderProfile(lastDuel.p, lastDuel.opts);
+      if (!m || m === scopeView) return;
+      scopeView = m;
+      renderProfile(lastScope.p, lastScope.opts);
     };
     $('.pf-actions').prepend(seg);
   }
-  document.querySelectorAll('#pf-scope button').forEach((b) => b.classList.toggle('on', (b.dataset.m === 'duel') === duelView));
-  if (!duelView || !p.duels) return;
-  const d = p.duels;
-  $('#pf-stats').innerHTML = [
-    ['Duelos', d.total, ''],
-    ['Victorias', d.wins, ''],
-    ['% ganados', d.rate + '%', ''],
-    ['Mejor en duelo', d.best ? speed(d.best) : 0, 'hot'],
-  ].map(([label, value, cls]) => `<div class="${cls}"><small>${label}</small><b>${value}</b></div>`).join('');
-  $('#pf-file').innerHTML = [
-    ['Derrotas', d.losses],
-    ['Racha actual', d.streak],
-    ['Mejor racha', d.bestStreak],
-    ['Ganados por abandono', d.byForfeit],
-    ['Promedio en duelo', d.avg ? `${speed(d.avg)} ${unit}` : '-'],
-  ].map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
+  document.querySelectorAll('#pf-scope button').forEach((b) => b.classList.toggle('on', b.dataset.m === scopeView));
+  const cards = (list) => list.map(([label, value, cls]) => `<div class="${cls}"><small>${label}</small><b>${value}</b></div>`).join('');
+  const file = (list) => list.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
+  if (scopeView === 'duel' && p.duels) {
+    const d = p.duels;
+    $('#pf-stats').innerHTML = cards([
+      ['Duelos', d.total, ''],
+      ['Victorias', d.wins, ''],
+      ['% ganados', d.rate + '%', ''],
+      ['Mejor en duelo', d.best ? speed(d.best) : 0, 'hot'],
+    ]);
+    $('#pf-file').innerHTML = file([
+      ['Derrotas', d.losses],
+      ['Racha actual', d.streak],
+      ['Mejor racha', d.bestStreak],
+      ['Ganados por abandono', d.byForfeit],
+      ['Promedio en duelo', d.avg ? `${speed(d.avg)} ${unit}` : '-'],
+    ]);
+  } else if (scopeView === 'tourney' && p.tourneys) {
+    const t = p.tourneys;
+    $('#pf-stats').innerHTML = cards([
+      ['Torneos', t.entered, ''],
+      ['Títulos', t.titles, ''],
+      ['Finales', t.finals, ''],
+      ['Mejor en torneo', t.best ? speed(t.best) : 0, 'hot'],
+    ]);
+    $('#pf-file').innerHTML = file([
+      ['Mejor resultado', t.bestRound ? bestRoundText(t.bestRound) : '-'],
+      ['Partidos ganados', `${t.wins} de ${t.total}`],
+      ['% ganados', t.total ? t.rate + '%' : '-'],
+      ['Racha actual', t.streak],
+      ['Mejor racha', t.bestStreak],
+      ['Promedio en torneo', t.avg ? `${speed(t.avg)} ${unit}` : '-'],
+    ]);
+  }
 }
 
 export function renderProfile(p, opts) {

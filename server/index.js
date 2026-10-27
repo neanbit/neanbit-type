@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { seed } from './seed.js';
 import { createDuels } from './duels.js';
 import { createTournaments } from './tournaments.js';
-import { CONDITIONS, ensureMedalSchema, groupOf, loadIcons, medalFile, medalValues, tierOf } from './medals.js';
+import { CONDITIONS, ensureMedalSchema, grantCount, groupOf, loadIcons, medalFile, medalValues, realTourneyWins, tierOf } from './medals.js';
 
 const scrypt = promisify(scryptCb);
 const root = join(fileURLToPath(import.meta.url), '..', '..');
@@ -204,9 +204,11 @@ function medalsOf(userId) {
   const rows = db.prepare('select * from medals order by pos, rowid').all();
   const grants = new Map(db.prepare('select medal_id, count from user_medals where user_id = ?').all(userId).map((r) => [r.medal_id, r.count]));
   const values = medalValues(db, userId, new Set(rows.map((m) => m.condition)));
+  const wins = realTourneyWins(db, userId);
   return rows.map((m) => {
     const manual = m.condition === 'manual' || !Object.hasOwn(CONDITIONS, m.condition);
-    const given = grants.get(m.id) || 0;
+    // En las manuales apilables que «cuentan como torneo ganado» se suman los torneos ganados de verdad a lo otorgado a mano.
+    const given = manual ? grantCount(m, grants.get(m.id) || 0, wins) : 0;
     const have = manual ? 0 : values[m.condition] || 0;
     const earned = manual ? given > 0 : have >= m.target;
     const tier = tierOf(m.tier);

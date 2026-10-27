@@ -31,13 +31,20 @@ export const CONDITIONS = {
   duel_best_cpm: { label: 'Velocidad máxima en un duelo', group: 'Duelos', unit: 'speed', hint: '' },
   duel_avg_cpm: { label: 'Promedio de velocidad en duelos', group: 'Duelos', unit: 'speed', hint: 'Recién se evalúa desde 5 duelos jugados.' },
   duel_flawless: { label: 'Duelos ganados sin errores', group: 'Duelos', unit: 'n', hint: 'Ganados con 100 % de precisión y sin abandono.' },
-  tournament_wins: { label: 'Torneos ganados', group: 'Torneos', unit: 'n', hint: 'Suma las veces que se otorgó una medalla manual apilable marcada como «cuenta como torneo ganado» (por defecto, Campeón).' },
+  tournament_wins: { label: 'Torneos ganados', group: 'Torneos', unit: 'n', hint: 'Cuenta solos los torneos que ganó en neanbit type, más las veces que se otorgó a mano una medalla apilable marcada como «cuenta como torneo ganado» (por ejemplo, torneos jugados fuera de la app). No otorgues a mano los torneos que se juegan acá: ya cuentan.' },
   manual: { label: 'Manual (se otorga a mano)', group: 'Especiales', unit: 'n', hint: '' },
 };
 export const isCondition = (c) => Object.hasOwn(CONDITIONS, c);
 export const groupOf = (c) => CONDITIONS[c]?.group || 'Especiales';
 export const maxTarget = (c) => (CONDITIONS[c]?.unit === 'pct' ? 100 : 1000000);
 export const conditionList = () => Object.entries(CONDITIONS).map(([id, c]) => ({ id, ...c }));
+
+// Torneos ganados en el sistema (filas de `tournaments` con campeón). La tabla la crea la app; si todavía no existe, cuenta 0.
+export function realTourneyWins(db, userId) {
+  try { return db.prepare('select count(*) as c from tournaments where winner_id = ?').get(userId).c; } catch { return 0; }
+}
+// Cuántas veces cuenta una medalla manual para un usuario: lo otorgado a mano y, si es apilable y «cuenta como torneo ganado», también sus títulos reales.
+export const grantCount = (m, given, wins) => (m.stackable && m.tourney ? given + wins : given);
 
 const MIN_DUELS_RATE = 10;
 const MIN_DUELS_AVG = 5;
@@ -73,7 +80,8 @@ export function medalValues(db, userId, need) {
     });
   }
   if (need.has('tournament_wins')) {
-    v.tournament_wins = db.prepare('select coalesce(sum(um.count), 0) as c from user_medals um join medals m on m.id = um.medal_id where um.user_id = ? and m.tourney = 1').get(userId).c;
+    const manual = db.prepare('select coalesce(sum(um.count), 0) as c from user_medals um join medals m on m.id = um.medal_id where um.user_id = ? and m.tourney = 1').get(userId).c;
+    v.tournament_wins = manual + realTourneyWins(db, userId);
   }
   return v;
 }

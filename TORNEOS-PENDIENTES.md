@@ -4,8 +4,8 @@
 1. Diseño y tablas: hecho.
 2. Servidor: hecho, probado y desplegado.
 3. App (esta entrega): lista de torneos, inscripción, llave, aviso de partido con «Estoy listo», volver al torneo tras cada partido, filtro «Torneos» en Estadísticas y pestaña «Torneos» en los rankings del inicio. Hecho y probado con un DOM simulado; falta tu prueba en el navegador.
-4. Panel (neanbit-type-admin): crear, publicar, controlar en vivo, descalificar y agregar. Pendiente.
-5. Integración con medallas (torneos ganados real, medallas ocultas como pase VIP) y perfil. Pendiente.
+4. Panel (neanbit-type-admin v1.5): crear, publicar, controlar en vivo, descalificar y agregar. Hecho y probado contra la app real (falta confirmarlo en el VPS).
+5. Integración: «Torneos ganados» y Campeón cuentan los torneos reales, pase VIP con medalla secreta, y selector «Torneos» en el perfil. Hecho (falta confirmarlo en el VPS).
 
 ## Reglas asumidas (cambiables)
 - Eliminación directa. La llave se sortea al empezar; si no son potencia de 2, los mejores sembrados pasan directo la primera ronda.
@@ -15,7 +15,8 @@
 - Si el servidor se reinicia con un partido en juego, el partido vuelve a «listo» con tiempo nuevo.
 - Durante el modo mantenimiento los plazos se congelan; al volver quedan 60 segundos.
 - Los duelos de torneo también cuentan en el filtro «Duelos» y en los rankings de Duelos (son duelos reales). El filtro «Torneos» muestra solo los de torneo.
-- «Torneos ganados» de las medallas sigue siendo manual hasta la etapa 5.
+- «Torneos ganados» cuenta solo los torneos ganados de verdad (`tournaments.winner_id`) más lo otorgado a mano en medallas apilables marcadas «cuenta como torneo ganado». Esas medallas (por defecto Campeón) además muestran solas los títulos reales, con contador. No hay que otorgar a mano los torneos jugados en la app: ya cuentan; lo manual es para títulos de fuera (por ejemplo, de CananTyper).
+- Pase VIP: un torneo por reglas puede exigir una medalla secreta. A quien no la tiene solo se le dice que no cumple los requisitos y la lista pública muestra «Con pase», sin nombre. Se otorga desde el perfil del usuario en el panel.
 
 ## Cómo se juega (app)
 - El jugador entra a Torneos desde el inicio, abre un torneo y se inscribe si cumple el acceso.
@@ -24,7 +25,7 @@
 - Al terminar, «Volver al torneo» lleva a la llave.
 
 ## Fuera de alcance por ahora
-- Resumen de torneos dentro del perfil: toca `js/profile.js` (zona protegida) y necesita tu autorización puntual. Va en la etapa 5.
+- Resumen de torneos en el perfil: hecho (selector General | Duelos | Torneos; se tocó `js/profile.js` con autorización de Ángel del 27 de octubre).
 - Mientras se está en la pantalla del torneo, las invitaciones a duelos comunes no se muestran (el invitador espera hasta que vence).
 - Agregar jugadores con el torneo ya en curso (solo antes de empezar).
 - Sembrado por velocidad (hoy es sorteo).
