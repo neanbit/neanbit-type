@@ -1,0 +1,24 @@
+# Unidad de systemd del panel neanbit-type-admin (proyecto aparte).
+# Copiar a /etc/systemd/system/neanbit-type-admin.service y cambiar usuario y rutas.
+# NT_DB tiene que ser la misma base que usa la app. El panel escucha solo en 127.0.0.1:
+# no publicar este puerto en el tunel de Cloudflare ni abrirlo en el firewall.
+[Unit]
+Description=neanbit type admin
+After=network.target neanbit-type.service
+
+[Service]
+Type=simple
+User=neanbit
+WorkingDirectory=/home/neanbit/neanbit-type-admin
+Environment=NT_ADMIN=neanbit
+Environment=NT_DB=/home/neanbit/neanbit-type-data/data.db
+Environment=PORT=4000
+ExecStart=/usr/bin/node server/index.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

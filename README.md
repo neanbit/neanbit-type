@@ -160,6 +160,8 @@ Abrir `http://localhost:3000`, crear la cuenta con el mismo nombre de usuario qu
 
 Guía para un VPS con Ubuntu 24.04 y el usuario `neanbit`. Los comandos se pegan en la terminal del servidor. Cambiar `neanbit` y `type.neanbit.com` por el usuario y el dominio propios.
 
+Los archivos de configuración que se usan en los pasos 4, 9 y 10 también están en la carpeta [`deploy/`](deploy) como ejemplos, para copiarlos y editarlos en vez de pegar los bloques: `neanbit-type.service.example`, `neanbit-type-admin.service.example`, `cloudflared-config.yml.example` y `backup.sh`. Ninguno lleva claves; las credenciales del túnel quedan en el servidor.
+
 ### 1. Reconocer el VPS
 
 ```bash
@@ -482,7 +484,7 @@ El panel es un proyecto aparte, **neanbit-type-admin**: Node 22.13 o superior, s
 | Mantenimiento y anuncios | Interruptor de mantenimiento con mensaje, botón de información y anuncios. |
 | Textos y categorías | Alta, edición, activación y borrado de textos y categorías, con contadores de caracteres y palabras. |
 
-**Instalación.** Se clona o se copia a `/home/neanbit/neanbit-type-admin` y se corre como servicio, igual que la app, con estas variables: `NT_DB` (la misma base que la app), `NT_ADMIN`, `PORT=4000` y, opcionalmente, `NTA_BACKUPS`. Ejemplo manual:
+**Instalación.** Se clona o se copia a `/home/neanbit/neanbit-type-admin` y se corre como servicio, igual que la app (hay una unidad de ejemplo en [`deploy/neanbit-type-admin.service.example`](deploy/neanbit-type-admin.service.example)), con estas variables: `NT_DB` (la misma base que la app), `NT_ADMIN`, `PORT=4000` y, opcionalmente, `NTA_BACKUPS`. Ejemplo manual:
 
 ```bash
 NT_DB=/home/neanbit/neanbit-type-data/data.db NT_ADMIN=neanbit node server/index.js
@@ -564,6 +566,7 @@ neanbit-type/
 ├── js/                     Módulos ES, sin build
 ├── img/                    Marca: mark.png y los wordmarks para fondo oscuro y claro
 ├── server/                 Servidor Node sin dependencias
+├── deploy/                 Ejemplos de systemd, cloudflared y backup
 ├── package.json
 └── .gitignore
 ```

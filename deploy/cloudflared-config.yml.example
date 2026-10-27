@@ -1,0 +1,12 @@
+# Configuracion del tunel de Cloudflare.
+# Copiar a /etc/cloudflared/config.yml, reemplazando TUNNEL_ID por el id que imprime
+# "cloudflared tunnel create" y el dominio por el propio.
+# Si el servidor ya tiene un config.yml, no lo pises: hacer copia .bak y sumar solo la
+# entrada de "hostname" al ingress existente.
+# El archivo TUNNEL_ID.json de credenciales no se comparte ni se sube a ningun repositorio.
+tunnel: TUNNEL_ID
+credentials-file: /etc/cloudflared/TUNNEL_ID.json
+ingress:
+  - hostname: type.example.com
+    service: http://localhost:3000
+  - service: http_status:404

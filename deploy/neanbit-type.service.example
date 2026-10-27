@@ -1,0 +1,22 @@
+# Unidad de systemd de neanbit type.
+# Copiar a /etc/systemd/system/neanbit-type.service y cambiar usuario, rutas y NT_ADMIN.
+[Unit]
+Description=neanbit type
+After=network.target
+
+[Service]
+Type=simple
+User=neanbit
+WorkingDirectory=/home/neanbit/neanbit-type
+Environment=NT_ADMIN=neanbit
+Environment=NT_DB=/home/neanbit/neanbit-type-data/data.db
+Environment=PORT=3000
+ExecStart=/usr/bin/node server/index.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
