@@ -17,6 +17,7 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
   try { db.exec('alter table races add column duel integer not null default 0'); } catch {}
 
   const online = new Map();
+  const hooks = { open: null, close: null, actions: {} };
   const invites = new Map();
   let queue = [];
   let nextId = 1;
@@ -51,13 +52,15 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
     conn.onmessage = (raw) => handle(c, raw);
     conn.onclose = () => gone(c);
     tell(c, { t: 'hello', me: card(c), online: online.size, queued: queue.length });
+    hooks.open?.(c);
   }
 
   function handle(c, raw) {
     let m;
     try { m = JSON.parse(raw); } catch { return; }
-    if (!m || typeof m.t !== 'string' || !Object.hasOwn(actions, m.t)) return;
-    actions[m.t](c, m);
+    if (!m || typeof m.t !== 'string') return;
+    if (Object.hasOwn(actions, m.t)) actions[m.t](c, m);
+    else if (Object.hasOwn(hooks.actions, m.t)) hooks.actions[m.t](c, m);
   }
 
   const actions = {
@@ -191,23 +194,25 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
     }
   }
 
-  function start(a, b) {
+  function start(a, b, opts = {}) {
     for (const x of [a, b]) {
       clearInvites(x);
       queue = queue.filter((q) => q !== x);
     }
-    const row = db.prepare('select id, body from texts where active = 1 order by random() limit 1').get();
+    const fixed = opts.textId ? db.prepare('select id, body from texts where id = ? and active = 1').get(opts.textId) : null;
+    const row = fixed || db.prepare('select id, body from texts where active = 1 order by random() limit 1').get();
     if (!row) {
       for (const x of [a, b]) { x.state = 'idle'; fail(x, 'No hay textos disponibles.'); }
-      return;
+      return false;
     }
     const body = row.body.trim().split(/\s+/).join(' ');
     const d = { id: nextId++, a, b, textId: row.id, body, phase: 'count', startAt: 0,
-      prog: new Map([[a.id, 0], [b.id, 0]]), done: new Map(), order: [], relayed: new Map(), timers: [] };
+      prog: new Map([[a.id, 0], [b.id, 0]]), done: new Map(), order: [], relayed: new Map(), timers: [],
+      tm: opts.tm || null, onDone: opts.onDone || null };
     for (const x of [a, b]) {
       x.state = 'duel';
       x.duel = d;
-      tell(x, { t: 'match', duel: d.id, opp: card(rival(d, x)), textId: d.textId, text: d.body });
+      tell(x, { t: 'match', duel: d.id, opp: card(rival(d, x)), textId: d.textId, text: d.body, tm: d.tm });
     }
     [1500, 2500, 3500].forEach((ms, i) => later(d, ms, () => both(d, { t: 'count', n: 3 - i })));
     later(d, 4500, () => {
@@ -216,6 +221,7 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
       both(d, { t: 'go' });
       later(d, MAX_RACE_MS, () => conclude(d));
     });
+    return true;
   }
 
   function both(d, msg) {
@@ -232,11 +238,12 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
     const winner = first || (quit ? rival(d, quit) : null);
     const forfeit = !first && !!quit;
     const [da, dbb] = [d.done.get(d.a.id), d.done.get(d.b.id)];
+    let duelId = null;
     if (winner || da || dbb) {
       try {
         const info = db.prepare('insert into duels (a_id, b_id, text_id, winner_id, a_cpm, a_acc, b_cpm, b_acc, forfeit, at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
           .run(d.a.id, d.b.id, d.textId, winner ? winner.id : null, da?.cpm ?? null, da?.acc ?? null, dbb?.cpm ?? null, dbb?.acc ?? null, forfeit ? 1 : 0, Date.now());
-        const duelId = Number(info.lastInsertRowid);
+        duelId = Number(info.lastInsertRowid);
         const add = db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc, duel) values (?, ?, ?, ?, ?, 0, ?)');
         for (const [x, r] of [[d.a, da], [d.b, dbb]]) {
           if (!r) continue;
@@ -258,6 +265,14 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
         you: d.done.get(x.id) ? { cpm: d.done.get(x.id).cpm, acc: d.done.get(x.id).acc, ms: d.done.get(x.id).ms } : null,
         opp: d.done.get(y.id) ? { cpm: d.done.get(y.id).cpm, acc: d.done.get(y.id).acc, ms: d.done.get(y.id).ms } : null });
     }
+    notify(d, { winnerId: winner ? winner.id : null, forfeit, duelId, prog: Object.fromEntries(d.prog) });
+  }
+
+  function notify(d, info) {
+    if (!d.onDone) return;
+    const fn = d.onDone;
+    d.onDone = null;
+    try { fn(info); } catch (err) { console.error(err); }
   }
 
   function abandon(c) {
@@ -272,6 +287,7 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
         o.state = 'idle';
         o.duel = null;
         tell(o, { t: 'cancelled' });
+        notify(d, { cancelled: true, quitId: c.id });
       } else if (d.phase === 'live' && !d.done.has(c.id)) {
         conclude(d, c);
       }
@@ -283,7 +299,27 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
   function gone(c) {
     if (online.get(c.id) === c) online.delete(c.id);
     abandon(c);
+    hooks.close?.(c);
   }
 
-  return { upgrade };
+  // Entradas para el módulo de torneos.
+  function startTournamentDuel(aId, bId, opts) {
+    const a = online.get(aId);
+    const b = online.get(bId);
+    if (!a || !b || a.state !== 'idle' || b.state !== 'idle') return false;
+    return start(a, b, opts) === true;
+  }
+
+  function free(c) {
+    if (c.state === 'queued') actions.unqueue(c);
+    else if (c.state === 'inviting') actions.cancel(c);
+    return c.state === 'idle';
+  }
+
+  function kick(userId) {
+    const c = online.get(userId);
+    if (c && c.duel) abandon(c);
+  }
+
+  return { upgrade, online, hooks, startTournamentDuel, free, kick };
 }

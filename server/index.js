@@ -8,6 +8,7 @@ import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { seed } from './seed.js';
 import { createDuels } from './duels.js';
+import { createTournaments } from './tournaments.js';
 import { CONDITIONS, ensureMedalSchema, groupOf, loadIcons, medalFile, medalValues, tierOf } from './medals.js';
 
 const scrypt = promisify(scryptCb);
@@ -427,6 +428,13 @@ async function api(req, res, url) {
 
   if (key === 'GET /api/stats') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    if (url.searchParams.get('mode') === 'tourney') {
+      const agg = tourneys.raceTotals(me.id);
+      return send(res, 200, {
+        races: tourneys.races(me.id), chars: [], words: [], deaths: 0, tourney: tourneys.summary(me.id, 8),
+        totals: { races: agg.n, best: agg.best, hcRaces: 0, hcBest: 0, acc: agg.acc, since: agg.since },
+      });
+    }
     const duelMode = url.searchParams.get('mode') === 'duel';
     const races = db.prepare(`select cpm, acc, at, text_id, hc from races where user_id = ? and hc = 0 and duel ${duelMode ? '>' : '>='} 0 order by at desc limit 100`).all(me.id).reverse();
     const top = (kind, n) => db.prepare('select key, n from errors where user_id = ? and kind = ? order by n desc limit ?').all(me.id, kind, n);
@@ -489,6 +497,32 @@ async function api(req, res, url) {
     return send(res, 200, { rows: all.slice(0, 10), me: at > -1 ? { pos: at + 1, wins: all[at].wins, duels: all[at].duels } : null });
   }
 
+  if (key === 'GET /api/ranking/tourneys') {
+    const all = memo('tourneys', () => tourneys.ranking());
+    const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
+    return send(res, 200, {
+      rows: all.slice(0, 10).map(({ uid, ...r }) => r),
+      me: at > -1 ? { pos: at + 1, titles: all[at].titles, wins: all[at].wins, played: all[at].played } : null,
+    });
+  }
+
+  if (key === 'GET /api/tournaments') return send(res, 200, { rows: tourneys.list(me) });
+
+  const tour = /^\/api\/tournaments\/(\d{1,9})(\/join|\/leave)?$/.exec(url.pathname);
+  if (tour) {
+    const id = Number(tour[1]);
+    if (req.method === 'GET' && !tour[2]) {
+      const t = tourneys.detail(id, me);
+      return t ? send(res, 200, t) : send(res, 404, { error: 'No existe ese torneo.' });
+    }
+    if (req.method === 'POST' && tour[2]) {
+      if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+      if (maintenance().on && me.role !== 'admin') return send(res, 503, { error: 'Estamos en mantenimiento.' });
+      const r = tour[2] === '/join' ? tourneys.join(id, me) : tourneys.leave(id, me);
+      return send(res, r.status, r.body);
+    }
+  }
+
   if (key === 'GET /api/home') {
     const tz = Math.max(-840, Math.min(840, Number(url.searchParams.get('tz')) || 0));
     const dayStart = Date.now() - 86400000;
@@ -536,7 +570,7 @@ async function api(req, res, url) {
       favorite: favorite ? favorite.text_id : null,
       rank: rankOf(user.id), hcRank: hcRankOf(user.id),
       verified: user.verified, shown: parseShown(user.shown), medals, secretLeft,
-      duels: duelSummary(user.id),
+      duels: duelSummary(user.id), tourneys: tourneys.summary(user.id),
     });
   }
 
@@ -606,6 +640,10 @@ async function serveStatic(req, res, pathname) {
 }
 
 const duels = createDuels({ db, sessionUser, maintenance, bump: () => { version++; }, saveErrors });
+const tourneys = createTournaments({
+  db, duels, maintenance, bump: () => { version++; },
+  earnedMedal: (userId, medalId) => medalsOf(userId).some((m) => m.id === medalId && m.earned),
+});
 
 const server = http.createServer(async (req, res) => {
   try {
