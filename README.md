@@ -160,7 +160,7 @@ Abrir `http://localhost:3000`, crear la cuenta con el mismo nombre de usuario qu
 
 Guía para un VPS con Ubuntu 24.04 y el usuario `neanbit`. Los comandos se pegan en la terminal del servidor. Cambiar `neanbit` y `type.neanbit.com` por el usuario y el dominio propios.
 
-Los archivos de configuración que se usan en los pasos 4, 9 y 10 también están en la carpeta [`deploy/`](deploy) como ejemplos, para copiarlos y editarlos en vez de pegar los bloques: `neanbit-type.service.example`, `neanbit-type-admin.service.example`, `cloudflared-config.yml.example` y `backup.sh`. Ninguno lleva claves; las credenciales del túnel quedan en el servidor.
+Los archivos de configuración que se usan en los pasos 4, 9 y 10 también están en la carpeta [`deploy/`](deploy) como ejemplos, para copiarlos y editarlos en vez de pegar los bloques: `neanbit-type.service.example`, `neanbit-type-admin.service.example`, `cloudflared-config.yml.example` y `backup.sh`. Además hay un `esquema.sql` con la estructura completa de la base, solo de referencia. Ninguno lleva claves; las credenciales del túnel quedan en el servidor.
 
 ### 1. Reconocer el VPS
 
@@ -566,7 +566,7 @@ neanbit-type/
 ├── js/                     Módulos ES, sin build
 ├── img/                    Marca: mark.png y los wordmarks para fondo oscuro y claro
 ├── server/                 Servidor Node sin dependencias
-├── deploy/                 Ejemplos de systemd, cloudflared y backup
+├── deploy/                 Ejemplos de systemd, cloudflared y backup, y esquema.sql
 ├── package.json
 └── .gitignore
 ```
@@ -595,6 +595,8 @@ El perfil (`css/profile.css`, `js/editor.js`, `js/vitrina.js`, `js/profile.js`, 
 ### Base de datos
 
 SQLite en modo WAL con `busy_timeout`. Tablas: `users`, `sessions`, `races`, `errors`, `deaths`, `categories`, `texts`, `announcements`, `settings`, `medals`, `user_medals`, `duels`, `tournaments`, `tournament_players`, `tournament_matches` y `tournament_orders`. La columna `races.duel` vale `0` en una carrera normal y el id del duelo en una de duelo.
+
+La app crea y migra las tablas sola al arrancar, así que no hay nada que importar. Para leer la estructura completa, con comentarios y consultas de ejemplo, está [`deploy/esquema.sql`](deploy/esquema.sql); también sirve para levantar una base vacía con `sqlite3 /tmp/prueba.db < deploy/esquema.sql`.
 
 ## API
 
