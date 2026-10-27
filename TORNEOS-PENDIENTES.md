@@ -2,8 +2,8 @@
 
 ## Etapas
 1. Diseño y tablas: hecho.
-2. Servidor (esta entrega): hecho y probado de punta a punta con un servidor real.
-3. App: lista de torneos, inscripción, llave, aviso de partido y filtro «Torneos» en Estadísticas. Pendiente.
+2. Servidor: hecho, probado y desplegado.
+3. App (esta entrega): lista de torneos, inscripción, llave, aviso de partido con «Estoy listo», volver al torneo tras cada partido, filtro «Torneos» en Estadísticas y pestaña «Torneos» en los rankings del inicio. Hecho y probado con un DOM simulado; falta tu prueba en el navegador.
 4. Panel (neanbit-type-admin): crear, publicar, controlar en vivo, descalificar y agregar. Pendiente.
 5. Integración con medallas (torneos ganados real, medallas ocultas como pase VIP) y perfil. Pendiente.
 
@@ -17,7 +17,15 @@
 - Los duelos de torneo también cuentan en el filtro «Duelos» y en los rankings de Duelos (son duelos reales). El filtro «Torneos» muestra solo los de torneo.
 - «Torneos ganados» de las medallas sigue siendo manual hasta la etapa 5.
 
+## Cómo se juega (app)
+- El jugador entra a Torneos desde el inicio, abre un torneo y se inscribe si cumple el acceso.
+- Mientras espera su partido tiene que dejar abierta la pantalla del torneo (la conexión vive ahí). Si sale al inicio, pierde la conexión y no recibe el aviso.
+- Cuando el partido está listo aparece el aviso con cuenta regresiva y el botón «Estoy listo». Al confirmar los dos, arranca el duelo normal.
+- Al terminar, «Volver al torneo» lleva a la llave.
+
 ## Fuera de alcance por ahora
+- Resumen de torneos dentro del perfil: toca `js/profile.js` (zona protegida) y necesita tu autorización puntual. Va en la etapa 5.
+- Mientras se está en la pantalla del torneo, las invitaciones a duelos comunes no se muestran (el invitador espera hasta que vence).
 - Agregar jugadores con el torneo ya en curso (solo antes de empezar).
 - Sembrado por velocidad (hoy es sorteo).
 - Mejor de 3 por partido, tercer puesto, doble eliminación y los otros formatos.

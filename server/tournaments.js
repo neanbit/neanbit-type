@@ -221,7 +221,7 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal })
     const isA = uid === m.a_id;
     return {
       t: 't_match', tid: t.id, mid: m.id, name: t.name, round: m.round, rounds: t.rounds,
-      opp: card(isA ? m.b_id : m.a_id), deadline: m.deadline, status: m.status,
+      opp: card(isA ? m.b_id : m.a_id), left: Math.max(0, m.deadline - now()), status: m.status,
       me: !!(isA ? m.a_ready : m.b_ready), oppReady: !!(isA ? m.b_ready : m.a_ready),
     };
   }

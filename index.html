@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="css/pick.css">
 <link rel="stylesheet" href="css/stats.css">
 <link rel="stylesheet" href="css/duel.css">
+<link rel="stylesheet" href="css/tourney.css">
 </head>
 <body>
 <header class="bar">
@@ -78,6 +79,7 @@
       <button class="mode" id="go-practice"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><span><b>Entrenamiento</b><small>Tus palabras difíciles</small></span><em class="lock-tag" id="practice-tag">Con cuenta</em></button>
       <button class="mode hard" id="go-hc"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.01"/></svg><span><b>Hardcore</b><small>Un error y se acaba</small></span></button>
       <button class="mode" id="go-duel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg><span><b>Duelos</b><small>1 contra 1 en vivo</small></span><em class="lock-tag" id="duel-tag">Con cuenta</em></button>
+      <button class="mode tn-mode" id="go-tourney"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg><span><b>Torneos</b><small>Llaves de eliminación directa</small></span></button>
     </div>
 
     <section class="board">
@@ -87,6 +89,7 @@
           <button data-b="avg">Promedios</button>
           <button data-b="hc">Hardcore</button>
           <button data-b="duels">Duelos</button>
+          <button data-b="tourneys">Torneos</button>
         </div>
         <div class="seg" id="board-scope"></div>
       </header>
@@ -226,6 +229,20 @@
       </div>
     </div>
   </section>
+  <section id="tourney" hidden>
+    <header class="pick-head">
+      <div>
+        <p class="eyebrow" id="tn-eyebrow">Eliminación directa</p>
+        <h2 class="pick-title" id="tn-title">Torneos</h2>
+      </div>
+      <button id="tn-back">Volver</button>
+    </header>
+    <p class="tn-conn" id="tn-conn"></p>
+    <div class="tn-alert" id="tn-alert" hidden></div>
+    <div id="tn-list"></div>
+    <div id="tn-detail" hidden></div>
+  </section>
+
   <section id="stats" hidden>
     <header class="pick-head">
       <div>
@@ -234,7 +251,7 @@
       </div>
       <button id="stats-back">Volver</button>
     </header>
-    <div class="seg d-seg" id="s-mode"><button data-m="all" class="on">General</button><button data-m="duel">Duelos</button></div>
+    <div class="seg d-seg" id="s-mode"><button data-m="all" class="on">General</button><button data-m="duel">Duelos</button><button data-m="tourney">Torneos</button></div>
     <div id="s-empty" class="s-empty" hidden>
       <p id="s-empty-text">Todavía no hay carreras guardadas. Corré una y acá vas a ver cómo evolucionás.</p>
       <button class="primary" id="s-first">Correr una carrera</button>
@@ -264,6 +281,11 @@
       <section class="s-block" id="s-duel" hidden>
         <header><h3>Últimos duelos</h3></header>
         <ul class="d-recent" id="s-duel-list"></ul>
+      </section>
+
+      <section class="s-block" id="s-tourney" hidden>
+        <header><h3>Últimos partidos de torneo</h3></header>
+        <ul class="d-recent" id="s-tourney-list"></ul>
       </section>
 
       <section class="s-block g-only">

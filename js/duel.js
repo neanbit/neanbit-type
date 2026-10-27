@@ -45,6 +45,7 @@ function connect() {
       ws = null;
       const wasDuel = status === 'duel';
       reset();
+      emit('closed');
       if (wasDuel) emit('lost');
       else draw();
     };
@@ -106,6 +107,12 @@ function handle(m) {
       toast('Abriste Duelos en otra pestaña. Esta quedó desconectada.');
       reset();
       emit('replaced');
+      return;
+    case 't_match':
+      emit('tmatch', m);
+      return;
+    case 't_info':
+      emit('tinfo', m);
       return;
     case 'count': case 'go': case 'opp': case 'opp_done': case 'wait': case 'cancelled':
       if (m.t === 'cancelled') status = 'idle';
@@ -189,6 +196,29 @@ export const duel = {
     pulse = setInterval(() => send({ t: 'presence' }), 10000);
     draw();
     if (wantQueue) send({ t: 'queue' });
+  },
+
+  // Conexión para torneos: sin cola ni invitaciones, solo para recibir el aviso del partido.
+  async join() {
+    try {
+      await connect();
+    } catch {
+      ws = null;
+      draw();
+      return false;
+    }
+    clearInterval(pulse);
+    pulse = setInterval(() => send({ t: 'presence' }), 10000);
+    draw();
+    return true;
+  },
+
+  connected() {
+    return !!ws && ws.readyState === WebSocket.OPEN;
+  },
+
+  ready(mid) {
+    send({ t: 't_ready', mid });
   },
 
   close() {

@@ -21,7 +21,15 @@ function kpis() {
   const gap = before ? speed(Math.round(last)) - speed(Math.round(before)) : null;
   const trend = gap === null ? '' : `<em class="${gap >= 0 ? 'up' : 'down'}">${gap >= 0 ? '+' : ''}${gap} vs las 10 anteriores</em>`;
   const d = data.duel;
-  const cards = mode === 'duel' ? [
+  const t = data.tourney;
+  const roundLabel = (b) => (b.champion ? 'campeón' : ['la final', 'semifinales', 'cuartos', 'octavos'][b.rounds - b.round] || `ronda ${b.round}`);
+  const cards = mode === 'tourney' ? [
+    ['Torneos', t.entered, `${plural(t.titles, 'título', 'títulos')}, ${plural(t.finals, 'final', 'finales')}${t.bestRound ? `, mejor: ${roundLabel(t.bestRound)}` : ''}`, ''],
+    ['Partidos', t.total, `${plural(t.wins, 'ganado', 'ganados')}, ${plural(t.losses, 'perdido', 'perdidos')}`, ''],
+    ['Victorias', t.rate + '%', 'de tus partidos de torneo', ''],
+    ['Récord', speed(t.best), unit + ' en torneo', ''],
+    ['Promedio', speed(t.avg), `${unit}, precisión ${t.acc}%`, ''],
+  ] : mode === 'duel' ? [
     ['Duelos', d.total, `${plural(d.wins, 'ganado', 'ganados')}, ${plural(d.losses, 'perdido', 'perdidos')}`, ''],
     ['Victorias', d.rate + '%', 'de tus duelos', ''],
     ['Racha', d.streak, `${d.streak === 1 ? 'victoria seguida' : 'victorias seguidas'}, mejor ${d.bestStreak}`, ''],
@@ -136,27 +144,44 @@ function duels() {
   }).join('');
 }
 
+function tourneys() {
+  $('#s-tourney-list').innerHTML = data.tourney.recent.map((r) => {
+    const label = r.win ? 'Ganado' : 'Perdido';
+    const mine = r.cpm === null ? '-' : kit.speed(r.cpm);
+    const theirs = r.rcpm === null ? '-' : kit.speed(r.rcpm);
+    const stage = ['Final', 'Semifinal', 'Cuartos de final', 'Octavos de final'][r.rounds - r.round] || `Ronda ${r.round}`;
+    const date = r.at ? new Date(r.at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) : '';
+    return `<li class="${r.win ? 'won' : ''}"><b>${label}</b><span>${esc(stage)} de ${esc(r.tournament)}, contra ${esc(r.name)}</span><em>${mine} vs ${theirs} ${kit.unit}</em><small>${date}</small></li>`;
+  }).join('') || '<li class="none"><span>Todavía no jugaste partidos de torneo.</span></li>';
+}
+
 function draw() {
   const duel = mode === 'duel';
-  const empty = !data.totals.races && !(duel && data.duel.total);
+  const tour = mode === 'tourney';
+  const empty = !data.totals.races && !(duel && data.duel.total) && !(tour && data.tourney.total);
   document.querySelectorAll('#s-mode button').forEach((b) => b.classList.toggle('on', b.dataset.m === mode));
   $('#s-empty').hidden = !empty;
   $('#s-body').hidden = empty;
-  $('#s-empty-text').textContent = duel
-    ? 'Todavía no jugaste duelos. Desafiá a alguien desde Duelos y acá vas a ver tus resultados.'
-    : 'Todavía no hay carreras guardadas. Corré una y acá vas a ver cómo evolucionás.';
-  $('#s-first').hidden = duel;
+  $('#s-empty-text').textContent = tour
+    ? 'Todavía no jugaste torneos. Cuando participes en uno, acá vas a ver tus resultados.'
+    : duel
+      ? 'Todavía no jugaste duelos. Desafiá a alguien desde Duelos y acá vas a ver tus resultados.'
+      : 'Todavía no hay carreras guardadas. Corré una y acá vas a ver cómo evolucionás.';
+  $('#s-first').hidden = duel || tour;
   $('#s-since').textContent = data.totals.since
-    ? `${duel ? 'Duelos' : 'Corriendo'} desde el ${new Date(data.totals.since).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}`
-    : (duel ? 'Tus duelos' : 'Tu rendimiento');
+    ? `${tour ? 'Torneos' : duel ? 'Duelos' : 'Corriendo'} desde el ${new Date(data.totals.since).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}`
+    : (tour ? 'Tus torneos' : duel ? 'Tus duelos' : 'Tu rendimiento');
   if (empty) return;
-  document.querySelectorAll('#s-body .g-only').forEach((el) => { el.hidden = duel; });
+  document.querySelectorAll('#s-body .g-only').forEach((el) => { el.hidden = duel || tour; });
   $('#s-duel').hidden = !duel;
+  $('#s-tourney').hidden = !tour;
   kpis();
   chart();
   days();
   categories();
-  if (duel) {
+  if (tour) {
+    tourneys();
+  } else if (duel) {
     duels();
   } else {
     keyboard();

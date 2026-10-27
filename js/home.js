@@ -3,7 +3,7 @@ import { load } from './store.js';
 import { avatarInner } from './avatar.js';
 import { $, esc, svg, icons } from './ui.js';
 
-const scope = { races: 'today', avg: '10', hc: 'today', duels: 'all' };
+const scope = { races: 'today', avg: '10', hc: 'today', duels: 'all', tourneys: 'all' };
 const cache = {};
 let current = 'races';
 let me = null;
@@ -49,6 +49,14 @@ const boards = {
     val: (r) => r.wins,
     empty: 'Nadie ganó un duelo en este período.',
     miss: 'Todavía no ganaste un duelo en este período.',
+  },
+  tourneys: {
+    scopes: [['all', 'Histórico']],
+    load: () => api.tourneyRanking(),
+    sub: (r) => `${plural(r.wins, 'partido ganado', 'partidos ganados')}, ${plural(r.played, 'torneo', 'torneos')}`,
+    val: (r) => r.titles,
+    empty: 'Todavía nadie ganó un torneo.',
+    miss: 'Todavía no jugaste un torneo.',
   },
 };
 

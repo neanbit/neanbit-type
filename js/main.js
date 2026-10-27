@@ -10,11 +10,12 @@ import { openVitrina } from './vitrina.js';
 import { esc } from './ui.js';
 import { avatarInner } from './avatar.js';
 import { duel } from './duel.js';
+import { tourney } from './tourney.js';
 
 const $ = (sel) => document.querySelector(sel);
 let texts = [];
 let categories = [];
-const screens = ['home', 'pick', 'race', 'stats', 'profile', 'duel'];
+const screens = ['home', 'pick', 'race', 'stats', 'profile', 'duel', 'tourney'];
 
 const state = {
   unit: load('unit', 'cpm'),
@@ -177,7 +178,8 @@ function startRace(text, mode = 'normal', ghost = 0) {
   $('#r-liveacc').textContent = '100';
   $('#r-words').textContent = '0';
   $('#r-of').textContent = '/ ' + state.engine.words.length;
-  $('#r-mode').textContent = modeNames[mode] || 'Carrera';
+  const inTourney = mode === 'duel' && !!state.duel?.tm;
+  $('#r-mode').textContent = inTourney ? 'Torneo' : modeNames[mode] || 'Carrera';
   $('#r-mode').dataset.mode = mode;
   $('#r-meta').textContent = raceMeta(text, mode, ghost);
   const isDuel = mode === 'duel';
@@ -192,12 +194,12 @@ function startRace(text, mode = 'normal', ghost = 0) {
   $('#r-forfeit').hidden = !isDuel;
   $('#r-forfeit').textContent = 'Abandonar';
   $('#r-again').hidden = isDuel;
-  $('#r-next-label').textContent = isDuel ? 'Otro duelo' : 'Siguiente';
+  $('#r-next-label').textContent = inTourney ? 'Volver al torneo' : isDuel ? 'Otro duelo' : 'Siguiente';
   $('#d-modal').hidden = true;
   $('.hint').hidden = isDuel;
   if (isDuel) {
     $('#r-opp-name').textContent = state.duel.opp.name;
-    $('#r-count-vs').textContent = 'Contra ' + state.duel.opp.name;
+    $('#r-count-vs').textContent = (inTourney ? `${roundName(state.duel.tm)}, contra ` : 'Contra ') + state.duel.opp.name;
     $('#r-ghost').style.width = '0';
     $('#d-bar-fill').style.width = '0';
   }
@@ -209,7 +211,10 @@ const modeNames = { normal: 'Carrera', ghost: 'Contra tu récord', hc: 'Hardcore
 
 function raceMeta(text, mode, ghost) {
   if (mode === 'practice') return 'Tus palabras difíciles';
-  if (mode === 'duel') return `Contra ${state.duel.opp.name}, ${text.text.split(' ').length} palabras`;
+  if (mode === 'duel') {
+    const tm = state.duel.tm;
+    return `${tm ? `${tm.name}, ${roundName(tm).toLowerCase()}. ` : ''}Contra ${state.duel.opp.name}, ${text.text.split(' ').length} palabras`;
+  }
   const base = `#${text.id} ${text.category}, ${text.text.split(' ').length} palabras`;
   return mode === 'ghost' ? `${base}. Récord ${speed(ghost)} ${unitLabel()}` : base;
 }
@@ -552,11 +557,17 @@ function openDuel(queue = false) {
 }
 
 function nextDuel() {
+  if (state.duel?.tm) return tourney.open(state.duel.tm.tid);
   openDuel(true);
 }
 
+function roundName({ round, rounds }) {
+  const left = rounds - round;
+  return ['Final', 'Semifinal', 'Cuartos de final', 'Octavos de final'][left] || `Ronda ${round}`;
+}
+
 function startDuelRace(match) {
-  state.duel = { opp: match.opp, len: match.text.length, live: false, ended: false, oppCpm: 0 };
+  state.duel = { opp: match.opp, len: match.text.length, live: false, ended: false, oppCpm: 0, tm: match.tm || null };
   startRace({ id: match.textId, category: 'Duelo', text: match.text }, 'duel');
 }
 
@@ -597,7 +608,7 @@ function showVerdict({ win = null, forfeit = false, wait = false, you = null, op
   let sub = `Esperando a que ${name} termine…`;
   if (!wait) {
     title = win === true ? (forfeit ? 'Ganaste por abandono' : 'Ganaste') : win === false ? 'Perdiste' : 'Sin ganador';
-    if (win === null) sub = 'Nadie llegó a terminar el texto.';
+    if (win === null) sub = state.duel?.tm ? 'Nadie terminó el texto. El torneo lo define por avance o repite el partido.' : 'Nadie llegó a terminar el texto.';
     else if (forfeit) sub = `${name} se desconectó antes de terminar.`;
     else if (!you) sub = `${name} terminó y vos no llegaste a tiempo.`;
     else if (opp) {
@@ -605,7 +616,10 @@ function showVerdict({ win = null, forfeit = false, wait = false, you = null, op
       sub = `${win ? 'Le sacaste' : 'Te sacó'} ${gap} s de ventaja.`;
     } else sub = '';
   }
-  $('#d-kicker').textContent = `Duelo contra ${name}`;
+  const tm = state.duel ? state.duel.tm : null;
+  if (tm && !wait && win === true) sub += tm.round < tm.rounds ? ' Pasás a la siguiente ronda.' : ' Sos el campeón del torneo.';
+  $('#d-kicker').textContent = tm ? `${tm.name}, ${roundName(tm).toLowerCase()}, contra ${name}` : `Duelo contra ${name}`;
+  $('#d-next span').textContent = tm ? 'Volver al torneo' : 'Otro duelo';
   $('#d-title').textContent = title;
   $('#d-sub').textContent = sub;
   $('#d-opp-label').textContent = name;
@@ -679,17 +693,31 @@ document.addEventListener('duel-result', (e) => {
 });
 document.addEventListener('duel-cancelled', () => {
   note('Tu rival se fue antes de largar.');
-  openDuel();
+  if (state.duel?.tm) tourney.open(state.duel.tm.tid);
+  else openDuel();
 });
 document.addEventListener('duel-lost', () => {
   if (state.mode !== 'duel') return;
   clearInterval(state.timer);
   state.over = true;
   note('Se perdió la conexión con el duelo.');
-  openDuel();
+  if (state.duel?.tm) tourney.open(state.duel.tm.tid);
+  else openDuel();
 });
 document.addEventListener('duel-replaced', () => goHome());
 $('#go-duel').onclick = () => openDuel();
+tourney.init({
+  show,
+  speed,
+  unitLabel,
+  me: () => state.me,
+  home: goHome,
+  login: () => {
+    note('Ingresá para inscribirte.');
+    $('#account').click();
+  },
+});
+$('#go-tourney').onclick = () => tourney.open();
 $('#duel-back').onclick = goHome;
 $('#d-next').onclick = nextDuel;
 $('#d-home').onclick = goHome;
