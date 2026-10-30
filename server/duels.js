@@ -59,8 +59,13 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
     let m;
     try { m = JSON.parse(raw); } catch { return; }
     if (!m || typeof m.t !== 'string') return;
-    if (Object.hasOwn(actions, m.t)) actions[m.t](c, m);
-    else if (Object.hasOwn(hooks.actions, m.t)) hooks.actions[m.t](c, m);
+    // Un mensaje malicioso o mal formado no tiene que poder tirar el proceso entero (y con él todos los duelos en curso).
+    try {
+      if (Object.hasOwn(actions, m.t)) actions[m.t](c, m);
+      else if (Object.hasOwn(hooks.actions, m.t)) hooks.actions[m.t](c, m);
+    } catch (err) {
+      console.error('ws', m.t, err);
+    }
   }
 
   const actions = {

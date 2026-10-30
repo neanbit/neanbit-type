@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { seed } from './seed.js';
 import { createDuels } from './duels.js';
 import { createTournaments } from './tournaments.js';
+import { clientIp, createLimiter } from './limits.js';
 import { CONDITIONS, ensureMedalSchema, grantCount, groupOf, loadIcons, medalFile, medalValues, realTourneyWins, tierOf } from './medals.js';
 
 const scrypt = promisify(scryptCb);
@@ -37,7 +38,8 @@ db.exec(`
   create table if not exists deaths (
     id integer primary key, user_id integer not null, text_id integer not null, at integer not null);
 `);
-db.exec('pragma journal_mode = wal; pragma busy_timeout = 5000;');
+// secure_delete: lo que se borra se pisa con ceros en el archivo, no queda en espacio libre.
+db.exec('pragma journal_mode = wal; pragma busy_timeout = 5000; pragma secure_delete = on;');
 try { db.exec("alter table users add column avatar text not null default ''"); } catch {}
 try { db.exec('alter table users add column avatar_v integer not null default 0'); } catch {}
 try { db.exec('alter table users add column verified integer not null default 0'); } catch {}
@@ -73,6 +75,15 @@ ensureMedalSchema(db, JSON.parse(readFileSync(join(root, 'server', 'medals-base.
 const medalIcons = loadIcons(join(root, 'server', 'medal-icons'));
 if (admin) db.prepare("update users set role = 'admin' where handle = ?").run(admin);
 
+// Los ids de usuario no se reutilizan nunca: `users.id` no es AUTOINCREMENT, así que si se borra al último usuario, SQLite
+// le daría ese mismo id al próximo, que heredaría sus filas sueltas (torneos, medallas). `user_seq` guarda el id más alto emitido.
+const seqNow = () => Number(db.prepare("select value from settings where key = 'user_seq'").get()?.value) || 0;
+const saveSeq = (n) => db.prepare("insert into settings (key, value) values ('user_seq', ?) on conflict(key) do update set value = excluded.value").run(String(n));
+{
+  const top = db.prepare('select coalesce(max(id), 0) as n from users').get().n;
+  if (seqNow() < top) saveSeq(top);
+}
+
 function seedTexts() {
   if (db.prepare('select count(*) as n from texts').get().n) return;
   const addCategory = db.prepare('insert into categories (name, pos) values (?, ?)');
@@ -102,10 +113,10 @@ function maintenance() {
 const userCols = 'id, handle, name, hash, role, created, avatar_v, verified, shown, bio, country, layout, switches, discord, title, website, accent, banner, shape';
 const sha = (s) => createHash('sha256').update(s).digest('hex');
 const mime = { '.png': 'image/png', '.svg': 'image/svg+xml', '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
-const hits = new Map();
+const limits = createLimiter();
 
 function send(res, status, data, headers = {}) {
-  res.writeHead(status, { 'content-type': 'application/json', ...headers });
+  res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers });
   res.end(JSON.stringify(data));
 }
 
@@ -122,12 +133,8 @@ function readBody(req, limit = 10000) {
   });
 }
 
-function limited(ip) {
-  const now = Date.now();
-  const recent = (hits.get(ip) || []).filter((t) => now - t < 60000);
-  recent.push(now);
-  hits.set(ip, recent);
-  return recent.length > 10;
+function tooMany(res, key, windowMs, text = 'Demasiados pedidos, esperá un momento.') {
+  return send(res, 429, { error: text }, { 'retry-after': String(limits.wait(key, windowMs)) });
 }
 
 function saveErrors(userId, kind, map) {
@@ -228,6 +235,10 @@ function memo(key, make, ttl = 20000) {
   const hit = cache.get(key);
   if (hit && hit.v === version && Date.now() - hit.at < ttl) return hit.data;
   const data = make();
+  if (cache.size >= 200) {
+    for (const [k, e] of cache) if (Date.now() - e.at > ttl * 3) cache.delete(k);
+    if (cache.size >= 200) cache.clear();
+  }
   cache.set(key, { v: version, at: Date.now(), data });
   return data;
 }
@@ -305,7 +316,19 @@ const publicUser = (u) => ({
 async function api(req, res, url) {
   const key = `${req.method} ${url.pathname}`;
   const me = sessionUser(req);
-  const ip = req.headers['cf-connecting-ip'] || req.socket.remoteAddress;
+  const ip = clientIp(req);
+
+  // Defensa contra CSRF: un pedido que cambia datos tiene que venir de esta misma página.
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    const site = req.headers['sec-fetch-site'];
+    let foreign = !!site && site !== 'same-origin' && site !== 'none';
+    if (!foreign && req.headers.origin) {
+      try { foreign = new URL(req.headers.origin).host !== req.headers.host; } catch { foreign = true; }
+    }
+    if (foreign) return send(res, 403, { error: 'Pedido no permitido.' });
+  }
+  if (limits.hit('all:' + ip, 600, 60000)) return tooMany(res, 'all:' + ip, 60000);
+  if (req.method !== 'GET' && limits.hit('post:' + ip, 120, 60000)) return tooMany(res, 'post:' + ip, 60000);
 
   const photo = /^\/api\/avatar\/([a-z0-9_]{3,15})$/.exec(url.pathname);
   if (req.method === 'GET' && photo) {
@@ -317,6 +340,7 @@ async function api(req, res, url) {
 
   if (key === 'POST /api/avatar') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    if (limits.hit('av:' + me.id, 10, 60000)) return tooMany(res, 'av:' + me.id, 60000);
     const { image } = await readBody(req, 120000);
     const prefix = 'data:image/jpeg;base64,';
     if (image === null) {
@@ -345,6 +369,7 @@ async function api(req, res, url) {
 
   if (key === 'POST /api/profile') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    if (limits.hit('pf:' + me.id, 20, 60000)) return tooMany(res, 'pf:' + me.id, 60000);
     const b = await readBody(req);
     const clean = (v, max) => String(v ?? '').trim().slice(0, max);
     const name = clean(b.name, 15);
@@ -365,29 +390,51 @@ async function api(req, res, url) {
   if (key === 'GET /api/me') return send(res, 200, { user: me && publicUser(me) });
 
   if (key === 'POST /api/register') {
-    if (limited(ip)) return send(res, 429, { error: 'Demasiados intentos, esperá un minuto.' });
+    if (limits.hit('auth:' + ip, 10, 60000)) return tooMany(res, 'auth:' + ip, 60000, 'Demasiados intentos, esperá un minuto.');
+    if (limits.hit('reg:' + ip, 5, 3600000)) return tooMany(res, 'reg:' + ip, 3600000, 'Ya se crearon varias cuentas desde esta conexión. Probá de nuevo más tarde.');
     const { handle = '', name = '', password = '' } = await readBody(req);
     const h = String(handle).toLowerCase();
     if (!/^[a-z0-9_]{3,15}$/.test(h)) return send(res, 400, { error: 'El usuario usa 3 a 15 letras, números o guion bajo.' });
     if (!/^[\p{L}\p{N} _.-]{1,15}$/u.test(name)) return send(res, 400, { error: 'El nombre tiene hasta 15 caracteres.' });
     if (typeof password !== 'string' || password.length < 8) return send(res, 400, { error: 'La contraseña necesita 8 caracteres o más.' });
+    if (password.length > 200) return send(res, 400, { error: 'La contraseña es demasiado larga (máximo 200 caracteres).' });
+    if (password.toLowerCase() === h) return send(res, 400, { error: 'La contraseña no puede ser igual al usuario.' });
     const hash = await hashPassword(password);
+    const role = h === admin ? 'admin' : 'user';
+    let id;
+    db.exec('begin immediate');
     try {
-      const role = h === admin ? 'admin' : 'user';
-      const info = db.prepare('insert into users (handle, name, hash, role, created) values (?, ?, ?, ?, ?)')
-        .run(h, name.trim(), hash, role, Date.now());
-      return startSession(req, res, Number(info.lastInsertRowid), 201);
-    } catch {
-      return send(res, 409, { error: 'Ese usuario ya existe.' });
+      id = Math.max(seqNow(), db.prepare('select coalesce(max(id), 0) as n from users').get().n) + 1;
+      db.prepare('insert into users (id, handle, name, hash, role, created) values (?, ?, ?, ?, ?, ?)').run(id, h, name.trim(), hash, role, Date.now());
+      saveSeq(id);
+      db.exec('commit');
+    } catch (err) {
+      try { db.exec('rollback'); } catch {}
+      if (/UNIQUE/i.test(String(err.message))) return send(res, 409, { error: 'Ese usuario ya existe.' });
+      throw err;
     }
+    return startSession(req, res, id, 201);
   }
 
   if (key === 'POST /api/login') {
-    if (limited(ip)) return send(res, 429, { error: 'Demasiados intentos, esperá un minuto.' });
+    if (limits.hit('auth:' + ip, 10, 60000)) return tooMany(res, 'auth:' + ip, 60000, 'Demasiados intentos, esperá un minuto.');
     const { handle = '', password = '' } = await readBody(req);
-    const user = db.prepare(`select ${userCols} from users where handle = ?`).get(String(handle).toLowerCase());
-    if (!user || typeof password !== 'string' || !(await checkPassword(password, user.hash)))
+    const h = String(handle).toLowerCase().slice(0, 15);
+    // Intentos fallidos: 5 por usuario desde cada conexión y 30 por usuario en total, cada 15 minutos.
+    const failIp = `fail:${ip}:${h}`;
+    const failAll = `failh:${h}`;
+    if (limits.blocked(failIp, 5, 900000)) return tooMany(res, failIp, 900000, 'Demasiados intentos fallidos. Esperá unos minutos.');
+    if (limits.blocked(failAll, 30, 900000)) return tooMany(res, failAll, 900000, 'Demasiados intentos fallidos con este usuario. Esperá unos minutos.');
+    const user = db.prepare(`select ${userCols} from users where handle = ?`).get(h);
+    const okPassword = typeof password === 'string' && password.length <= 200;
+    // Si el usuario no existe se hace igual el cálculo del hash, para que la demora no revele qué usuarios existen.
+    const good = okPassword && (user ? await checkPassword(password, user.hash) : (await scrypt(password, '0'.repeat(32), 64), false));
+    if (!user || !good) {
+      limits.add(failIp, 900000);
+      limits.add(failAll, 900000);
       return send(res, 401, { error: 'Usuario o contraseña incorrectos.' });
+    }
+    limits.reset(failIp);
     return startSession(req, res, user.id, 200);
   }
 
@@ -402,7 +449,7 @@ async function api(req, res, url) {
     if (maintenance().on && me.role !== 'admin') return send(res, 503, { error: 'Estamos en mantenimiento.' });
     const { textId, cpm, acc, hc = 0, chars, words } = await readBody(req);
     const valid = [textId, cpm, acc].every(Number.isInteger) && cpm >= 1 && cpm <= 1800 && acc >= 0 && acc <= 100 && (hc === 0 || hc === 1);
-    if (!valid) return send(res, 400, { error: 'Resultado inválido.' });
+    if (!valid || !db.prepare('select 1 from texts where id = ?').get(textId)) return send(res, 400, { error: 'Resultado inválido.' });
     const last = db.prepare('select max(at) as a from races where user_id = ?').get(me.id).a || 0;
     if (Date.now() - last < 3000) return send(res, 429, { error: 'Demasiado rápido.' });
     db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc) values (?, ?, ?, ?, ?, ?)')
@@ -416,7 +463,8 @@ async function api(req, res, url) {
   if (key === 'POST /api/deaths') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
     const { textId } = await readBody(req);
-    if (!Number.isInteger(textId)) return send(res, 400, { error: 'Pedido inválido.' });
+    if (!Number.isInteger(textId) || !db.prepare('select 1 from texts where id = ?').get(textId)) return send(res, 400, { error: 'Pedido inválido.' });
+    if (limits.hit('death:' + me.id, 20, 60000)) return tooMany(res, 'death:' + me.id, 60000);
     db.prepare('insert into deaths (user_id, text_id, at) values (?, ?, ?)').run(me.id, textId, Date.now());
     return send(res, 201, { ok: true });
   }
@@ -457,7 +505,7 @@ async function api(req, res, url) {
 
   if (key === 'GET /api/races/top') {
     const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
-    const rows = memo('top' + since, () => db.prepare(`
+    const rows = memo('top' + (since ? 'today' : 'all'), () => db.prepare(`
       select u.handle, u.name, u.avatar_v as av, u.verified, max(r.cpm) as cpm, r.text_id
       from races r join users u on u.id = r.user_id
       where r.hc = 0 and r.at >= ? group by u.id order by cpm desc, u.id limit 10`).all(since));
@@ -479,7 +527,7 @@ async function api(req, res, url) {
   if (key === 'GET /api/ranking') {
     const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
     const hc = url.searchParams.get('mode') === 'hc' ? 1 : 0;
-    const all = memo(`rank${hc}-${since}`, () => db.prepare(`
+    const all = memo(`rank${hc}-${since ? 'today' : 'all'}`, () => db.prepare(`
       select u.handle, u.name, u.avatar_v as av, u.verified, max(r.cpm) as cpm, count(*) as races
       from races r join users u on u.id = r.user_id
       where r.at >= ? and r.hc = ? group by u.id order by cpm desc, u.id`).all(since, hc));
@@ -489,7 +537,7 @@ async function api(req, res, url) {
 
   if (key === 'GET /api/ranking/duels') {
     const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
-    const all = memo('duels-' + since, () => db.prepare(`
+    const all = memo('duels-' + (since ? 'today' : 'all'), () => db.prepare(`
       select u.handle, u.name, u.avatar_v as av, u.verified,
         sum(case when p.winner_id = u.id then 1 else 0 end) as wins, count(*) as duels
       from (select a_id as uid, winner_id, at from duels union all select b_id, winner_id, at from duels) p
@@ -520,6 +568,7 @@ async function api(req, res, url) {
     if (req.method === 'POST' && tour[2]) {
       if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
       if (maintenance().on && me.role !== 'admin') return send(res, 503, { error: 'Estamos en mantenimiento.' });
+      if (limits.hit('tj:' + me.id, 20, 60000)) return tooMany(res, 'tj:' + me.id, 60000);
       const r = tour[2] === '/join' ? tourneys.join(id, me) : tourneys.leave(id, me);
       return send(res, r.status, r.body);
     }
@@ -540,6 +589,7 @@ async function api(req, res, url) {
   }
 
   if (key === 'GET /api/users') {
+    if (limits.hit('search:' + ip, 40, 60000)) return tooMany(res, 'search:' + ip, 60000);
     const q = String(url.searchParams.get('q') || '').toLowerCase().replace(/[^\p{L}\p{N}_ .-]/gu, '');
     if (q.length < 2) return send(res, 200, { rows: [] });
     const rows = db.prepare('select handle, name, avatar_v as av from users where handle like ? or lower(name) like ? limit 6').all(`%${q}%`, `%${q}%`);
@@ -548,10 +598,11 @@ async function api(req, res, url) {
 
   const route = /^\/api\/users\/([a-z0-9_]{3,15})(\/races)?$/.exec(url.pathname);
   if (req.method === 'GET' && route) {
+    if (limits.hit('prof:' + ip, 90, 60000)) return tooMany(res, 'prof:' + ip, 60000);
     const user = db.prepare(`select ${userCols} from users where handle = ?`).get(route[1]);
     if (!user) return send(res, 404, { error: 'No existe ese piloto.' });
     if (route[2]) {
-      const page = Math.max(0, Number(url.searchParams.get('page')) || 0);
+      const page = Math.min(100000, Math.max(0, Math.trunc(Number(url.searchParams.get('page'))) || 0));
       const rows = db.prepare('select cpm, text_id, at from races where user_id = ? and hc = 0 order by at desc limit 10 offset ?').all(user.id, page * 10);
       const total = db.prepare('select count(*) as n from races where user_id = ? and hc = 0').get(user.id).n;
       return send(res, 200, { rows, total });
@@ -584,6 +635,7 @@ function startSession(req, res, userId, status) {
   db.prepare('delete from sessions where expires < ?').run(Date.now());
   db.prepare('insert into sessions (token, user_id, expires) values (?, ?, ?)')
     .run(sha(token), userId, Date.now() + 30 * 86400000);
+  db.prepare('delete from sessions where user_id = ? and token not in (select token from sessions where user_id = ? order by expires desc limit 10)').run(userId, userId);
   const user = db.prepare(`select ${userCols} from users where id = ?`).get(userId);
   send(res, status, { user: publicUser(user) }, { 'set-cookie': cookie(req, token, 30 * 86400) });
 }
@@ -647,7 +699,35 @@ const tourneys = createTournaments({
   earnedMedal: (userId, medalId) => medalsOf(userId).some((m) => m.id === medalId && m.earned),
 });
 
+// Cabeceras de seguridad. NT_CSP=report solo avisa en la consola del navegador sin bloquear; NT_CSP=off la quita.
+const cspMode = process.env.NT_CSP || 'enforce';
+function secure(req, res) {
+  const https = req.headers['x-forwarded-proto'] === 'https';
+  res.setHeader('x-content-type-options', 'nosniff');
+  res.setHeader('x-frame-options', 'DENY');
+  res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
+  res.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  res.setHeader('cross-origin-opener-policy', 'same-origin');
+  if (https) res.setHeader('strict-transport-security', 'max-age=15552000');
+  if (cspMode === 'off') return;
+  const host = String(req.headers.host || '').replace(/[^\w.:-]/g, '');
+  const socket = host ? ` ${https ? 'wss' : 'ws'}://${host}` : '';
+  res.setHeader(cspMode === 'report' ? 'content-security-policy-report-only' : 'content-security-policy', [
+    "default-src 'self'",
+    "script-src 'self' https://static.cloudflareinsights.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    'font-src https://fonts.gstatic.com',
+    "img-src 'self' data: blob:",
+    `connect-src 'self'${socket} https://cloudflareinsights.com`,
+    "frame-ancestors 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ].join('; '));
+}
+
 const server = http.createServer(async (req, res) => {
+  secure(req, res);
   try {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname.startsWith('/api/')) await api(req, res, url);
@@ -660,4 +740,17 @@ const server = http.createServer(async (req, res) => {
   }
 });
 server.on('upgrade', duels.upgrade);
-server.listen(port, () => console.log(`neanbit type en http://localhost:${port}`));
+server.requestTimeout = 30000;
+server.headersTimeout = 15000;
+// Por defecto solo escucha en esta máquina: se llega por el túnel de Cloudflare y el firewall no es la única defensa.
+const host = process.env.HOST || '127.0.0.1';
+server.listen(port, host, () => console.log(`neanbit type en http://${host === '127.0.0.1' ? 'localhost' : host}:${port}`));
+
+setInterval(() => limits.sweep(), 60000).unref();
+setInterval(() => {
+  try {
+    db.prepare('delete from sessions where expires < ?').run(Date.now());
+    db.exec('pragma wal_checkpoint(truncate)');
+  } catch (err) { console.error(err); }
+}, 3600000).unref();
+process.on('unhandledRejection', (err) => console.error('unhandledRejection', err));
