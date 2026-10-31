@@ -1,15 +1,8 @@
 import { api } from './api.js';
 import { load, save } from './store.js';
+import { pages } from './pages.js';
 
 const $ = (sel) => document.querySelector(sel);
-let info = null;
-
-$('#nav-info').onclick = () => {
-  $('#info-title').textContent = info?.title || 'Información';
-  $('#info-body').textContent = info?.body || 'Todavía no hay información publicada.';
-  $('#info').showModal();
-};
-$('#info-close').onclick = () => $('#info').close();
 
 async function checkSite() {
   let config;
@@ -19,7 +12,7 @@ async function checkSite() {
   } catch {
     return;
   }
-  info = config.info;
+  pages.setInfo(config.info);
 
   if (config.maintenance.on && session.user?.role !== 'admin') {
     $('#maint-msg').textContent = config.maintenance.message || 'Volvemos en un rato.';

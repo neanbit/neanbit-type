@@ -11,11 +11,13 @@ import { esc } from './ui.js';
 import { avatarInner } from './avatar.js';
 import { duel } from './duel.js';
 import { tourney } from './tourney.js';
+import { pages } from './pages.js';
+import { paintArt } from './art.js';
 
 const $ = (sel) => document.querySelector(sel);
 let texts = [];
 let categories = [];
-const screens = ['home', 'pick', 'race', 'stats', 'profile', 'duel', 'tourney'];
+const screens = ['home', 'pick', 'race', 'stats', 'profile', 'duel', 'tourney', 'page'];
 
 const state = {
   unit: load('unit', 'cpm'),
@@ -50,8 +52,13 @@ async function loadCatalog() {
 
 function show(name) {
   document.body.classList.toggle('profile-view', name === 'profile');
+  document.body.classList.toggle('racing', name === 'race');
   $('#more-menu').hidden = true;
   screens.forEach((s) => ($('#' + s).hidden = s !== name));
+  if (name !== 'page') {
+    document.title = 'neanbit type';
+    if (location.pathname !== '/') history.pushState(null, '', '/');
+  }
   if (name === 'home') document.dispatchEvent(new Event('home'));
   if (name === 'race') typing.focus();
 }
@@ -733,5 +740,19 @@ $('#r-forfeit').onclick = () => {
   btn.timer = setTimeout(() => { delete btn.dataset.sure; btn.textContent = 'Abandonar'; }, 3000);
 };
 
+pages.init({
+  show,
+  leave: () => { clearInterval(state.timer); state.engine = null; duel.close(); },
+  home: goHome,
+  profile: (handle) => openProfile(handle),
+  // en un duelo en curso no se sale a otra página: habría que abandonarlo antes
+  guard: () => {
+    const live = state.mode === 'duel' && !$('#race').hidden && state.duel && !state.duel.ended && (state.duel.live || state.over);
+    if (live) note('Terminá o abandoná el duelo antes de salir.');
+    return !live;
+  },
+});
+paintArt();
 applyPrefs();
 loadCatalog();
+pages.boot();

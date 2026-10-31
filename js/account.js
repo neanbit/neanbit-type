@@ -29,6 +29,8 @@ function setMode(register) {
   registering = register;
   $('#auth-title').textContent = register ? 'Crear cuenta' : 'Ingresar';
   $('#auth-name').hidden = !register;
+  $('#auth-terms').hidden = !register;
+  $('#auth-accept').checked = false;
   $('#auth-submit').textContent = register ? 'Crear cuenta' : 'Ingresar';
   $('#auth-switch').textContent = register ? 'Ya tengo cuenta' : 'Crear una cuenta';
   $('#auth-error').textContent = '';
@@ -50,6 +52,10 @@ $('#auth-form').onsubmit = async (e) => {
   e.preventDefault();
   const handle = $('#auth-handle').value.trim();
   const password = $('#auth-pass').value;
+  if (registering && !$('#auth-accept').checked) {
+    $('#auth-error').textContent = 'Para crear la cuenta tenés que aceptar los términos y la política de privacidad.';
+    return;
+  }
   try {
     if (registering) await api.register(handle, $('#auth-name').value.trim(), password);
     else await api.login(handle, password);

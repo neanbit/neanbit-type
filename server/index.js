@@ -669,8 +669,11 @@ function versioned(clean, file) {
   return file;
 }
 
+// Páginas de contenido: las dibuja el front, el servidor solo entrega index.html.
+const pageRoutes = new Set(['/info', '/guias', '/terminos', '/privacidad', '/cookies', '/normas']);
+
 async function serveStatic(req, res, pathname) {
-  const clean = pathname === '/' ? '/index.html' : pathname;
+  const clean = pathname === '/' || pageRoutes.has(pathname.replace(/\/+$/, '')) ? '/index.html' : pathname;
   const art = /^\/img\/medals\/([\w-]+\.svg)$/.exec(clean);
   if (art) {
     const f = medalFile(medalIcons, db, art[1]);
