@@ -7,7 +7,10 @@
 //   users.xp         total (carreras + eventos), para no recorrer el historial en cada consulta
 import { cleanProgress, countsOf, levelFrom, levelOfXp } from './levels.js';
 
-export const REASONS = { manual: 'Ajuste manual', migrado: 'Ajuste anterior', duel: 'Duelo ganado', tourney: 'Torneo ganado' };
+export const REASONS = {
+  manual: 'Ajuste manual', migrado: 'Ajuste anterior', duel: 'Duelo ganado', tourney: 'Torneo ganado',
+  tourney_final: 'Finalista de torneo', tourney_semi: 'Semifinalista de torneo', tourney_part: 'Participación en torneo',
+};
 
 const col = (db, table, name) => db.prepare(`pragma table_info(${table})`).all().some((c) => c.name === name);
 const tableExists = (db, name) => !!db.prepare("select 1 from sqlite_master where type = 'table' and name = ?").get(name);
@@ -44,10 +47,11 @@ export function createXp({ db, setting }) {
     return amount;
   }
 
-  // XP de un duelo ganado ('duel') o de un torneo ganado ('tourney'), con el valor global del panel.
-  function event(userId, kind, ref, at = Date.now()) {
+  // XP de un duelo ganado ('duel') o de un puesto de torneo ('tourney', 'tourney_final', 'tourney_semi', 'tourney_part').
+  // Sin `base` usa el valor global del panel; los torneos pasan el suyo, ya resuelto.
+  function event(userId, kind, ref, at = Date.now(), base = null) {
     const mult = multFor(userId, at);
-    return add(userId, Math.round(cfg().xp[kind] * mult), kind, { ref, mult, at });
+    return add(userId, Math.round((base ?? cfg().xp[kind]) * mult), kind, { ref, mult, at });
   }
 
   // Ajuste manual acumulado (lo que el panel muestra como «ajuste de XP»).

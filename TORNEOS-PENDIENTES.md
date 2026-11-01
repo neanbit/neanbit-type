@@ -48,3 +48,10 @@ El panel crea la fila en `tournaments` (name, description, status, size 4/8/16/3
 - `remove` (user_id): lo quita. Solo en inscripción.
 - `dq` (user_id): descalifica; si está jugando, el rival gana al instante.
 - `advance` (user_id, match_id): fuerza que ese jugador gane su partido pendiente.
+
+## XP por puesto (v6, etapa 26 paso 4)
+
+- `tournaments.xp_champ`, `xp_final`, `xp_semi` y `xp_part` (entero, -1 = valor global de `settings.progress`). La app crea las columnas al arrancar; el panel las escribe al crear o editar.
+- Al iniciar el torneo los -1 se reemplazan por el global vigente, así que el valor queda fijo. Un torneo ya en curso con -1 paga con el global del momento en que termina.
+- Al terminar (`awardXp` en `server/tournaments.js`): campeón (`tourney`), perdedor de la final (`tourney_final`), perdedores de la ronda anterior si hay 2 rondas o más (`tourney_semi`) y el resto de los eliminados (`tourney_part`). Los descalificados no cobran. El índice único de `xp_events` impide pagar dos veces; el potenciador activo multiplica.
+- La vista pública del torneo trae `xp` y la pantalla del torneo muestra «Premios de XP» (solo los puestos que dan algo).

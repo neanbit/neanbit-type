@@ -37,7 +37,7 @@ El panel [neanbit-type-admin](../neanbit-type-admin) comparte la base y escribe 
 | `maintenance` | Modo mantenimiento y mensaje. |
 | `info` | Aviso del sitio (arriba de la página Información). |
 | `features` | Funciones encendidas o apagadas: compartir, revancha, sonido, ritmo, textos propios, niveles, meta diaria. |
-| `progress` | XP por acción, escala, títulos de nivel, meta diaria por defecto y máxima. |
+| `progress` | XP por acción (incluye los valores por defecto de los puestos de torneo), escala, títulos de nivel, meta diaria por defecto y máxima. |
 | `content` | Reemplazos de los textos de las páginas y datos del sitio (contacto, fecha, repositorio). |
 
 Los textos originales viven en `js/pages.js`. Si los cambiás, regenerá el archivo que usa el panel y copialo a la carpeta `server/` del panel:

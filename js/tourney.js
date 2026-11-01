@@ -71,7 +71,7 @@ function when(t) {
 
 const chips = (t) => `<span class="tn-chip" data-s="${t.status}">${statusLabel[t.status] || t.status}</span>`
   + `<span class="tn-chip">${esc(accessLabel(t.access))}</span>`
-  + `<span class="tn-chip">${t.players} de ${t.size} cupos</span>`;
+  + `<span class="tn-chip">${Array.isArray(t.players) ? t.count : t.players} de ${t.size} cupos</span>`;
 
 function drawList() {
   const live = rows.filter((t) => t.status === 'inscripcion' || t.status === 'en_curso');
@@ -136,6 +136,16 @@ function actions(t, me, mine) {
   return '';
 }
 
+// Premios de XP por puesto; solo se muestra lo que da algo.
+function xpBlock(t) {
+  if (!t.xp) return '';
+  const slots = [['champ', 'Campeón'], ['final', 'Finalista'], ['semi', 'Semifinalista'], ['part', 'Participación']]
+    .filter(([k]) => t.xp[k] > 0 && !(k === 'semi' && t.rounds === 1));
+  if (!slots.length) return '';
+  const note = t.status === 'finalizado' ? 'Se pagó al terminar el torneo.' : 'Se paga al terminar el torneo. Un potenciador activo los multiplica.';
+  return `<section class="tn-block"><h3>Premios de XP</h3><ul class="tn-xp">${slots.map(([k, l]) => `<li><small>${l}</small><b>${t.xp[k]}<i>XP</i></b></li>`).join('')}</ul><p class="tn-note">${note}</p></section>`;
+}
+
 function drawDetail() {
   const t = detail;
   const me = kit.me();
@@ -155,6 +165,7 @@ function drawDetail() {
     + `${t.description ? `<p class="tn-desc">${esc(t.description)}</p>` : ''}`
     + `<p class="tn-when" id="tn-when"></p>`
     + `<div class="tn-actions">${actions(t, me, mine)}</div></section>${champ}`
+    + xpBlock(t)
     + `<section class="tn-block"><h3>Llave</h3>${draw}</section>`
     + `<section class="tn-block"><h3>Participantes <small>${t.count}</small></h3><ul class="tn-players">${players}</ul></section>`;
   drawWhen();

@@ -2,7 +2,8 @@
 // Los valores se leen de `settings.progress`; si no existe o es inválido se usan los de fábrica.
 
 export const DEFAULT_PROGRESS = {
-  xp: { race: 10, hc: 15, perfect: 5, duel: 20, tourney: 150 },
+  // tourney = campeón de torneo; tFinal, tSemi y tPart son los valores por defecto de finalista, semifinalista y participación.
+  xp: { race: 10, hc: 15, perfect: 5, duel: 20, tourney: 150, tFinal: 0, tSemi: 0, tPart: 0 },
   step: 50,
   titles: [[1, 'Novato'], [3, 'Aprendiz'], [6, 'Mecanógrafo'], [10, 'Escribano'], [15, 'Veloz'], [22, 'Experto'], [30, 'Maestro'], [40, 'Leyenda']],
   goalDefault: 5,

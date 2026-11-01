@@ -36,6 +36,20 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
     create index if not exists to_open on tournament_orders (done_at);
   `);
 
+  // XP por puesto, definida en cada torneo: -1 = usar el valor global del panel. Se congela al iniciar (ver startTournament).
+  for (const c of ['champ', 'final', 'semi', 'part']) {
+    try { db.exec(`alter table tournaments add column xp_${c} integer not null default -1`); } catch {}
+  }
+  const XP_SLOTS = [['champ', 'tourney'], ['final', 'tFinal'], ['semi', 'tSemi'], ['part', 'tPart']];
+
+  // XP que da cada puesto de un torneo: el valor propio si tiene, y si no el global de ahora.
+  function rewardsOf(t) {
+    const g = xp.cfg().xp;
+    const out = {};
+    for (const [k, key] of XP_SLOTS) out[k] = t[`xp_${k}`] >= 0 ? t[`xp_${k}`] : g[key];
+    return out;
+  }
+
   const now = () => Date.now();
   const tget = (id) => db.prepare('select * from tournaments where id = ?').get(id);
   const mget = (id) => db.prepare('select * from tournament_matches where id = ?').get(id);
@@ -148,7 +162,10 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
         add.run(t.id, r, s, a, b);
       }
     }
-    db.prepare("update tournaments set status = 'en_curso', rounds = ? where id = ?").run(rounds, t.id);
+    // Los valores de XP que quedaban en «global» se fijan ahora: cambiar el valor global durante el torneo no los mueve.
+    const frozen = rewardsOf(t);
+    db.prepare("update tournaments set status = 'en_curso', rounds = ?, xp_champ = ?, xp_final = ?, xp_semi = ?, xp_part = ? where id = ?")
+      .run(rounds, frozen.champ, frozen.final, frozen.semi, frozen.part, t.id);
     const first = db.prepare('select id from tournament_matches where tournament_id = ? and round = 1 order by slot').all(t.id);
     for (const { id } of first) settle(id);
     for (const id of players) push(id, { t: 't_info', tid: t.id, name: t.name, event: 'start' });
@@ -190,6 +207,20 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
     announce(mget(m.id));
   }
 
+  // XP al terminar el torneo: campeón, finalista (perdió la final), semifinalistas (perdieron la ronda anterior) y el resto de
+  // los eliminados como participación. Los descalificados no reciben nada. El índice único de xp_events evita pagar dos veces.
+  function awardXp(t, winnerId) {
+    const r = rewardsOf(t);
+    if (winnerId) xp.event(winnerId, 'tourney', t.id, Date.now(), r.champ);
+    const out = db.prepare("select user_id, out_round from tournament_players where tournament_id = ? and status = 'eliminado'").all(t.id);
+    for (const p of out) {
+      if (p.user_id === winnerId) continue;
+      if (p.out_round >= t.rounds) xp.event(p.user_id, 'tourney_final', t.id, Date.now(), r.final);
+      else if (t.rounds >= 2 && p.out_round === t.rounds - 1) xp.event(p.user_id, 'tourney_semi', t.id, Date.now(), r.semi);
+      else xp.event(p.user_id, 'tourney_part', t.id, Date.now(), r.part);
+    }
+  }
+
   function finishMatch(m, winnerId, result, duelId = null) {
     const t = tget(m.tournament_id);
     db.prepare("update tournament_matches set status = 'done', winner_id = ?, result = ?, duel_id = coalesce(?, duel_id), a_ready = 0, b_ready = 0 where id = ?")
@@ -209,10 +240,8 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
       if (next) settle(next.id);
     } else {
       db.prepare("update tournaments set status = 'finalizado', winner_id = ?, finished_at = ? where id = ?").run(winnerId, now(), t.id);
-      if (winnerId) {
-        xp.event(winnerId, 'tourney', t.id);
-        push(winnerId, { t: 't_info', tid: t.id, name: t.name, event: 'champion' });
-      }
+      awardXp(tget(t.id), winnerId);
+      if (winnerId) push(winnerId, { t: 't_info', tid: t.id, name: t.name, event: 'champion' });
     }
     bump();
   }
@@ -423,7 +452,7 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
     return {
       id: t.id, name: t.name, description: t.description, status: t.status, size: t.size, rounds: t.rounds,
       players: playerCount(t.id), startsAt: t.starts_at, readySecs: t.ready_secs, finishedAt: t.finished_at,
-      access: publicAccess(t), winner,
+      access: publicAccess(t), winner, xp: rewardsOf(t),
       mine: row ? { status: row.status } : null,
       can: uid && !row ? eligibility(t, uid) : null,
     };
