@@ -7,21 +7,33 @@ import { api } from './api.js';
 import { renderStats, redrawStats } from './stats.js';
 import { renderProfile, renderHistory } from './profile.js';
 import { openVitrina } from './vitrina.js';
-import { esc } from './ui.js';
+import { esc, svg, icons } from './ui.js';
 import { avatarInner } from './avatar.js';
 import { duel } from './duel.js';
 import { tourney } from './tourney.js';
 import { pages } from './pages.js';
 import { paintArt } from './art.js';
+import { sound } from './sound.js';
+import { openShare } from './share.js';
+import { mytexts, editMyText } from './mytexts.js';
 
 const $ = (sel) => document.querySelector(sel);
 let texts = [];
 let categories = [];
 const screens = ['home', 'pick', 'race', 'stats', 'profile', 'duel', 'tourney', 'page'];
 
+// Primera visita: respeta la preferencia del sistema (alto contraste o claro).
+function systemTheme() {
+  if (matchMedia('(prefers-contrast: more)').matches) return 'contraste';
+  return matchMedia('(prefers-color-scheme: light)').matches ? 'claro' : 'neanbit';
+}
+
 const state = {
   unit: load('unit', 'cpm'),
-  theme: ['neanbit', 'claro', 'carbon'].includes(load('theme', '')) ? load('theme', '') : 'neanbit',
+  theme: ['neanbit', 'claro', 'carbon', 'contraste'].includes(load('theme', '')) ? load('theme', '') : systemTheme(),
+  pace: ['off', 'avg', 'best'].includes(load('pace', 'off')) ? load('pace', 'off') : 'off',
+  pacing: 0,
+  last: null,
   history: load('history', []),
   category: null,
   length: '',
@@ -76,6 +88,8 @@ function applyPrefs() {
   document.body.classList.toggle('zen', state.unit === 'zen');
   document.querySelectorAll('#units button').forEach((b) => b.classList.toggle('on', b.dataset.unit === state.unit));
   $('#theme').value = state.theme;
+  document.querySelectorAll('#sound-seg button').forEach((b) => b.classList.toggle('on', b.dataset.v === sound.level));
+  document.querySelectorAll('#pace-seg button').forEach((b) => b.classList.toggle('on', b.dataset.v === state.pace));
   $('#r-unit').textContent = unitLabel();
   $('#r-speed-unit').textContent = unitLabel();
 }
@@ -109,14 +123,18 @@ function pickList() {
   const query = $('#search').value.trim().toLowerCase();
   const cuts = lengthCuts();
   const base = texts.filter((t) => (!query || t.text.toLowerCase().includes(query)) && (!state.length || lengthOf(t, cuts) === state.length));
+  if (state.category === 'Mis textos') {
+    const mine = mytexts.all().filter((t) => !query || (t.title + ' ' + t.text).toLowerCase().includes(query));
+    return { query, base, list: mine.map(mytexts.asText).map((t, i) => ({ ...t, key: mine[i].id })), mine };
+  }
   const list = base.filter((t) => !state.category || (state.category === 'Favoritos' ? favs.has(t.id) : t.category === state.category));
   return { query, base, list };
 }
 
 function renderPick() {
-  const { query, base, list } = pickList();
-  const count = (c) => base.filter((t) => (c === 'Todos' ? true : c === 'Favoritos' ? favs.has(t.id) : t.category === c)).length;
-  $('#chips').innerHTML = ['Todos', 'Favoritos', ...categories].map((c) =>
+  const { query, base, list, mine } = pickList();
+  const count = (c) => (c === 'Mis textos' ? mytexts.all().length : base.filter((t) => (c === 'Todos' ? true : c === 'Favoritos' ? favs.has(t.id) : t.category === c)).length);
+  $('#chips').innerHTML = ['Todos', 'Favoritos', ...categories, 'Mis textos'].map((c) =>
     `<button data-cat="${esc(c)}" class="${(state.category || 'Todos') === c ? 'on' : ''}">${esc(c)}<i>${count(c)}</i></button>`
   ).join('');
   document.querySelectorAll('#len button').forEach((b) => b.classList.toggle('on', b.dataset.len === state.length));
@@ -125,6 +143,15 @@ function renderPick() {
 
   const best = new Map();
   for (const h of state.history) best.set(h.id, Math.max(best.get(h.id) || 0, h.cpm));
+  if (mine) {
+    $('#pick-count').textContent = `${list.length} ${list.length === 1 ? 'texto propio' : 'textos propios'}, guardados solo en este navegador`;
+    $('#cards').innerHTML = list.length
+      ? list.map((t) => `<li data-my="${esc(t.key)}"><div class="c-top"><span class="c-id">Mío</span><span class="c-cat">${esc(t.title || 'Sin título')}</span>`
+        + `<button class="star" data-edit="${esc(t.key)}" aria-label="Editar">${svg(icons.pen)}</button><button class="star" data-del="${esc(t.key)}" aria-label="Borrar">${svg(icons.close)}</button></div>`
+        + `<p>${highlight(t.text, query)}</p><div class="c-foot"><span>${words(t)} palabras</span><span>Sin ranking</span></div></li>`).join('')
+      : '<li class="none">Todavía no guardaste textos. Tocá «Mi texto» para pegar uno y practicarlo.</li>';
+    return;
+  }
   $('#cards').innerHTML = list.length
     ? list.map((t) => {
       const mine = best.get(t.id);
@@ -163,6 +190,7 @@ function drawTarget() {
 
 function startRace(text, mode = 'normal', ghost = 0) {
   if (!text) return note('Todavía no hay textos cargados.');
+  if (text.custom) mode = 'custom';
   clearInterval(state.timer);
   state.text = text;
   state.mode = mode;
@@ -181,7 +209,10 @@ function startRace(text, mode = 'normal', ghost = 0) {
   $('#r-live').textContent = '0';
   $('#r-bar').style.width = '0';
   typing.placeholder = 'Empezá a escribir para arrancar el reloj';
-  $('#r-ghostbtn').hidden = ['hc', 'practice', 'duel'].includes(mode);
+  $('#r-ghostbtn').hidden = ['hc', 'practice', 'duel', 'custom'].includes(mode);
+  setPace(mode);
+  resetResultFx();
+  resetRematch();
   $('#r-liveacc').textContent = '100';
   $('#r-words').textContent = '0';
   $('#r-of').textContent = '/ ' + state.engine.words.length;
@@ -214,10 +245,11 @@ function startRace(text, mode = 'normal', ghost = 0) {
   drawTarget();
 }
 
-const modeNames = { normal: 'Carrera', ghost: 'Contra tu récord', hc: 'Hardcore', practice: 'Entrenamiento', duel: 'Duelo' };
+const modeNames = { custom: 'Texto propio', normal: 'Carrera', ghost: 'Contra tu récord', hc: 'Hardcore', practice: 'Entrenamiento', duel: 'Duelo' };
 
 function raceMeta(text, mode, ghost) {
   if (mode === 'practice') return 'Tus palabras difíciles';
+  if (mode === 'custom') return `${text.title || 'Mi texto'}, ${text.text.split(' ').length} palabras. No suma al ranking.`;
   if (mode === 'duel') {
     const tm = state.duel.tm;
     return `${tm ? `${tm.name}, ${roundName(tm).toLowerCase()}. ` : ''}Contra ${state.duel.opp.name}, ${text.text.split(' ').length} palabras`;
@@ -263,6 +295,7 @@ function practiceText() {
 }
 
 function nextText() {
+  if (state.mode === 'custom') return state.text;
   return state.mode === 'practice' ? practiceText() : randomText();
 }
 
@@ -344,6 +377,11 @@ function tick() {
   $('#r-liveacc').textContent = engine.accuracy();
   $('#r-words').textContent = engine.index;
   $('#r-bar').style.width = (engine.index / engine.words.length) * 100 + '%';
+  if (state.pacing) {
+    const target = (state.pacing / 60) * engine.elapsed();
+    $('#r-pace').style.width = Math.min(1, target / state.text.text.length) * 100 + '%';
+    $('#r-track').dataset.pace = engine.chars() >= target ? 'ahead' : 'behind';
+  }
   if (state.ghost) {
     const ahead = (state.ghost / 60) * engine.elapsed() / state.text.text.length;
     $('#r-ghost').style.width = Math.min(1, ahead) * 100 + '%';
@@ -363,7 +401,7 @@ function finish() {
     state.history = [...state.history, { id: state.text.id, cpm, acc: engine.accuracy(), at: Date.now() }].slice(-50);
     save('history', state.history);
   }
-  if (state.mode !== 'practice') {
+  if (state.mode !== 'practice' && state.mode !== 'custom') {
     document.dispatchEvent(new CustomEvent('race', {
       detail: { textId: state.text.id, cpm, acc: engine.accuracy(), hc: state.mode === 'hc', chars: engine.missedChars, words: engine.missedWords },
     }));
@@ -382,10 +420,21 @@ function finish() {
     delta.textContent = gap === 0 ? 'Igual que tu promedio' : `${Math.abs(gap)} ${unitLabel()} ${gap > 0 ? 'sobre' : 'bajo'} tu promedio`;
   }
   $('#r-total').textContent = engine.elapsed().toFixed(1);
-  $('#r-guest').hidden = !!state.me;
+  const guest = $('#r-guest');
+  guest.textContent = state.mode === 'custom' ? 'Los textos propios no se guardan ni suman al ranking.' : 'Ingresá para guardar esta carrera en tu historial.';
+  guest.hidden = state.mode === 'custom' ? false : !!state.me;
+  $('#r-next-label').textContent = state.mode === 'custom' ? 'Repetir' : 'Siguiente';
+  $('#r-again').hidden = state.mode === 'custom';
   $('#result').hidden = false;
   typing.blur();
 
+  state.last = {
+    speed: speed(cpm), unit: unitLabel(), acc: engine.accuracy(), time: engine.elapsed().toFixed(1), words: engine.words.length,
+    errors: engine.misses, record: !$('#r-flag').hidden,
+    label: state.mode === 'custom' ? 'Texto propio' : `${modeNames[state.mode] || 'Carrera'} · #${state.text.id} ${state.text.category}`,
+  };
+  sound.play('done');
+  playResultFx(!$('#r-flag').hidden);
   const goal = speed(cpm);
   const out = $('#r-speed');
   const began = performance.now();
@@ -397,13 +446,15 @@ function finish() {
   requestAnimationFrame(step);
 }
 
-typing.addEventListener('input', () => {
+typing.addEventListener('input', (e) => {
   const { engine } = state;
   if (!engine || engine.finished || state.over) return;
   const first = !engine.startedAt;
   const res = engine.input(typing.value);
   typing.value = res.typed;
   typing.classList.toggle('err', res.wrong);
+  if (e.inputType && e.inputType.startsWith('insert')) sound.play(res.wrong ? 'error' : res.advanced ? 'space' : 'key');
+  if (state.pacing) beat();
   if (state.mode === 'hc' && res.wrong) return die();
   if (first) {
     state.timer = setInterval(tick, 100);
@@ -432,6 +483,133 @@ function goHome() {
   duel.close();
   show('home');
 }
+
+// ---- ritmo del cursor ----
+function paceTarget() {
+  const h = state.history;
+  if (state.pace === 'off' || h.length < 3) return 0;
+  if (state.pace === 'best') return Math.max(...h.map((x) => x.cpm));
+  const last = h.slice(-10);
+  return Math.round(last.reduce((a, x) => a + x.cpm, 0) / last.length);
+}
+
+function setPace(mode) {
+  state.pacing = mode === 'duel' || mode === 'practice' ? 0 : paceTarget();
+  $('#r-pace').hidden = !state.pacing;
+  $('#r-pace').style.width = '0';
+  $('#r-track').dataset.pace = state.pacing ? 'ahead' : '';
+}
+
+function beat() {
+  const bar = $('#r-bar');
+  bar.classList.remove('beat');
+  void bar.offsetWidth;
+  bar.classList.add('beat');
+}
+
+// ---- resultado: animación, experiencia y compartir ----
+function resetResultFx() {
+  $('#result').classList.remove('fx', 'record');
+  $('#r-xp').hidden = true;
+  $('#xp-fill').style.transition = 'none';
+  $('#xp-fill').style.width = '0';
+  document.querySelectorAll('#result .burst').forEach((b) => b.remove());
+}
+
+function playResultFx(record) {
+  const box = $('#result');
+  box.classList.remove('fx', 'record');
+  void box.offsetWidth;
+  box.classList.add('fx');
+  if (!record || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  box.classList.add('record');
+  const burst = document.createElement('div');
+  burst.className = 'burst';
+  burst.setAttribute('aria-hidden', 'true');
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement('i');
+    const a = (Math.PI * 2 * i) / 18 + Math.random() * 0.3;
+    const d = 70 + Math.random() * 90;
+    s.style.setProperty('--x', Math.cos(a) * d + 'px');
+    s.style.setProperty('--y', Math.sin(a) * d * 0.7 + 'px');
+    s.style.setProperty('--s', 5 + Math.random() * 6 + 'px');
+    burst.append(s);
+  }
+  box.append(burst);
+  setTimeout(() => burst.remove(), 1400);
+}
+
+document.addEventListener('race-saved', (e) => {
+  const xp = e.detail && e.detail.after;
+  if (!xp || $('#result').hidden || state.mode === 'duel') return;
+  const { before, after } = e.detail;
+  const gain = after.xp - before.xp;
+  const pct = (x) => Math.round(((x.xp - x.from) / (x.to - x.from)) * 100);
+  const fill = $('#xp-fill');
+  $('#r-xp').hidden = false;
+  $('#xp-gain').textContent = `+${gain} XP`;
+  const up = after.level > before.level;
+  $('#xp-lv').textContent = up ? `Subiste al nivel ${after.level}: ${after.title}` : `Nivel ${after.level}, ${after.title}`;
+  $('#r-xp').classList.toggle('up', up);
+  fill.style.transition = 'none';
+  fill.style.width = pct(before) + '%';
+  void fill.offsetWidth;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  fill.style.transition = reduce ? 'none' : 'width .7s ease-out .35s';
+  if (!up) { fill.style.width = pct(after) + '%'; return; }
+  fill.style.width = '100%';
+  setTimeout(() => {
+    fill.style.transition = 'none';
+    fill.style.width = '0';
+    void fill.offsetWidth;
+    fill.style.transition = reduce ? 'none' : 'width .6s ease-out';
+    fill.style.width = pct(after) + '%';
+  }, reduce ? 0 : 1100);
+});
+
+$('#r-share').onclick = () => {
+  if (!state.last) return;
+  openShare({ ...state.last, name: state.me ? $('#who-name').textContent : 'Invitado', handle: state.me, level: $('#xp-lv').textContent.match(/ivel (\d+)/)?.[1] || '' });
+};
+
+// ---- revancha en duelos ----
+const re = { from: null, sent: false };
+
+function resetRematch() {
+  re.from = null;
+  re.sent = false;
+  $('#d-re').hidden = true;
+  $('#d-rematch').hidden = false;
+  $('#d-rematch').disabled = false;
+  $('#d-rematch').textContent = 'Revancha';
+}
+
+function drawRematch(msg = '') {
+  $('#d-re').hidden = !msg;
+  $('#d-re-msg').textContent = msg;
+  $('#d-re-yes').hidden = !re.from;
+  $('#d-re-no').textContent = re.from ? 'Rechazar' : 'Cancelar';
+  $('#d-rematch').hidden = !!re.from || re.sent;
+}
+
+$('#d-rematch').onclick = () => {
+  if (!state.duel) return;
+  if (!duel.rematch(state.duel.opp.handle)) return note('No se pudo conectar para pedir la revancha.');
+};
+$('#d-re-yes').onclick = () => { if (re.from) duel.answer(re.from, true); };
+$('#d-re-no').onclick = () => {
+  if (re.from) { duel.answer(re.from, false); re.from = null; drawRematch(); $('#d-rematch').hidden = false; }
+  else { duel.cancelInvite(); re.sent = false; drawRematch(); }
+};
+document.addEventListener('duel-invite', (e) => {
+  if (!state.duel || $('#d-modal').hidden || !state.duel.ended || state.duel.tm) return;
+  if (e.detail.handle !== state.duel.opp.handle) return;
+  re.from = e.detail.handle;
+  drawRematch(`${e.detail.name} propone una revancha.`);
+});
+document.addEventListener('duel-invite_gone', (e) => { if (re.from === e.detail.handle) { re.from = null; drawRematch(); $('#d-rematch').hidden = false; } });
+document.addEventListener('duel-invite_sent', () => { re.sent = true; drawRematch(`Revancha enviada a ${state.duel?.opp.name}. Esperando que responda…`); });
+document.addEventListener('duel-invite_ended', () => { re.sent = false; drawRematch(); $('#d-rematch').hidden = false; });
 
 document.addEventListener('play', (e) => startRace(texts.find((t) => t.id === e.detail)));
 $('#go-random').onclick = () => startRace(randomText());
@@ -533,6 +711,16 @@ $('#pick-random').onclick = () => {
   if (list.length) startRace(list[Math.floor(Math.random() * list.length)]);
 };
 $('#cards').onclick = (e) => {
+  const edit = e.target.closest('[data-edit]');
+  if (edit) return editMyText(mytexts.find(edit.dataset.edit), () => renderPick());
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    if (!del.dataset.sure) { del.dataset.sure = '1'; del.title = 'Tocá de nuevo para borrar'; del.classList.add('on'); setTimeout(() => { delete del.dataset.sure; del.classList.remove('on'); }, 2500); return; }
+    mytexts.remove(del.dataset.del);
+    return renderPick();
+  }
+  const mine = e.target.closest('li[data-my]');
+  if (mine) return startRace(mytexts.asText(mytexts.find(mine.dataset.my)));
   const fav = e.target.closest('[data-fav]');
   if (fav) return toggleFav(Number(fav.dataset.fav));
   const card = e.target.closest('li[data-id]');
@@ -546,6 +734,20 @@ $('#units').onclick = (e) => {
   applyPrefs();
   document.dispatchEvent(new Event('units'));
 };
+$('#sound-seg').onclick = (e) => {
+  const v = e.target.dataset.v;
+  if (!v) return;
+  sound.set(v);
+  applyPrefs();
+};
+$('#pace-seg').onclick = (e) => {
+  const v = e.target.dataset.v;
+  if (!v) return;
+  state.pace = v;
+  save('pace', v);
+  applyPrefs();
+};
+$('#pick-add').onclick = () => editMyText(null, (item) => { state.category = 'Mis textos'; renderPick(); startRace(mytexts.asText(item)); });
 $('#theme').onchange = (e) => {
   state.theme = e.target.value;
   save('theme', state.theme);
@@ -641,6 +843,7 @@ function showVerdict({ win = null, forfeit = false, wait = false, you = null, op
   if (errors !== null) $('#d-errs').textContent = errors;
   $('#d-bar').hidden = !wait;
   $('#d-actions').hidden = wait;
+  $('#d-rematch').hidden = !!tm || forfeit || !state.duel || re.sent || !!re.from;
   $('#d-modal').hidden = false;
   verdict.classList.remove('pop');
   void verdict.offsetWidth;

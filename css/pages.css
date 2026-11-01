@@ -148,3 +148,4 @@ kbd, .prose code { padding: 0 .4rem; border: 1px solid var(--line); border-botto
 }
 
 body.racing .foot { display: none; }
+.guide-grid.nofig { grid-template-columns: minmax(0, 1fr); }

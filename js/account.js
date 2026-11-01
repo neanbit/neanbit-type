@@ -70,8 +70,8 @@ $('#auth-form').onsubmit = async (e) => {
 document.addEventListener('race', async (e) => {
   if (!user) return;
   const { textId, cpm, acc, hc, chars, words } = e.detail;
-  await api.sendRace({ textId, cpm, acc, hc: hc ? 1 : 0, chars, words }).catch(() => {});
-  document.dispatchEvent(new Event('race-saved'));
+  const saved = await api.sendRace({ textId, cpm, acc, hc: hc ? 1 : 0, chars, words }).catch(() => null);
+  document.dispatchEvent(new CustomEvent('race-saved', { detail: saved && saved.xp }));
 });
 
 document.addEventListener('death', (e) => {

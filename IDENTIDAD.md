@@ -31,4 +31,23 @@ Una tecla y un cursor. El logo termina en un cuadrado de color: ese cuadrado es 
 - Capturas de pantalla para el README.
 - Tipografías alojadas en el propio servidor (hoy vienen de Google Fonts).
 - Imagen para compartir en redes (og:image).
-- Probado en Chromium (3 temas, 1280 y 390 px) sin desbordes ni errores de consola; no probado en Safari/Firefox ni con duelos/torneos en vivo.
+- Probado en Chromium (4 temas, 1280 y 390 px) sin desbordes; duelo y revancha probados con dos usuarios en Chromium. No probado en Safari/Firefox ni con torneos en vivo.
+
+## Segunda tanda (funciones nuevas)
+- **Resultado compartible**: botón «Compartir» plano en el resultado. Dibuja un PNG de 1200x630 en un canvas (`js/share.js`), solo si lo pedís; no sube nada. Ofrece descargar, copiar y la hoja de compartir del sistema cuando existe. No aparece mientras jugás ni abre nada solo.
+- **Niveles y XP** (`levelOf` en `server/index.js`): sin tabla nueva, se calcula con lo guardado. 10 XP por carrera, 15 en Hardcore, +5 sin errores, +20 duelo ganado, +150 torneo ganado. Nivel = 1 + raíz(XP/50). Ocho títulos (Novato a Leyenda). **Fórmula y títulos son decisión mía**: ajustalos en `RANKS`/`levelOf`.
+- **Racha y meta diaria**: la racha viene de `homeSummary`; la meta es la columna `users.goal` (1 a 50, por defecto 5), editable desde el inicio.
+- **Rankings paginados**: 10 por página, con «tu posición»; Hardcore completo (carreras y eliminaciones).
+- **Revancha**: tras un duelo ambos siguen conectados, así que es una invitación normal (`duel.rematch`). Se oculta en torneos y si el rival abandonó.
+- **Textos propios** (`js/mytexts.js`): solo en el navegador (`nt_mytexts`), 40 a 800 caracteres, no suman a ranking, XP ni estadísticas.
+- **Tema «Alto contraste»**: negro, amarillo `#ffd400`, bordes de 2 px y foco blanco grueso.
+- **Sonido de teclas** (`js/sound.js`): sintetizado con WebAudio, apagado por defecto (Apagado / Suave / Fuerte).
+- **Ritmo del cursor**: apagado por defecto. Marca punteada sobre la barra al ritmo de tu promedio (10 últimas) o tu récord; verde si vas adelante, rojo si atrás. Necesita 3 carreras. No se usa en duelos ni entrenamiento. La barra «late» con cada tecla.
+- **Animación del resultado**: entrada escalonada, barra de XP y estallido de partículas si es récord. Respeta `prefers-reduced-motion`.
+- El tema por defecto ahora sigue al sistema (claro u oscuro) hasta que elegís uno.
+- La grilla de modos pasó a 3x2 (los seis modos al mismo tamaño).
+
+### Pendiente de esta tanda
+- La velocidad del texto propio y del ritmo no se verificó con teclados reales (probado con Playwright).
+- Sonido: no se pudo oír en el entorno de prueba; revisá volúmenes.
+- Probar la revancha con mala conexión (invitación vencida a los 30 s) en vivo.

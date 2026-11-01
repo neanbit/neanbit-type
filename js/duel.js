@@ -77,20 +77,25 @@ function handle(m) {
       break;
     case 'invite_sent':
       status = 'inviting';
+      emit('invite_sent', m.to);
       $('#d-wait-msg').textContent = `Invitación enviada a ${m.to.name}. Esperando que responda…`;
       break;
     case 'invite':
       incoming.set(m.from.handle, m.from);
+      emit('invite', m.from);
       break;
     case 'invite_gone':
       incoming.delete(m.from.handle);
+      emit('invite_gone', m.from);
       break;
     case 'invite_declined':
       status = 'idle';
+      emit('invite_ended', m);
       toast(m.busy ? `${m.to.name} está ocupado ahora.` : `${m.to.name} rechazó la invitación.`);
       break;
     case 'invite_expired':
       status = 'idle';
+      emit('invite_ended', m);
       toast(`${m.to.name} no respondió a tiempo.`);
       break;
     case 'match':
@@ -212,6 +217,15 @@ export const duel = {
     draw();
     return true;
   },
+
+  // Revancha: la conexión sigue abierta en la pantalla de resultado, así que es una invitación común.
+  rematch(handle) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    send({ t: 'invite', to: handle });
+    return true;
+  },
+  answer(handle, yes) { send({ t: yes ? 'accept' : 'decline', from: handle }); incoming.delete(handle); },
+  cancelInvite() { send({ t: 'cancel' }); },
 
   connected() {
     return !!ws && ws.readyState === WebSocket.OPEN;

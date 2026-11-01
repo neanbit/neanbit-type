@@ -145,6 +145,7 @@ const guides = [
       <li>Los dos escriben el <b>mismo texto</b>. Hay una cuenta regresiva de 3 segundos y se larga a la vez.</li>
       <li>Gana quien termina primero. Si el otro no termina, tiene 90 segundos de gracia, y el duelo se cierra como máximo a los 5 minutos.</li>
       <li>Si alguien se desconecta o abandona en plena carrera, gana el rival. Si alguien se va antes de largar, el duelo se cancela sin resultado.</li>
+      <li>Al terminar, cualquiera de los dos puede pedir <b>Revancha</b>. El otro la acepta o la rechaza; vence igual que una invitación. En torneos no hay revancha.</li>
     </ol>
     <p>La velocidad en duelo la calcula el <b>servidor</b> desde la largada, así que no depende de tu reloj. Las carreras de duelo suman a tu historial y a tus estadísticas, con una vista propia de Duelos.</p>`, () => art.duelDiagram()],
   ['g-torneos', 'Torneos', () => `
@@ -156,9 +157,21 @@ const guides = [
       <li><b>Si no aparecés, perdés.</b> Si no aparece ninguno de los dos, pasa el mejor sembrado.</li>
     </ol>
     <p>Si en un partido nadie termina el texto en 5 minutos, pasa quien llegó más lejos. Con igualdad se repite una vez con otro texto.</p>`, () => art.bracketDiagram()],
-  ['g-medallas', 'Medallas y niveles', () => `
+  ['g-progreso', 'Niveles, rachas y meta diaria', () => `
+    <p>Tu <b>nivel</b> sube con la experiencia (XP) que sale de lo que ya jugás: 10 XP por carrera (15 en Hardcore), 5 más si no tuviste errores, 20 por duelo ganado y 150 por torneo ganado. El nivel 2 llega a los 50 XP, el 3 a los 200 y el 5 a los 800. Cada tramo de niveles tiene un título, de Novato a Leyenda. Lo ves en el inicio y en tu perfil, y al terminar una carrera aparece cuánto sumaste.</p>
+    <p>La <b>racha</b> cuenta los días seguidos en que corriste al menos una carrera. Si hoy todavía no jugaste, la racha de ayer sigue viva hasta que termine el día.</p>
+    <p>La <b>meta de hoy</b> es cuántas carreras querés hacer por día (de 1 a 50). La cambiás desde el inicio con «Cambiar» y se guarda en tu cuenta.</p>`],
+  ['g-extras', 'Textos propios, ritmo, sonido y compartir', () => `
+    <ul>
+      <li><b>Mis textos.</b> En Personalizado podés sumar un texto propio (de 40 a 800 caracteres). Se guarda solo en tu navegador, no suma al ranking ni a tus estadísticas.</li>
+      <li><b>Ritmo del cursor.</b> En Ajustes podés activar una marca fina sobre la barra de progreso que avanza al ritmo de tu promedio o de tu récord. Si la barra la pasa, vas adelante. Viene apagado.</li>
+      <li><b>Sonido de teclas.</b> Suave o fuerte, generado en el momento. Viene apagado.</li>
+      <li><b>Compartir.</b> El botón «Compartir» del resultado arma una imagen en tu navegador y la podés descargar o copiar. Solo se crea cuando lo pedís y no se sube a ningún lado.</li>
+      <li><b>Alto contraste.</b> Un cuarto tema, en Ajustes, con negro puro, amarillo y bordes marcados.</li>
+    </ul>`],
+  ['g-medallas', 'Medallas', () => `
     <p>Las medallas se ganan solas al cumplir una condición: cantidad de carreras, velocidad máxima o promedio, carreras sin errores, Hardcore, duelos o torneos ganados. Algunas son <b>apilables</b> (se cuentan) y otras <b>secretas</b>: no se muestran hasta que las conseguís.</p>
-    <p>El <b>nivel</b> (bronce, gris, oro, coral o blanco) es el color de la medalla. En la vitrina ves cuáles tenés, cuáles te faltan y cuánto te falta para cada una. Desde «Editar perfil» elegís hasta seis para exhibir.</p>`, () => art.tierDiagram()],
+    <p>El <b>color</b> de la medalla (bronce, gris, oro, coral o blanco) indica su categoría. En la vitrina ves cuáles tenés, cuáles te faltan y cuánto te falta para cada una. Desde «Editar perfil» elegís hasta seis para exhibir.</p>`, () => art.tierDiagram()],
 ];
 
 const faq = [
@@ -167,6 +180,10 @@ const faq = [
   ['Cuenta', 'Me olvidé la contraseña, ¿qué hago?', 'Por ahora no hay recuperación automática. Si la perdés, escribinos y vemos cómo ayudarte. Para evitarlo, usá una contraseña que puedas recordar o un gestor de contraseñas.'],
   ['Cuenta', '¿Cómo borro mi cuenta?', `Pedilo por ${contact}. Se eliminan tu perfil, tus carreras y tus estadísticas. Los detalles están en la <a href="/privacidad" data-page="privacidad">Política de privacidad</a>.`],
   ['Cuenta', '¿Quién puede ver mi perfil?', 'Cualquiera. El perfil, el historial reciente, las medallas y tu lugar en los rankings son públicos. Tus errores por tecla y tus estadísticas detalladas solo las ves vos. No pongas en la biografía ni en la foto nada que no quieras que vea todo el mundo.'],
+  ['Progreso', '¿Cómo se calcula mi nivel?', 'Con la experiencia (XP): 10 por carrera, 15 en Hardcore, 5 extra sin errores, 20 por duelo ganado y 150 por torneo ganado. No hay nada que activar: se calcula con tus carreras guardadas.'],
+  ['Progreso', '¿Por qué se me cortó la racha?', 'La racha cuenta días seguidos con al menos una carrera guardada, según tu zona horaria. Las carreras de invitado y los textos propios no cuentan.'],
+  ['Progreso', '¿Los textos propios cuentan para algo?', 'No. Sirven para practicar con lo que quieras, pero no se guardan en tu cuenta, no suman XP ni entran a rankings. Viven solo en este navegador.'],
+  ['Progreso', '¿La imagen para compartir se sube a algún lado?', 'No. Se dibuja en tu navegador cuando tocás «Compartir» y vos decidís si la descargás o la mandás.'],
   ['Medición', '¿Qué diferencia hay entre CPM y WPM?', 'CPM cuenta caracteres por minuto; WPM, palabras por minuto, que son CPM dividido por cinco. 300 CPM equivalen a 60 WPM. Elegís la unidad en Ajustes.'],
   ['Medición', '¿Por qué un error me baja la precisión aunque lo corrija?', 'Porque la precisión se calcula sobre las teclas apretadas: cada tecla equivocada cuenta, se corrija o no. Además, una palabra tiene que quedar exacta para poder avanzar.'],
   ['Medición', '¿Se guardan mis carreras de invitado?', 'No. Para que una carrera quede en tu historial y cuente para los rankings, tenés que haber ingresado.'],
@@ -198,7 +215,7 @@ function guiasPage() {
       <article class="guide" id="${id}">
         <p class="eyebrow">Guía ${String(i + 1).padStart(2, '0')}</p>
         <h2>${title}</h2>
-        <div class="guide-grid"><div class="prose">${body()}</div><div class="guide-fig" aria-hidden="true">${fig()}</div></div>
+        <div class="guide-grid${fig ? '' : ' nofig'}"><div class="prose">${body()}</div>${fig ? `<div class="guide-fig" aria-hidden="true">${fig()}</div>` : ''}</div>
       </article>`).join('')}
       <section class="faq" id="faq">
         <p class="eyebrow">Preguntas frecuentes</p>
@@ -272,6 +289,7 @@ const legal = {
           <tr><td>Cuenta</td><td>Nombre de usuario, nombre para mostrar, fecha de alta y rol. La contraseña se guarda <b>solo como hash</b> (scrypt), nunca en texto.</td></tr>
           <tr><td>Perfil (opcional)</td><td>Foto, título, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, y las medallas que elegís mostrar.</td></tr>
           <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>
+          <tr><td>Progreso</td><td>Tu meta diaria de carreras. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>
           <tr><td>Sesión</td><td>Una cookie que mantiene tu sesión iniciada hasta 30 días. En el servidor se guarda una huella de ese código, no el código.</td></tr>
           <tr><td>Técnicos</td><td>Tu dirección IP y datos del navegador viajan con cada solicitud. Se usan para limitar abusos y proteger el servicio y se mantienen en la memoria del servidor por minutos u horas; <b>no se guardan en la base de datos</b>.</td></tr>
         </tbody></table>
@@ -317,9 +335,12 @@ const legal = {
         <thead><tr><th>Nombre</th><th>Tipo</th><th>Para qué sirve</th><th>Dura</th></tr></thead>
         <tbody>
           <tr><td><code>nt_session</code></td><td>Cookie</td><td>Mantiene tu sesión iniciada. Es <b>HttpOnly</b> (los scripts no pueden leerla), <b>SameSite=Lax</b> y <b>Secure</b> en HTTPS.</td><td>30 días o hasta que cerrás sesión</td></tr>
-          <tr><td><code>nt_theme</code></td><td>Almacenamiento local</td><td>El tema elegido (neanbit, claro o carbón).</td><td>Hasta que lo borres</td></tr>
+          <tr><td><code>nt_theme</code></td><td>Almacenamiento local</td><td>El tema elegido (neanbit, claro, carbón o alto contraste).</td><td>Hasta que lo borres</td></tr>
           <tr><td><code>nt_unit</code></td><td>Almacenamiento local</td><td>La unidad de velocidad (CPM, WPM o ZEN).</td><td>Hasta que lo borres</td></tr>
           <tr><td><code>nt_history</code></td><td>Almacenamiento local</td><td>Tus últimas 50 carreras, para compararte con tu promedio.</td><td>Hasta que lo borres</td></tr>
+          <tr><td><code>nt_sound</code></td><td>Almacenamiento local</td><td>Si querés sonido de teclas y con qué volumen.</td><td>Hasta que lo borres</td></tr>
+          <tr><td><code>nt_pace</code></td><td>Almacenamiento local</td><td>El ritmo del cursor que elegiste (apagado, promedio o récord).</td><td>Hasta que lo borres</td></tr>
+          <tr><td><code>nt_mytexts</code></td><td>Almacenamiento local</td><td>Los textos propios que escribiste. No se envían al servidor.</td><td>Hasta que lo borres</td></tr>
           <tr><td><code>nt_favs</code></td><td>Almacenamiento local</td><td>Los textos que marcaste como favoritos.</td><td>Hasta que lo borres</td></tr>
           <tr><td><code>nt_news</code></td><td>Almacenamiento local</td><td>El último anuncio que viste, para no repetirlo.</td><td>Hasta que lo borres</td></tr>
         </tbody></table>`],

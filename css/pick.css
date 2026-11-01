@@ -40,3 +40,17 @@
   .pick-tools .seg { order: 3; width: 100%; }
   .pick-tools .seg button { flex: 1; }
 }
+
+/* textos propios */
+#cards li[data-my] { position: relative; }
+.my-actions { display: flex; gap: .4rem; margin-top: .6rem; }
+.my-actions button, [data-edit], [data-del] { padding: .2rem .6rem; font-size: .75rem; }
+[data-del].on { border-color: var(--bad); color: var(--bad); }
+#mytext textarea { font: .95rem/1.6 var(--mono); }
+.mt-count { margin: 0; color: var(--muted); font: .75rem var(--mono); text-align: right; }
+#mt-error { margin: 0; color: var(--bad); font-size: .85rem; min-height: 1.1em; }
+
+/* compartir */
+.share { width: min(94vw, 680px); }
+.share-view { border: 1px solid var(--line); background: var(--bg-deep); }
+.share-view img { display: block; width: 100%; height: auto; }

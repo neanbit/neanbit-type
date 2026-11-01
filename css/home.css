@@ -22,9 +22,8 @@
 .daily footer span { color: var(--muted); font: .78rem var(--mono); }
 
 /* modos: teclas grandes con su ilustración */
-.modes-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: .9rem; }
+.modes-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .9rem; }
 .mode { position: relative; display: flex; align-items: center; gap: .9rem; grid-column: span 1; padding: 1rem 1.1rem; text-align: left; background: var(--panel); box-shadow: 0 4px 0 color-mix(in srgb, var(--text) 14%, var(--line)); }
-.mode:first-child { grid-column: span 2; }
 .mode:hover { transform: translateY(-1px); box-shadow: 0 5px 0 color-mix(in srgb, var(--accent) 55%, var(--line)); }
 .mode:active { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--text) 14%, var(--line)); }
 .m-art { flex: none; width: 2.9rem; color: var(--muted); transition: color .15s; }
@@ -81,7 +80,6 @@
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; }
   .modes-grid { grid-template-columns: 1fr 1fr; }
-  .mode:first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 560px) {
   .pulse { grid-template-columns: 1fr 1fr; }
@@ -91,3 +89,22 @@
   .invite { flex-direction: column; align-items: stretch; }
   .rows .nm small { display: none; }
 }
+
+/* nivel y meta del día */
+.progress { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 1rem; padding: 1rem 1.1rem; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
+.p-top { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin-bottom: .6rem; }
+.p-top b { font-weight: 600; }
+.p-top span { color: var(--muted); font-size: .85rem; }
+.p-top em, .p-top .link { margin-left: auto; color: var(--muted); font: normal .72rem var(--mono); }
+.p-top .link { color: var(--ink); }
+.meter { height: 8px; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 10%), var(--bg-deep); border: 1px solid var(--line); }
+.meter i { display: block; width: 0; height: 100%; background: var(--accent); transition: width .6s ease-out; }
+.ticks { display: flex; gap: 3px; height: 8px; }
+.ticks i { flex: 1; background: var(--bg-deep); border: 1px solid var(--line); }
+.ticks i.on { background: var(--accent); border-color: var(--accent); }
+.ticks.full i.on { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 50%, transparent); }
+.goal .seg { width: max-content; margin-top: .7rem; }
+.goal .seg button { padding: .25rem .75rem; font-size: .8rem; }
+
+.board-pager { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: .8rem 1.2rem 1rem; border-top: 1px solid var(--line); color: var(--muted); font: .78rem var(--mono); }
+@media (max-width: 560px) { .progress { grid-template-columns: 1fr; } }

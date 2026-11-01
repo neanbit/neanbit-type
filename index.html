@@ -67,6 +67,17 @@
           <div><dt id="p-avg-l">Promedio</dt><dd id="p-avg">0</dd><small>últimas 10</small></div>
           <div><dt>Hoy</dt><dd id="p-today">0</dd><small id="p-today-u">carreras</small></div>
         </dl>
+        <div class="progress" id="progress" hidden>
+          <div class="lvl">
+            <div class="p-top"><b id="lv-name">Nivel 1</b><span id="lv-title">Novato</span><em id="lv-xp"></em></div>
+            <div class="meter" role="progressbar" aria-label="Avance hacia el próximo nivel"><i id="lv-fill"></i></div>
+          </div>
+          <div class="goal">
+            <div class="p-top"><b>Meta de hoy</b><span id="goal-txt"></span><button class="link" id="goal-edit">Cambiar</button></div>
+            <div class="ticks" id="goal-ticks" aria-hidden="true"></div>
+            <div class="seg" id="goal-seg" hidden><button data-g="3">3</button><button data-g="5">5</button><button data-g="10">10</button><button data-g="20">20</button><button data-g="30">30</button></div>
+          </div>
+        </div>
         <div class="invite" id="invite">
           <span>Estás como invitado: las carreras no se guardan ni suman al ranking.</span>
           <button class="primary" id="invite-login">Ingresar o crear cuenta</button>
@@ -100,6 +111,7 @@
         <div class="seg" id="board-scope"></div>
       </header>
       <ol class="rows" id="board-rows"></ol>
+      <div class="board-pager" id="board-pager" hidden><button id="bp-prev">Anterior</button><span id="bp-info"></span><button id="bp-next">Siguiente</button></div>
       <p class="board-note" id="board-note"></p>
     </section>
     <p class="community" id="community"></p>
@@ -121,6 +133,7 @@
         <button data-len="m">Medias</button>
         <button data-len="l">Largas</button>
       </div>
+      <button id="pick-add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Mi texto</button>
       <button id="pick-random"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l8 10h4M4 17h4l2-2.5M14 9.5L16 7h4M18 5l2 2-2 2M18 15l2 2-2 2"/></svg>Una al azar</button>
     </div>
     <div class="chips" id="chips"></div>
@@ -177,7 +190,7 @@
       <div><small>Precisión</small><b id="r-liveacc">100</b><em>%</em></div>
       <div><small>Palabras</small><b id="r-words">0</b><em id="r-of">/ 0</em></div>
     </div>
-    <div class="track" id="r-track"><i id="r-ghost"></i><i id="r-bar"></i></div>
+    <div class="track" id="r-track"><i id="r-ghost"></i><i id="r-pace" hidden></i><i id="r-bar"></i></div>
     <p class="d-legend" id="r-legend" hidden><i class="l-me"></i>Vos <i class="l-opp"></i><span id="r-opp-name"></span></p>
     <div class="d-count" id="r-count" hidden aria-live="assertive">
       <div class="d-count-box"><i class="d-ring"></i><b id="r-count-n">3</b></div>
@@ -200,6 +213,11 @@
           <p class="delta" id="r-delta" hidden></p>
         </div>
       </div>
+      <div class="res-xp" id="r-xp" hidden>
+        <span class="xp-gain" id="xp-gain"></span>
+        <div class="meter"><i id="xp-fill"></i></div>
+        <span class="xp-lv" id="xp-lv"></span>
+      </div>
       <dl class="res-grid">
         <div><dt>Precisión</dt><dd id="r-acc">100%</dd></div>
         <div><dt>Tiempo</dt><dd><span id="r-total">0</span> s</dd></div>
@@ -212,6 +230,7 @@
         <button id="r-again">Repetir <span class="key">Tab</span></button>
         <button id="r-ghostbtn">Contra mi récord</button>
         <button id="r-home">Inicio <span class="key">Esc</span></button>
+        <button class="flat" id="r-share" title="Crear una imagen con este resultado"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4M5 14v6h14v-6"/></svg>Compartir</button>
       </div>
     </div>
     <div class="d-modal" id="d-modal" hidden role="dialog" aria-modal="true" aria-labelledby="d-title">
@@ -230,8 +249,13 @@
           <div><dt>Palabras</dt><dd id="d-words">0</dd></div>
           <div><dt>Errores</dt><dd id="d-errs">0</dd></div>
         </dl>
+        <div class="d-re" id="d-re" hidden>
+          <p id="d-re-msg"></p>
+          <div class="d-re-btns"><button class="primary" id="d-re-yes" hidden>Aceptar</button><button id="d-re-no">Rechazar</button></div>
+        </div>
         <div class="d-actions" id="d-actions">
           <button class="primary" id="d-next"><span>Otro duelo</span> <span class="key">Enter</span></button>
+          <button id="d-rematch">Revancha</button>
           <button id="d-home">Inicio</button>
         </div>
       </div>
@@ -493,6 +517,23 @@
   <input id="crop-zoom" type="range" aria-label="Zoom">
   <div class="modes"><button class="primary" id="crop-save">Guardar</button><button id="crop-cancel">Cancelar</button></div>
 </dialog>
+<dialog id="mytext">
+  <form id="mytext-form" method="dialog">
+    <h2 id="mytext-h">Mi texto</h2>
+    <p class="note">Se guarda solo en este navegador. No suma al ranking ni a tus estadísticas.</p>
+    <input id="mt-title" maxlength="40" placeholder="Título (opcional)" autocomplete="off">
+    <textarea id="mt-body" rows="7" maxlength="800" placeholder="Pegá o escribí el texto que querés practicar (entre 40 y 800 caracteres)"></textarea>
+    <p class="mt-count" id="mt-count"></p>
+    <p id="mt-error" role="alert"></p>
+    <div class="modes"><button class="primary" id="mt-save">Guardar y practicar</button><button type="button" id="mt-cancel">Cancelar</button></div>
+  </form>
+</dialog>
+<dialog id="share" class="share">
+  <h2>Compartir resultado</h2>
+  <div class="share-view"><img id="share-img" alt="Vista previa de la imagen del resultado"></div>
+  <p class="note" id="share-msg"></p>
+  <div class="modes"><button class="primary" id="share-dl">Descargar</button><button id="share-copy" hidden>Copiar imagen</button><button id="share-send" hidden>Compartir…</button><button id="share-close">Cerrar</button></div>
+</dialog>
 <dialog id="preview">
   <h2 id="preview-title"></h2>
   <p class="note" id="preview-meta"></p>
@@ -530,6 +571,7 @@
       <option value="neanbit">neanbit</option>
       <option value="claro">Claro</option>
       <option value="carbon">Carbón</option>
+      <option value="contraste">Alto contraste</option>
     </select>
   </label>
   <div class="field">Unidad de velocidad
@@ -538,6 +580,13 @@
       <button data-unit="wpm"><b>WPM</b><small>palabras por minuto</small></button>
       <button data-unit="zen"><b>ZEN</b><small>sin mostrar la velocidad</small></button>
     </div>
+  </div>
+  <div class="field">Sonido de teclas
+    <div class="seg" id="sound-seg"><button data-v="off">Apagado</button><button data-v="low">Suave</button><button data-v="high">Fuerte</button></div>
+  </div>
+  <div class="field">Ritmo del cursor
+    <div class="seg" id="pace-seg"><button data-v="off">Apagado</button><button data-v="avg">Mi promedio</button><button data-v="best">Mi récord</button></div>
+    <small>Una marca avanza al ritmo elegido. El cursor se pone ámbar si vas por delante y coral si vas por detrás.</small>
   </div>
   <p class="note">Tab reinicia la carrera, Esc vuelve al inicio y Enter pasa a la siguiente.</p>
   <div class="modes"><button id="settings-close">Cerrar</button></div>

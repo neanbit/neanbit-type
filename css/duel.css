@@ -127,3 +127,11 @@
 .d-recent small { color: var(--muted); text-align: right; }
 @media (max-width: 560px) { .d-recent li { grid-template-columns: 1fr auto; } .d-recent span, .d-recent small { display: none; } }
 @media (max-width: 560px) { .pf-actions { flex-wrap: wrap; } }
+
+/* revancha */
+.d-re { flex: 1 1 100%; margin-top: 1rem; padding: .7rem .9rem; border: 1px dashed var(--accent); border-radius: var(--r); }
+.d-re[hidden] { display: none; }
+.d-re p { margin: 0 0 .6rem; font-size: .9rem; }
+.d-re-btns { display: flex; gap: .5rem; }
+.d-re-btns [hidden] { display: none; }
+.d-stats { flex: none; } .d-stats dd { margin: .1rem 0 0; }

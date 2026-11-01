@@ -44,6 +44,7 @@ try { db.exec("alter table users add column avatar text not null default ''"); }
 try { db.exec('alter table users add column avatar_v integer not null default 0'); } catch {}
 try { db.exec('alter table users add column verified integer not null default 0'); } catch {}
 try { db.exec("alter table users add column shown text not null default '[]'"); } catch {}
+try { db.exec('alter table users add column goal integer not null default 5'); } catch {}
 for (const col of ['bio', 'country', 'layout', 'switches', 'discord', 'title', 'website']) {
   try { db.exec(`alter table users add column ${col} text not null default ''`); } catch {}
 }
@@ -271,6 +272,29 @@ function homeSummary(userId, tz) {
   };
 }
 
+// Niveles: la experiencia (XP) sale de lo ya guardado, no hay tabla nueva.
+// 10 por carrera (15 en Hardcore), +5 si fue sin errores, +20 por duelo ganado, +150 por torneo ganado.
+// Nivel = 1 + raíz(XP / 50): el 2 llega a 50 XP, el 3 a 200, el 5 a 800, el 10 a 4050.
+const RANKS = [[1, 'Novato'], [3, 'Aprendiz'], [6, 'Mecanógrafo'], [10, 'Escribano'], [15, 'Veloz'], [22, 'Experto'], [30, 'Maestro'], [40, 'Leyenda']];
+function levelOf(userId) {
+  const r = db.prepare('select count(*) as n, coalesce(sum(hc), 0) as h, coalesce(sum(acc = 100), 0) as p from races where user_id = ?').get(userId);
+  const wins = db.prepare('select count(*) as n from duels where winner_id = ?').get(userId).n;
+  const titles = db.prepare('select count(*) as n from tournaments where winner_id = ?').get(userId).n;
+  const xp = (r.n - r.h) * 10 + r.h * 15 + r.p * 5 + wins * 20 + titles * 150;
+  const level = Math.floor(Math.sqrt(xp / 50)) + 1;
+  const from = 50 * (level - 1) ** 2;
+  const to = 50 * level ** 2;
+  const title = [...RANKS].reverse().find(([min]) => level >= min)[1];
+  return { xp, level, from, to, title };
+}
+
+// Paginado de rankings: 10 por página, la página se acota al rango que existe.
+function pageOf(url, total) {
+  const last = Math.max(0, Math.ceil(total / 10) - 1);
+  const page = Math.min(last, Math.max(0, Math.trunc(Number(url.searchParams.get('page'))) || 0));
+  return { page, from: page * 10 };
+}
+
 function rankOf(userId) {
   const rows = db.prepare(`
     select user_id, avg(cpm) as a, count(*) as c
@@ -452,12 +476,21 @@ async function api(req, res, url) {
     if (!valid || !db.prepare('select 1 from texts where id = ?').get(textId)) return send(res, 400, { error: 'Resultado inválido.' });
     const last = db.prepare('select max(at) as a from races where user_id = ?').get(me.id).a || 0;
     if (Date.now() - last < 3000) return send(res, 429, { error: 'Demasiado rápido.' });
+    const before = levelOf(me.id);
     db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc) values (?, ?, ?, ?, ?, ?)')
       .run(me.id, textId, cpm, acc, Date.now(), hc);
     version++;
     saveErrors(me.id, 'c', chars);
     saveErrors(me.id, 'w', words);
-    return send(res, 201, { ok: true });
+    return send(res, 201, { ok: true, xp: { before, after: levelOf(me.id) } });
+  }
+
+  if (key === 'POST /api/goal') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    const { goal } = await readBody(req);
+    if (!Number.isInteger(goal) || goal < 1 || goal > 50) return send(res, 400, { error: 'La meta va de 1 a 50 carreras.' });
+    db.prepare('update users set goal = ? where id = ?').run(goal, me.id);
+    return send(res, 200, { goal });
   }
 
   if (key === 'POST /api/deaths') {
@@ -521,18 +554,21 @@ async function api(req, res, url) {
     const window = url.searchParams.get('window') === 'all' ? 1000000 : 10;
     const all = memo('avg' + window, () => averages(window));
     const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
-    return send(res, 200, { rows: all.slice(0, 10), me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null, min: minForAverage });
+    const pg = pageOf(url, all.length);
+    return send(res, 200, { rows: all.slice(pg.from, pg.from + 10), total: all.length, page: pg.page, me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null, min: minForAverage });
   }
 
   if (key === 'GET /api/ranking') {
     const since = url.searchParams.get('scope') === 'today' ? Date.now() - 86400000 : 0;
     const hc = url.searchParams.get('mode') === 'hc' ? 1 : 0;
     const all = memo(`rank${hc}-${since ? 'today' : 'all'}`, () => db.prepare(`
-      select u.handle, u.name, u.avatar_v as av, u.verified, max(r.cpm) as cpm, count(*) as races
+      select u.handle, u.name, u.avatar_v as av, u.verified, max(r.cpm) as cpm, count(*) as races,
+        (select count(*) from deaths d where d.user_id = u.id and d.at >= ?) as deaths
       from races r join users u on u.id = r.user_id
-      where r.at >= ? and r.hc = ? group by u.id order by cpm desc, u.id`).all(since, hc));
+      where r.at >= ? and r.hc = ? group by u.id order by cpm desc, u.id`).all(since, since, hc));
     const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
-    return send(res, 200, { rows: all.slice(0, 10), me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null });
+    const pg = pageOf(url, all.length);
+    return send(res, 200, { rows: all.slice(pg.from, pg.from + 10), total: all.length, page: pg.page, me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null });
   }
 
   if (key === 'GET /api/ranking/duels') {
@@ -544,7 +580,8 @@ async function api(req, res, url) {
       join users u on u.id = p.uid where p.at >= ?
       group by u.id having wins > 0 order by wins desc, (wins * 1.0 / count(*)) desc, u.id`).all(since));
     const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
-    return send(res, 200, { rows: all.slice(0, 10), me: at > -1 ? { pos: at + 1, wins: all[at].wins, duels: all[at].duels } : null });
+    const pg = pageOf(url, all.length);
+    return send(res, 200, { rows: all.slice(pg.from, pg.from + 10), total: all.length, page: pg.page, me: at > -1 ? { pos: at + 1, wins: all[at].wins, duels: all[at].duels } : null });
   }
 
   if (key === 'GET /api/ranking/tourneys') {
@@ -584,7 +621,7 @@ async function api(req, res, url) {
     const ids = memo('textids', () => db.prepare('select id from texts where active = 1 order by id').all().map((t) => t.id), 60000);
     const dayNumber = Math.floor((Date.now() - tz * 60000) / 86400000);
     const daily = ids.length ? ids[dayNumber % ids.length] : null;
-    const pulse = me ? { ...homeSummary(me.id, tz), rank: rankOf(me.id), hcRank: hcRankOf(me.id) } : null;
+    const pulse = me ? { ...homeSummary(me.id, tz), rank: rankOf(me.id), hcRank: hcRankOf(me.id), level: levelOf(me.id), goal: db.prepare('select goal from users where id = ?').get(me.id).goal } : null;
     return send(res, 200, { community, daily, pulse, min: minForAverage });
   }
 
@@ -621,7 +658,7 @@ async function api(req, res, url) {
       races: s.races, best: s.best, hcBest: s.hcBest,
       avg: mean(normal.slice(0, 10)), avgAll: mean(normal),
       favorite: favorite ? favorite.text_id : null,
-      rank: rankOf(user.id), hcRank: hcRankOf(user.id),
+      rank: rankOf(user.id), hcRank: hcRankOf(user.id), level: levelOf(user.id),
       verified: user.verified, shown: parseShown(user.shown), medals, secretLeft,
       duels: duelSummary(user.id), tourneys: tourneys.summary(user.id),
     });

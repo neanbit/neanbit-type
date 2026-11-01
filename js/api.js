@@ -32,7 +32,8 @@ export const api = {
   profile: (handle) => call('/users/' + handle),
   home: () => call('/home?tz=' + new Date().getTimezoneOffset()),
   topRaces: (scope) => call('/races/top?scope=' + scope),
-  averages: (window) => call('/ranking/average?window=' + window),
-  duelRanking: (scope) => call('/ranking/duels?scope=' + scope),
-  ranking: (scope, hc) => call('/ranking?scope=' + scope + (hc ? '&mode=hc' : '')),
+  averages: (window, page = 0) => call('/ranking/average?window=' + window + '&page=' + page),
+  setGoal: (goal) => call('/goal', { goal }),
+  duelRanking: (scope, page = 0) => call('/ranking/duels?scope=' + scope + '&page=' + page),
+  ranking: (scope, hc, page = 0) => call('/ranking?scope=' + scope + (hc ? '&mode=hc' : '') + '&page=' + page),
 };

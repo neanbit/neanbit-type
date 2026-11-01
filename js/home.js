@@ -4,6 +4,8 @@ import { avatarInner } from './avatar.js';
 import { $, esc, svg, icons } from './ui.js';
 
 const scope = { races: 'today', avg: '10', hc: 'today', duels: 'all', tourneys: 'all' };
+const page = { races: 0, avg: 0, hc: 0, duels: 0, tourneys: 0 };
+const PAGE = 10;
 const cache = {};
 let current = 'races';
 let me = null;
@@ -30,21 +32,21 @@ const boards = {
   },
   avg: {
     scopes: [['10', 'Últimas 10'], ['all', 'General']],
-    load: (v) => api.averages(v),
+    load: (v, p) => api.averages(v, p),
     sub: (r) => (r.races ? plural(r.races, 'carrera', 'carreras') : 'Tu promedio'),
     empty: 'Nadie llegó todavía a las 5 carreras que hacen falta.',
     miss: () => `Necesitás 5 carreras para entrar${pulse ? ` (llevás ${pulse.races})` : ''}.`,
   },
   hc: {
     scopes: [['today', '24 h'], ['all', 'Histórico']],
-    load: (v) => api.ranking(v, true),
-    sub: (r) => (r.races ? plural(r.races, 'carrera', 'carreras') : 'Tu mejor marca'),
+    load: (v, p) => api.ranking(v, true, p),
+    sub: (r) => (r.races ? `${plural(r.races, 'carrera', 'carreras')}, ${plural(r.deaths || 0, 'eliminación', 'eliminaciones')}` : 'Tu mejor marca'),
     empty: 'Nadie corrió en Hardcore todavía.',
     miss: 'Todavía no corriste en Hardcore en este período.',
   },
   duels: {
     scopes: [['today', '24 h'], ['all', 'Histórico']],
-    load: (v) => api.duelRanking(v),
+    load: (v, p) => api.duelRanking(v, p),
     sub: (r) => (r.duels ? `${plural(r.duels, 'duelo', 'duelos')}, ${Math.round((r.wins / r.duels) * 100)}% ganados` : 'Tus victorias'),
     val: (r) => r.wins,
     empty: 'Nadie ganó un duelo en este período.',
@@ -70,7 +72,7 @@ function row(board, r, pos, own) {
 
 function drawBoard() {
   const board = boards[current];
-  const data = cache[current + scope[current]];
+  const data = cache[current + scope[current] + page[current]];
   const rows = $('#board-rows');
   const note = $('#board-note');
   note.textContent = '';
@@ -84,7 +86,7 @@ function drawBoard() {
   }
   const mine = me && data.rows.findIndex((r) => r.handle === me.handle);
   let html = data.rows.length
-    ? data.rows.map((r, i) => row(board, r, i + 1, i === mine)).join('')
+    ? data.rows.map((r, i) => row(board, r, page[current] * PAGE + i + 1, i === mine)).join('')
     : `<li class="none">${board.empty}</li>`;
   if (me && data.me && mine < 0) {
     html += '<li class="gap" aria-hidden="true"></li>' + row(board, { ...me, ...data.me }, data.me.pos, true);
@@ -92,6 +94,13 @@ function drawBoard() {
     note.textContent = typeof board.miss === 'function' ? board.miss() : board.miss;
   }
   rows.innerHTML = html;
+  const pages = Math.ceil((data.total || 0) / PAGE);
+  $('#board-pager').hidden = pages < 2;
+  if (pages > 1) {
+    $('#bp-info').textContent = `Puestos ${page[current] * PAGE + 1} a ${Math.min(data.total, (page[current] + 1) * PAGE)} de ${data.total}`;
+    $('#bp-prev').disabled = page[current] === 0;
+    $('#bp-next').disabled = page[current] + 1 >= pages;
+  }
 }
 
 function drawTabs() {
@@ -103,9 +112,9 @@ function drawTabs() {
 async function loadBoard() {
   drawTabs();
   drawBoard();
-  const key = current + scope[current];
+  const key = current + scope[current] + page[current];
   try {
-    cache[key] = await boards[current].load(scope[current]);
+    cache[key] = await boards[current].load(scope[current], page[current]);
   } catch {
     cache[key] = { error: true };
   }
@@ -119,6 +128,7 @@ function drawHero() {
   $('#practice-tag').hidden = !!me;
   $('#duel-tag').hidden = !!me;
   $('#pulse').hidden = !(me && pulse);
+  drawProgress();
 
   let sub = 'Corré una carrera y medite contra el resto del ranking.';
   if (me && pulse) {
@@ -140,6 +150,24 @@ function drawHero() {
     $('#p-today').textContent = pulse.today;
     $('#p-today-u').textContent = pulse.today === 1 ? 'carrera' : 'carreras';
   }
+}
+
+// Nivel y meta del día
+function drawProgress() {
+  const box = $('#progress');
+  box.hidden = !(me && pulse && pulse.level);
+  if (box.hidden) return;
+  const { xp, level, from, to, title } = pulse.level;
+  $('#lv-name').textContent = 'Nivel ' + level;
+  $('#lv-title').textContent = title;
+  $('#lv-xp').textContent = `${xp - from} / ${to - from} XP`;
+  $('#lv-fill').style.width = Math.round(((xp - from) / (to - from)) * 100) + '%';
+  const goal = pulse.goal || 5;
+  const done = Math.min(pulse.today, goal);
+  $('#goal-txt').textContent = pulse.today >= goal ? `Meta cumplida: ${plural(pulse.today, 'carrera', 'carreras')}` : `${pulse.today} de ${goal} carreras`;
+  $('#goal-ticks').innerHTML = Array.from({ length: goal }, (_, i) => `<i class="${i < done ? 'on' : ''}"></i>`).join('');
+  $('#goal-ticks').classList.toggle('full', pulse.today >= goal);
+  document.querySelectorAll('#goal-seg button').forEach((b) => b.classList.toggle('on', Number(b.dataset.g) === goal));
 }
 
 function drawDaily() {
@@ -180,17 +208,27 @@ $('#board-tabs').onclick = (e) => {
   const b = e.target.dataset.b;
   if (!b || b === current) return;
   current = b;
+  page[current] = 0;
   loadBoard();
 };
 $('#board-scope').onclick = (e) => {
   const v = e.target.dataset.v;
   if (!v || v === scope[current]) return;
   scope[current] = v;
+  page[current] = 0;
   loadBoard();
 };
 $('#board-rows').onclick = (e) => {
   const item = e.target.closest('li[data-handle]');
   if (item) document.dispatchEvent(new CustomEvent('profile', { detail: item.dataset.handle }));
+};
+$('#bp-prev').onclick = () => { page[current]--; loadBoard(); };
+$('#bp-next').onclick = () => { page[current]++; loadBoard(); };
+$('#goal-edit').onclick = () => { $('#goal-seg').hidden = !$('#goal-seg').hidden; };
+$('#goal-seg').onclick = async (e) => {
+  const g = Number(e.target.dataset.g);
+  if (!g || !pulse) return;
+  try { await api.setGoal(g); pulse.goal = g; $('#goal-seg').hidden = true; drawProgress(); } catch {}
 };
 $('#invite-login').onclick = () => $('#account').click();
 $('#daily-go').onclick = () => document.dispatchEvent(new CustomEvent('play', { detail: daily }));
