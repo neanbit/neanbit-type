@@ -1,7 +1,7 @@
 import { Engine } from './engine.js';
 import { load, save } from './store.js';
 import './account.js';
-import './site.js';
+import { siteReady } from './site.js';
 import './home.js';
 import { api } from './api.js';
 import { renderStats, redrawStats } from './stats.js';
@@ -13,6 +13,7 @@ import { duel } from './duel.js';
 import { tourney } from './tourney.js';
 import { pages } from './pages.js';
 import { paintArt } from './art.js';
+import { features } from './features.js';
 import { sound } from './sound.js';
 import { openShare } from './share.js';
 import { mytexts, editMyText } from './mytexts.js';
@@ -134,7 +135,7 @@ function pickList() {
 function renderPick() {
   const { query, base, list, mine } = pickList();
   const count = (c) => (c === 'Mis textos' ? mytexts.all().length : base.filter((t) => (c === 'Todos' ? true : c === 'Favoritos' ? favs.has(t.id) : t.category === c)).length);
-  $('#chips').innerHTML = ['Todos', 'Favoritos', ...categories, 'Mis textos'].map((c) =>
+  $('#chips').innerHTML = ['Todos', 'Favoritos', ...categories, ...(features.mytexts ? ['Mis textos'] : [])].map((c) =>
     `<button data-cat="${esc(c)}" class="${(state.category || 'Todos') === c ? 'on' : ''}">${esc(c)}<i>${count(c)}</i></button>`
   ).join('');
   document.querySelectorAll('#len button').forEach((b) => b.classList.toggle('on', b.dataset.len === state.length));
@@ -494,7 +495,7 @@ function paceTarget() {
 }
 
 function setPace(mode) {
-  state.pacing = mode === 'duel' || mode === 'practice' ? 0 : paceTarget();
+  state.pacing = !features.pace || mode === 'duel' || mode === 'practice' ? 0 : paceTarget();
   $('#r-pace').hidden = !state.pacing;
   $('#r-pace').style.width = '0';
   $('#r-track').dataset.pace = state.pacing ? 'ahead' : '';
@@ -958,4 +959,5 @@ pages.init({
 paintArt();
 applyPrefs();
 loadCatalog();
-pages.boot();
+// Si la dirección es una página (por ejemplo /terminos), se espera un instante a que lleguen los textos editados desde el panel.
+Promise.race([siteReady, new Promise((r) => setTimeout(r, 1200))]).then(() => pages.boot());

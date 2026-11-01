@@ -1,0 +1,336 @@
+{
+ "site": {
+  "contact": "neanbit",
+  "updated": "30 de octubre de 2026",
+  "repo": "https://github.com/neanbit/neanbit-type"
+ },
+ "info": {
+  "title": "Escribir mejor, medirte y competir.",
+  "lead": "neanbit type es un lugar para practicar mecanografía en español: carreras contra el reloj, duelos 1 contra 1 en vivo y torneos de eliminación directa. Se juega en el navegador, sin instalar nada."
+ },
+ "guias": {
+  "title": "Aprendé a sacarle el jugo.",
+  "lead": "Desde cómo apoyar los dedos hasta cómo funciona una llave de torneo. Si no encontrás lo que buscás, abajo hay preguntas frecuentes con buscador.",
+  "guides": [
+   {
+    "id": "g-primeros",
+    "title": "Primeros pasos",
+    "html": "<p>No hace falta cuenta para probar: como invitado podés correr todas las carreras que quieras, pero no se guardan ni suman al ranking.</p>\n    <ol class=\"num\">\n      <li>Desde el inicio, tocá <b>Aleatorio</b>. Aparece un texto y un campo para escribir debajo.</li>\n      <li>Empezá a escribir. El reloj arranca con la primera tecla.</li>\n      <li>Cada palabra tiene que quedar exacta para pasar a la siguiente. Con la barra espaciadora la confirmás.</li>\n      <li>Al terminar ves tu velocidad, precisión y tiempo. <kbd>Enter</kbd> pasa al siguiente texto.</li>\n    </ol>\n    <p>Atajos durante una carrera: <kbd>Tab</kbd> la reinicia, <kbd>Esc</kbd> vuelve al inicio y <kbd>Enter</kbd> avanza al siguiente texto cuando termina. No se puede pegar texto en el campo.</p>"
+   },
+   {
+    "id": "g-postura",
+    "title": "Postura y fila base",
+    "html": "<p>Antes de buscar velocidad conviene ordenar las manos. La <b>fila base</b> es donde descansan los dedos: <b>A S D F</b> con la mano izquierda y <b>J K L Ñ</b> con la derecha. Los índices apoyan en la F y la J, que suelen tener una marquita en relieve.</p>\n    <p>Cada dedo cubre su zona, como muestra el dibujo. Con el tiempo, dejar de mirar el teclado es lo que más acelera.</p>\n    <ul class=\"dots\">\n      <li><b>Precisión primero.</b> Mejor lento y limpio: la velocidad llega sola cuando el movimiento es correcto.</li>\n      <li><b>Muñecas rectas</b> y antebrazos apoyados, sin forzar los hombros.</li>\n      <li><b>Pantalla a la altura de los ojos</b> y pausas cortas cada tanto.</li>\n    </ul>"
+   },
+   {
+    "id": "g-medicion",
+    "title": "Cómo se mide tu velocidad",
+    "html": "<p><b>CPM</b> son los caracteres correctos por minuto, contando el espacio que va entre palabras. <b>WPM</b> es CPM dividido por cinco. Por ejemplo, 300 CPM son 60 WPM.</p>\n    <p>La <b>precisión</b> es el porcentaje de teclas correctas sobre las teclas totales: cada tecla equivocada cuenta como un error, aunque la corrijas después.</p>\n    <p>En Ajustes elegís la unidad (CPM, WPM o ZEN). ZEN oculta la velocidad mientras escribís, útil si te pones nervioso mirando el número.</p>"
+   },
+   {
+    "id": "g-entrenamiento",
+    "title": "Entrenamiento y contra tu récord",
+    "html": "<p><b>Entrenamiento</b> arma un texto con las palabras en las que más te equivocás. Necesita cuenta y un mínimo de errores registrados: si todavía no hay suficientes, jugá algunas carreras primero. Lo ves también en Estadísticas, en «Palabras que más te cuestan».</p>\n    <p><b>Contra mi récord</b> aparece al terminar una carrera, y también desde tu historial en el perfil. Corrés el mismo texto contra la sombra de tu mejor marca en él.</p>"
+   },
+   {
+    "id": "g-hardcore",
+    "title": "Hardcore",
+    "html": "<p>En Hardcore <b>un solo error termina la carrera</b>. Se ve hasta qué palabra llegaste. Las carreras terminadas se guardan aparte de las normales y cuentan para el ranking Hardcore y para las medallas de ese modo.</p>\n    <p>Consejo: no apures las primeras palabras. Es más fácil sostener el ritmo que recuperar la calma después de un fallo.</p>"
+   },
+   {
+    "id": "g-duelos",
+    "title": "Duelos 1 contra 1",
+    "html": "<ol class=\"num\">\n      <li>Entrá a <b>Duelos</b> (hace falta cuenta). Elegí <b>Rival al azar</b> o invitá a alguien por su nombre de usuario; esa persona tiene que estar en la sala de Duelos para recibir la invitación, que vence a los 30 segundos.</li>\n      <li>Los dos escriben el <b>mismo texto</b>. Hay una cuenta regresiva de 3 segundos y se larga a la vez.</li>\n      <li>Gana quien termina primero. Si el otro no termina, tiene 90 segundos de gracia, y el duelo se cierra como máximo a los 5 minutos.</li>\n      <li>Si alguien se desconecta o abandona en plena carrera, gana el rival. Si alguien se va antes de largar, el duelo se cancela sin resultado.</li>\n      <li>Al terminar, cualquiera de los dos puede pedir <b>Revancha</b>. El otro la acepta o la rechaza; vence igual que una invitación. En torneos no hay revancha.</li>\n    </ol>\n    <p>La velocidad en duelo la calcula el <b>servidor</b> desde la largada, así que no depende de tu reloj. Las carreras de duelo suman a tu historial y a tus estadísticas, con una vista propia de Duelos.</p>"
+   },
+   {
+    "id": "g-torneos",
+    "title": "Torneos",
+    "html": "<p>Los torneos son de <b>eliminación directa</b> y cada partido es un duelo. Los organiza neanbit y se anuncian en la sección Torneos.</p>\n    <ol class=\"num\">\n      <li><b>Inscripción.</b> Puede ser abierta o pedir requisitos, como un récord mínimo o una medalla. También puede ser por lista cerrada.</li>\n      <li><b>Llave.</b> Se sortea cuando empieza el torneo. Si los jugadores no son potencia de dos, los mejores sembrados pasan directo la primera ronda.</li>\n      <li><b>Tu partido.</b> Dejá abierta la pantalla del torneo. Cuando te toca, aparece un aviso: tenés un tiempo (180 segundos, salvo que el torneo diga otro) para apretar <b>Estoy listo</b>.</li>\n      <li><b>Si no aparecés, perdés.</b> Si no aparece ninguno de los dos, pasa el mejor sembrado.</li>\n    </ol>\n    <p>Si en un partido nadie termina el texto en 5 minutos, pasa quien llegó más lejos. Con igualdad se repite una vez con otro texto.</p>"
+   },
+   {
+    "id": "g-progreso",
+    "title": "Niveles, rachas y meta diaria",
+    "html": "<p>Tu <b>nivel</b> sube con la experiencia (XP) que sale de lo que ya jugás: 10 XP por carrera (15 en Hardcore), 5 más si no tuviste errores, 20 por duelo ganado y 150 por torneo ganado. El nivel 2 llega a los 50 XP, el 3 a los 200 y el 5 a los 800. Cada tramo de niveles tiene un título, de Novato a Leyenda. Lo ves en el inicio y en tu perfil, y al terminar una carrera aparece cuánto sumaste.</p>\n    <p>La <b>racha</b> cuenta los días seguidos en que corriste al menos una carrera. Si hoy todavía no jugaste, la racha de ayer sigue viva hasta que termine el día.</p>\n    <p>La <b>meta de hoy</b> es cuántas carreras querés hacer por día (de 1 a 50). La cambiás desde el inicio con «Cambiar» y se guarda en tu cuenta.</p>"
+   },
+   {
+    "id": "g-extras",
+    "title": "Textos propios, ritmo, sonido y compartir",
+    "html": "<ul>\n      <li><b>Mis textos.</b> En Personalizado podés sumar un texto propio (de 40 a 800 caracteres). Se guarda solo en tu navegador, no suma al ranking ni a tus estadísticas.</li>\n      <li><b>Ritmo del cursor.</b> En Ajustes podés activar una marca fina sobre la barra de progreso que avanza al ritmo de tu promedio o de tu récord. Si la barra la pasa, vas adelante. Viene apagado.</li>\n      <li><b>Sonido de teclas.</b> Suave o fuerte, generado en el momento. Viene apagado.</li>\n      <li><b>Compartir.</b> El botón «Compartir» del resultado arma una imagen en tu navegador y la podés descargar o copiar. Solo se crea cuando lo pedís y no se sube a ningún lado.</li>\n      <li><b>Alto contraste.</b> Un cuarto tema, en Ajustes, con negro puro, amarillo y bordes marcados.</li>\n    </ul>"
+   },
+   {
+    "id": "g-medallas",
+    "title": "Medallas",
+    "html": "<p>Las medallas se ganan solas al cumplir una condición: cantidad de carreras, velocidad máxima o promedio, carreras sin errores, Hardcore, duelos o torneos ganados. Algunas son <b>apilables</b> (se cuentan) y otras <b>secretas</b>: no se muestran hasta que las conseguís.</p>\n    <p>El <b>color</b> de la medalla (bronce, gris, oro, coral o blanco) indica su categoría. En la vitrina ves cuáles tenés, cuáles te faltan y cuánto te falta para cada una. Desde «Editar perfil» elegís hasta seis para exhibir.</p>"
+   }
+  ],
+  "faq": [
+   {
+    "c": "Cuenta",
+    "q": "¿Necesito una cuenta para jugar?",
+    "a": "No. Como invitado podés correr carreras, pero no se guardan, no suman a rankings y no podés jugar duelos ni torneos. Crear una cuenta es gratis y solo pide usuario, nombre para mostrar y contraseña."
+   },
+   {
+    "c": "Cuenta",
+    "q": "¿Puedo cambiar mi nombre de usuario?",
+    "a": "El usuario (el que va con @) no se cambia. El <b>nombre para mostrar</b>, el título, la biografía y la foto sí, desde «Editar perfil»."
+   },
+   {
+    "c": "Cuenta",
+    "q": "Me olvidé la contraseña, ¿qué hago?",
+    "a": "Por ahora no hay recuperación automática. Si la perdés, escribinos y vemos cómo ayudarte. Para evitarlo, usá una contraseña que puedas recordar o un gestor de contraseñas."
+   },
+   {
+    "c": "Cuenta",
+    "q": "¿Cómo borro mi cuenta?",
+    "a": "Pedilo por {{contacto}}. Se eliminan tu perfil, tus carreras y tus estadísticas. Los detalles están en la <a href=\"/privacidad\" data-page=\"privacidad\">Política de privacidad</a>."
+   },
+   {
+    "c": "Cuenta",
+    "q": "¿Quién puede ver mi perfil?",
+    "a": "Cualquiera. El perfil, el historial reciente, las medallas y tu lugar en los rankings son públicos. Tus errores por tecla y tus estadísticas detalladas solo las ves vos. No pongas en la biografía ni en la foto nada que no quieras que vea todo el mundo."
+   },
+   {
+    "c": "Progreso",
+    "q": "¿Cómo se calcula mi nivel?",
+    "a": "Con la experiencia (XP): 10 por carrera, 15 en Hardcore, 5 extra sin errores, 20 por duelo ganado y 150 por torneo ganado. No hay nada que activar: se calcula con tus carreras guardadas."
+   },
+   {
+    "c": "Progreso",
+    "q": "¿Por qué se me cortó la racha?",
+    "a": "La racha cuenta días seguidos con al menos una carrera guardada, según tu zona horaria. Las carreras de invitado y los textos propios no cuentan."
+   },
+   {
+    "c": "Progreso",
+    "q": "¿Los textos propios cuentan para algo?",
+    "a": "No. Sirven para practicar con lo que quieras, pero no se guardan en tu cuenta, no suman XP ni entran a rankings. Viven solo en este navegador."
+   },
+   {
+    "c": "Progreso",
+    "q": "¿La imagen para compartir se sube a algún lado?",
+    "a": "No. Se dibuja en tu navegador cuando tocás «Compartir» y vos decidís si la descargás o la mandás."
+   },
+   {
+    "c": "Medición",
+    "q": "¿Qué diferencia hay entre CPM y WPM?",
+    "a": "CPM cuenta caracteres por minuto; WPM, palabras por minuto, que son CPM dividido por cinco. 300 CPM equivalen a 60 WPM. Elegís la unidad en Ajustes."
+   },
+   {
+    "c": "Medición",
+    "q": "¿Por qué un error me baja la precisión aunque lo corrija?",
+    "a": "Porque la precisión se calcula sobre las teclas apretadas: cada tecla equivocada cuenta, se corrija o no. Además, una palabra tiene que quedar exacta para poder avanzar."
+   },
+   {
+    "c": "Medición",
+    "q": "¿Se guardan mis carreras de invitado?",
+    "a": "No. Para que una carrera quede en tu historial y cuente para los rankings, tenés que haber ingresado."
+   },
+   {
+    "c": "Medición",
+    "q": "¿Por qué puedo ver una velocidad distinta en un duelo?",
+    "a": "En duelos y torneos el tiempo lo mide el servidor desde la largada, para que sea igual para los dos. Puede diferir unas décimas de lo que ves en pantalla."
+   },
+   {
+    "c": "Duelos y torneos",
+    "q": "¿Qué pasa si se me corta internet en un duelo?",
+    "a": "Si ya largó, gana tu rival por abandono. Si pasa antes de largar, el duelo se cancela sin resultado. En un torneo, desconectarse en plena carrera cuenta como derrota."
+   },
+   {
+    "c": "Duelos y torneos",
+    "q": "¿Cómo me inscribo a un torneo?",
+    "a": "Entrá a Torneos, abrí el que esté en inscripción e inscribite. Algunos piden requisitos (un récord mínimo, una medalla) o son por lista cerrada; la pantalla te dice si cumplís."
+   },
+   {
+    "c": "Duelos y torneos",
+    "q": "¿Qué es «Estoy listo»?",
+    "a": "Es la confirmación de que estás en tu pantalla de torneo para jugar el partido. Si no la apretás dentro del tiempo que da el torneo, perdés el partido."
+   },
+   {
+    "c": "Medallas",
+    "q": "¿Qué es una medalla secreta?",
+    "a": "Una cuyo requisito no se muestra hasta que la conseguís. En la vitrina aparece cuántas te quedan por descubrir."
+   },
+   {
+    "c": "Medallas",
+    "q": "¿Por qué una medalla tiene un contador?",
+    "a": "Es una medalla apilable: se puede ganar varias veces, como un título de campeón en cada torneo ganado."
+   },
+   {
+    "c": "Técnico",
+    "q": "¿Funciona en el celular?",
+    "a": "La página se adapta a pantallas chicas, pero está pensada para escribir con un teclado físico. Para jugar en serio, usá una computadora."
+   },
+   {
+    "c": "Técnico",
+    "q": "¿Puedo pegar un texto o usar un programa que escriba por mí?",
+    "a": "No. El campo no acepta pegar y está prohibido usar macros, bots o automatizaciones. Las carreras sospechosas pueden anularse; mirá las <a href=\"/normas\" data-page=\"normas\">Normas de la comunidad</a>."
+   },
+   {
+    "c": "Técnico",
+    "q": "¿Cómo reporto un error o a alguien que hace trampa?",
+    "a": "Escribinos por {{contacto}}. Si es un error técnico, contá qué hiciste, el navegador que usás y, si podés, una captura."
+   }
+  ]
+ },
+ "legal": {
+  "terminos": {
+   "title": "Términos y condiciones",
+   "lead": "Las reglas básicas para usar neanbit type. Están escritas para que se entiendan: leelas antes de crear una cuenta.",
+   "sections": [
+    {
+     "t": "Quién ofrece el servicio",
+     "html": "<p>neanbit type («el servicio») es un proyecto personal de neanbit, disponible en type.neanbit.com. Estos términos regulan el uso del sitio, de las cuentas y de las funciones asociadas (carreras, duelos, torneos, perfiles y rankings).</p>"
+    },
+    {
+     "t": "Aceptación y edad mínima",
+     "html": "<p>Al crear una cuenta o usar el servicio aceptás estos términos y la <a href=\"/privacidad\" data-page=\"privacidad\">Política de privacidad</a>. Si no estás de acuerdo, no lo uses.</p>\n        <p>Tenés que tener <b>13 años o más</b>. Si sos menor de 18, usá el servicio con conocimiento de tu madre, padre o tutor. Podés practicar sin cuenta, como invitado, con las limitaciones que se explican en las guías.</p>"
+    },
+    {
+     "t": "Tu cuenta",
+     "html": "<ul>\n        <li>El usuario (3 a 15 letras, números o guion bajo) es único y no se puede cambiar.</li>\n        <li>La contraseña debe tener al menos 8 caracteres. Guardala bien y no la compartas: todo lo que se haga con tu cuenta se considera hecho por vos.</li>\n        <li>Una persona, una cuenta. No crees cuentas adicionales para alterar rankings, torneos o medallas.</li>\n        <li>Si pensás que alguien accedió a tu cuenta, avisanos cuanto antes.</li>\n      </ul>"
+    },
+    {
+     "t": "Uso aceptable",
+     "html": "<p>Te comprometés a usar el servicio de buena fe. En particular, no está permitido:</p>\n        <ul>\n          <li>Usar bots, macros, scripts o cualquier automatización para escribir, ni alterar las solicitudes al servidor para enviar resultados falsos.</li>\n          <li>Acordar resultados con otra persona en duelos o torneos.</li>\n          <li>Intentar vulnerar la seguridad, sobrecargar el servicio, acceder a datos de otras personas o extraer información de forma masiva.</li>\n          <li>Suplantar a otra persona o usar nombres, textos o fotos ofensivos, ilegales o que vulneren derechos de terceros.</li>\n        </ul>\n        <p>El detalle está en las <a href=\"/normas\" data-page=\"normas\">Normas de la comunidad</a>.</p>"
+    },
+    {
+     "t": "El contenido que publicás",
+     "html": "<p>Tu nombre para mostrar, título, biografía, foto, país, datos de teclado, usuario de Discord y sitio web son visibles para otras personas. Seguís siendo titular de lo que subís. Nos das una licencia gratuita, no exclusiva y limitada a mostrarlo dentro del servicio mientras tengas cuenta.</p>\n        <p>Declarás que tenés derecho a usar la foto y los textos que publiques. Podemos quitar contenido que incumpla estos términos o las normas.</p>"
+    },
+    {
+     "t": "Resultados, rankings, medallas y torneos",
+     "html": "<ul>\n        <li>Las carreras se validan en el servidor. Podemos <b>anular carreras</b>, reiniciar estadísticas, retirar medallas o descalificar de un torneo cuando haya indicios de trampa o de error técnico.</li>\n        <li>Los rankings, las medallas y los títulos son virtuales y no tienen valor económico. Si un torneo ofreciera algo más, se informará en su descripción.</li>\n        <li>Las decisiones de organización de un torneo (llave, plazos, descalificaciones, desempates) son definitivas, y se aplican las reglas publicadas en las guías.</li>\n      </ul>"
+    },
+    {
+     "t": "Propiedad intelectual",
+     "html": "<p>El nombre y el logotipo «neanbit» pertenecen a su titular. El código del servicio está publicado en <a href=\"{{repo}}\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a> y se rige por las condiciones que figuren en ese repositorio.</p>\n        <p>Los textos de práctica se usan con fines de práctica. Si sos titular de derechos sobre alguno y querés que lo retiremos, escribinos y lo revisamos.</p>"
+    },
+    {
+     "t": "Disponibilidad y cambios del servicio",
+     "html": "<p>El servicio se ofrece «tal cual». Puede tener errores, interrupciones o períodos de mantenimiento, y podemos modificar o retirar funciones. Hacemos copias de seguridad periódicas, pero no garantizamos que no se pierdan datos.</p>"
+    },
+    {
+     "t": "Responsabilidad",
+     "html": "<p>En la medida que la ley lo permita, neanbit no responde por daños indirectos, pérdida de resultados, interrupciones del servicio ni por el contenido publicado por otras personas. Esto no limita los derechos que la ley no permita limitar.</p>"
+    },
+    {
+     "t": "Suspensión y baja",
+     "html": "<p>Podemos suspender o eliminar cuentas que incumplan estos términos o las normas, con o sin aviso previo cuando la gravedad lo justifique. Vos podés pedir la baja de tu cuenta en cualquier momento; mirá cómo en la <a href=\"/privacidad\" data-page=\"privacidad\">Política de privacidad</a>.</p>"
+    },
+    {
+     "t": "Cambios en estos términos",
+     "html": "<p>Podemos actualizar estos términos. La fecha de la última versión figura arriba. Si el cambio es importante, lo avisaremos con un anuncio dentro del servicio. Seguir usándolo después del aviso implica aceptar la nueva versión.</p>"
+    },
+    {
+     "t": "Ley aplicable",
+     "html": "<p>Estos términos se rigen por las leyes de la República Argentina. Cualquier conflicto se someterá a los tribunales competentes de ese país.</p>"
+    },
+    {
+     "t": "Contacto",
+     "html": "<p>Para consultas sobre estos términos, escribinos por {{contacto}}.</p>"
+    }
+   ]
+  },
+  "privacidad": {
+   "title": "Política de privacidad",
+   "lead": "Qué datos guarda neanbit type, para qué los usa, quién puede verlos y cómo podés acceder a ellos, corregirlos o borrarlos.",
+   "sections": [
+    {
+     "t": "Quién es responsable",
+     "html": "<p>El responsable del tratamiento de los datos es neanbit, titular del proyecto neanbit type (type.neanbit.com). Podés contactarlo por {{contacto}}.</p>"
+    },
+    {
+     "t": "Qué datos guardamos",
+     "html": "<table class=\"doc-table\">\n        <thead><tr><th>Dato</th><th>Detalle</th></tr></thead>\n        <tbody>\n          <tr><td>Cuenta</td><td>Nombre de usuario, nombre para mostrar, fecha de alta y rol. La contraseña se guarda <b>solo como hash</b> (scrypt), nunca en texto.</td></tr>\n          <tr><td>Perfil (opcional)</td><td>Foto, título, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, y las medallas que elegís mostrar.</td></tr>\n          <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>\n          <tr><td>Progreso</td><td>Tu meta diaria de carreras. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>\n          <tr><td>Sesión</td><td>Una cookie que mantiene tu sesión iniciada hasta 30 días. En el servidor se guarda una huella de ese código, no el código.</td></tr>\n          <tr><td>Técnicos</td><td>Tu dirección IP y datos del navegador viajan con cada solicitud. Se usan para limitar abusos y proteger el servicio y se mantienen en la memoria del servidor por minutos u horas; <b>no se guardan en la base de datos</b>.</td></tr>\n        </tbody></table>\n        <p>No pedimos tu correo, teléfono, nombre real ni documentos.</p>"
+    },
+    {
+     "t": "Para qué los usamos",
+     "html": "<ul>\n        <li>Darte una cuenta y guardar tus carreras, estadísticas, medallas y perfil.</li>\n        <li>Armar rankings, duelos y torneos.</li>\n        <li>Proteger el servicio: límites de uso, detección de trampas, anulación de resultados.</li>\n        <li>Mantener y mejorar el servicio.</li>\n      </ul>\n      <p>No vendemos tus datos, no mostramos publicidad y no hacemos perfiles comerciales.</p>"
+    },
+    {
+     "t": "Qué es público y qué no",
+     "html": "<p><b>Es público</b> (lo ve cualquier persona, tenga o no cuenta): tu usuario, nombre para mostrar, foto, título, biografía, país, datos de teclado, Discord y sitio web si los completás, tus medallas, tus récords, promedios, historial reciente y tu posición en los rankings.</p>\n        <p><b>No es público</b>: tu contraseña, tu sesión, tu IP y tus estadísticas detalladas de errores por tecla y palabra. Pensá bien qué escribís en tu perfil: no incluyas datos que no quieras que vea todo el mundo.</p>"
+    },
+    {
+     "t": "Con quién se comparten",
+     "html": "<p>No se ceden datos a terceros para fines propios de ellos. Para que el servicio funcione intervienen estos proveedores:</p>\n        <ul>\n          <li><b>Cloudflare</b>: el tráfico pasa por su red (túnel, protección y caché). Puede registrar métricas técnicas y de seguridad.</li>\n          <li><b>Proveedor de servidores</b>: la base de datos y las copias de seguridad están en un servidor ubicado en Alemania (Unión Europea).</li>\n          <li><b>Google Fonts</b>: tu navegador descarga las tipografías desde Google, que recibe tu dirección IP al hacerlo.</li>\n        </ul>\n        <p>También podemos revelar datos si una autoridad competente lo exige de forma legal.</p>"
+    },
+    {
+     "t": "Cuánto tiempo los conservamos",
+     "html": "<ul>\n        <li>Tus datos se conservan mientras tengas cuenta.</li>\n        <li>Si la eliminás, se borran tu perfil, carreras, errores, duelos y torneos asociados. Los resultados de tus rivales se mantienen sin tus datos.</li>\n        <li>Las <b>copias de seguridad</b> pueden contener tus datos hasta que se renuevan: las diarias se guardan 14 días, y las que se hacen antes de acciones de mantenimiento hasta 30 días.</li>\n        <li>Las sesiones vencen a los 30 días.</li>\n      </ul>"
+    },
+    {
+     "t": "Seguridad",
+     "html": "<p>Protegemos el servicio con conexión cifrada (HTTPS), contraseñas con hash, cookie de sesión sin acceso desde scripts, límites de intentos, verificación de origen de las solicitudes y cabeceras de seguridad. Ningún sistema es infalible; si detectáramos un incidente que te afecte, te avisaremos.</p>"
+    },
+    {
+     "t": "Tus derechos",
+     "html": "<p>Tenés derecho a <b>acceder</b> a tus datos, <b>rectificarlos o actualizarlos</b> y pedir su <b>supresión</b>. Gran parte la hacés vos mismo desde «Editar perfil». Para el resto, o para pedir la baja de tu cuenta, escribinos por {{contacto}} desde tu cuenta y respondemos dentro de los plazos de la ley (10 días corridos para el acceso; 5 días hábiles para rectificar, actualizar o suprimir).</p>\n        <p>La Agencia de Acceso a la Información Pública, como órgano de control de la Ley 25.326 de Protección de los Datos Personales, atiende las denuncias y reclamos de quienes resulten afectados por incumplimientos de esa ley.</p>"
+    },
+    {
+     "t": "Menores de edad",
+     "html": "<p>El servicio no está dirigido a menores de 13 años. Si detectamos una cuenta de una persona menor de esa edad, la eliminamos. Si sos madre, padre o tutor y creés que pasó, avisanos.</p>"
+    },
+    {
+     "t": "Cambios en esta política",
+     "html": "<p>Podemos actualizar esta política y lo avisaremos dentro del servicio cuando el cambio sea importante. La fecha de la última versión figura arriba.</p>"
+    },
+    {
+     "t": "Contacto",
+     "html": "<p>Para cualquier consulta sobre tus datos, escribinos por {{contacto}}.</p>"
+    }
+   ]
+  },
+  "cookies": {
+   "title": "Cookies y almacenamiento local",
+   "lead": "Qué guarda neanbit type en tu navegador y por qué. Resumen: solo lo necesario para que funcione. Sin publicidad ni seguimiento.",
+   "sections": [
+    {
+     "t": "Qué guardamos en tu navegador",
+     "html": "<table class=\"doc-table\">\n        <thead><tr><th>Nombre</th><th>Tipo</th><th>Para qué sirve</th><th>Dura</th></tr></thead>\n        <tbody>\n          <tr><td><code>nt_session</code></td><td>Cookie</td><td>Mantiene tu sesión iniciada. Es <b>HttpOnly</b> (los scripts no pueden leerla), <b>SameSite=Lax</b> y <b>Secure</b> en HTTPS.</td><td>30 días o hasta que cerrás sesión</td></tr>\n          <tr><td><code>nt_theme</code></td><td>Almacenamiento local</td><td>El tema elegido (neanbit, claro, carbón o alto contraste).</td><td>Hasta que lo borres</td></tr>\n          <tr><td><code>nt_unit</code></td><td>Almacenamiento local</td><td>La unidad de velocidad (CPM, WPM o ZEN).</td><td>Hasta que lo borres</td></tr>\n          <tr><td><code>nt_history</code></td><td>Almacenamiento local</td><td>Tus últimas 50 carreras, para compararte con tu promedio.</td><td>Hasta que lo borres</td></tr>\n          <tr><td><code>nt_sound</code></td><td>Almacenamiento local</td><td>Si querés sonido de teclas y con qué volumen.</td><td>Hasta que lo borres</td></tr>\n          <tr><td><code>nt_pace</code></td><td>Almacenamiento local</td><td>El ritmo del cursor que elegiste (apagado, promedio o récord).</td><td>Hasta que lo borres</td></tr>\n          <tr><td><code>nt_mytexts</code></td><td>Almacenamiento local</td><td>Los textos propios que escribiste. No se envían al servidor.</td><td>Hasta que lo borres</td></tr>\n          <tr><td><code>nt_favs</code></td><td>Almacenamiento local</td><td>Los textos que marcaste como favoritos.</td><td>Hasta que lo borres</td></tr>\n          <tr><td><code>nt_news</code></td><td>Almacenamiento local</td><td>El último anuncio que viste, para no repetirlo.</td><td>Hasta que lo borres</td></tr>\n        </tbody></table>"
+    },
+    {
+     "t": "Sin publicidad ni seguimiento",
+     "html": "<p>neanbit type no usa cookies publicitarias ni de seguimiento propias, ni comparte datos con redes de anuncios.</p>\n        <p>Las cookies y el almacenamiento anteriores son <b>necesarios o de preferencia</b>: sin ellos no podrías mantener la sesión ni recordar tus ajustes. Por eso no mostramos un aviso para aceptarlas.</p>"
+    },
+    {
+     "t": "Servicios de terceros",
+     "html": "<p>Cloudflare, que intermedia el tráfico, puede usar mecanismos técnicos propios (por ejemplo, para distinguir tráfico automatizado). Google Fonts entrega las tipografías y recibe tu dirección IP al hacerlo. Más datos en la <a href=\"/privacidad\" data-page=\"privacidad\">Política de privacidad</a>.</p>"
+    },
+    {
+     "t": "Cómo borrarlos",
+     "html": "<ul>\n        <li><b>Cerrar sesión</b> elimina la cookie de sesión.</li>\n        <li>Desde la configuración de tu navegador podés borrar las cookies y los datos del sitio type.neanbit.com. Se pierden tus ajustes y tus últimas carreras locales; lo guardado en tu cuenta no se toca.</li>\n      </ul>"
+    }
+   ]
+  },
+  "normas": {
+   "title": "Normas de la comunidad",
+   "lead": "Para que competir valga la pena: juego limpio, buen trato y un lugar donde todos puedan practicar tranquilos.",
+   "sections": [
+    {
+     "t": "Juego limpio",
+     "html": "<ul>\n        <li>Escribís vos, con tu teclado. Nada de bots, macros, autoescritores ni extensiones que escriban o corrijan por vos.</li>\n        <li>No manipules las solicitudes al servidor ni envíes resultados falsos.</li>\n        <li>Una persona, una cuenta. No uses cuentas extra para subir en rankings o ganar medallas.</li>\n        <li>En duelos y torneos, nada de pactar resultados ni de abandonar a propósito para perjudicar a otra persona.</li>\n      </ul>"
+    },
+    {
+     "t": "Buen trato",
+     "html": "<ul>\n        <li>Tu nombre, título, biografía y foto tienen que ser aptos para todo público: sin odio, acoso, contenido sexual explícito ni amenazas.</li>\n        <li>No suplantes a otras personas ni uses datos personales de terceros.</li>\n        <li>No hagas spam ni incluyas enlaces engañosos o maliciosos.</li>\n      </ul>"
+    },
+    {
+     "t": "Torneos y duelos",
+     "html": "<ul>\n        <li>Llegá a tiempo a tu partido y mantené abierta la pantalla del torneo.</li>\n        <li>Las decisiones de la organización (llave, plazos, descalificaciones) son definitivas.</li>\n        <li>Si tenés un problema técnico durante un partido, escribinos después con los detalles; no se repiten partidos por problemas de conexión del jugador.</li>\n      </ul>"
+    },
+    {
+     "t": "Seguridad",
+     "html": "<p>Si encontrás una falla de seguridad, no la uses ni la difundas: avisanos por {{contacto}} y la corregimos. Se agradece y se reconoce.</p>"
+    },
+    {
+     "t": "Qué pasa si no se cumplen",
+     "html": "<p>Según la gravedad, podemos: anular carreras, reiniciar estadísticas, retirar medallas, descalificar de un torneo, quitar o cambiar contenido del perfil, o bloquear o eliminar la cuenta. En lo posible, avisamos primero y escuchamos tu versión.</p>"
+    },
+    {
+     "t": "Cómo reportar",
+     "html": "<p>Escribinos por {{contacto}} indicando el usuario involucrado y qué pasó. Cuanta más información, mejor.</p>"
+    }
+   ]
+  }
+ }
+}

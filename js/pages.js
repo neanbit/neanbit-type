@@ -6,14 +6,18 @@ import { art, legalArt, paintArt } from './art.js';
 import { esc } from './ui.js';
 
 // Quién responde las consultas: la persona dueña del proyecto, a través de su perfil público (ahí figura su Discord).
-const CONTACT_HANDLE = 'neanbit';
-const UPDATED = '30 de octubre de 2026';
-const REPO = 'https://github.com/neanbit/neanbit-type';
+// Estos tres valores y los textos de las páginas se pueden reemplazar desde el panel (settings.content, ver `applyContent`).
+// En los textos, {{contacto}}, {{fecha}} y {{repo}} se reemplazan al mostrarlos.
+const SITE = { contact: 'neanbit', updated: '30 de octubre de 2026', repo: 'https://github.com/neanbit/neanbit-type' };
 
 const paths = { info: '/info', guias: '/guias', terminos: '/terminos', privacidad: '/privacidad', cookies: '/cookies', normas: '/normas' };
 const idOf = (path) => Object.keys(paths).find((k) => paths[k] === path.replace(/\/+$/, '')) || null;
 
-const contact = `<a href="#" data-profile="${CONTACT_HANDLE}">el perfil de @${CONTACT_HANDLE}</a>`;
+const contact = '{{contacto}}';
+const fill = (html) => String(html ?? '')
+  .replaceAll('{{contacto}}', `<a href="#" data-profile="${esc(SITE.contact)}">el perfil de @${esc(SITE.contact)}</a>`)
+  .replaceAll('{{fecha}}', esc(SITE.updated))
+  .replaceAll('{{repo}}', esc(SITE.repo));
 
 // ---------- piezas ----------
 const hero = ({ eyebrow, title, lead, side, wide = false, meta = '' }) => `
@@ -43,8 +47,8 @@ function infoPage(ctx) {
   return `
   ${hero({
     eyebrow: 'Información',
-    title: 'Escribir mejor, medirte y competir.',
-    lead: 'neanbit type es un lugar para practicar mecanografía en español: carreras contra el reloj, duelos 1 contra 1 en vivo y torneos de eliminación directa. Se juega en el navegador, sin instalar nada.',
+    title: titleOf('info', 'Escribir mejor, medirte y competir.'),
+    lead: leadOf('info', 'neanbit type es un lugar para practicar mecanografía en español: carreras contra el reloj, duelos 1 contra 1 en vivo y torneos de eliminación directa. Se juega en el navegador, sin instalar nada.'),
     side: art.heroKeys(),
     wide: true,
   })}
@@ -100,9 +104,11 @@ function infoPage(ctx) {
     <div class="grid-3">
       <div class="pt"><b>Sin publicidad</b><span>No hay anuncios ni venta de datos. El proyecto se sostiene por gusto, no por negocio.</span></div>
       <div class="pt"><b>Solo navegador</b><span>No hay que instalar nada. Funciona en las versiones actuales de Chrome, Firefox, Safari y Edge.</span></div>
-      <div class="pt"><b>Código abierto</b><span>El código está publicado en <a href="${REPO}" target="_blank" rel="noopener noreferrer">GitHub</a>. Las carreras se validan en el servidor.</span></div>
+      <div class="pt"><b>Código abierto</b><span>El código está publicado en <a href="{{repo}}" target="_blank" rel="noopener noreferrer">GitHub</a>. Las carreras se validan en el servidor.</span></div>
     </div>
   </section>
+
+  ${extraNow('info')}
 
   <aside class="callout cta">
     <div><b>¿Listo para escribir?</b><span>Podés empezar ahora mismo como invitado, o crear una cuenta para guardar tus carreras.</span></div>
@@ -111,7 +117,7 @@ function infoPage(ctx) {
 }
 
 // ---------- Guías y preguntas frecuentes ----------
-const guides = [
+const GUIDES = [
   ['g-primeros', 'Primeros pasos', () => `
     <p>No hace falta cuenta para probar: como invitado podés correr todas las carreras que quieras, pero no se guardan ni suman al ranking.</p>
     <ol class="num">
@@ -174,7 +180,7 @@ const guides = [
     <p>El <b>color</b> de la medalla (bronce, gris, oro, coral o blanco) indica su categoría. En la vitrina ves cuáles tenés, cuáles te faltan y cuánto te falta para cada una. Desde «Editar perfil» elegís hasta seis para exhibir.</p>`, () => art.tierDiagram()],
 ];
 
-const faq = [
+const FAQ = [
   ['Cuenta', '¿Necesito una cuenta para jugar?', 'No. Como invitado podés correr carreras, pero no se guardan, no suman a rankings y no podés jugar duelos ni torneos. Crear una cuenta es gratis y solo pide usuario, nombre para mostrar y contraseña.'],
   ['Cuenta', '¿Puedo cambiar mi nombre de usuario?', 'El usuario (el que va con @) no se cambia. El <b>nombre para mostrar</b>, el título, la biografía y la foto sí, desde «Editar perfil».'],
   ['Cuenta', 'Me olvidé la contraseña, ¿qué hago?', 'Por ahora no hay recuperación automática. Si la perdés, escribinos y vemos cómo ayudarte. Para evitarlo, usá una contraseña que puedas recordar o un gestor de contraseñas.'],
@@ -198,14 +204,27 @@ const faq = [
   ['Técnico', '¿Cómo reporto un error o a alguien que hace trampa?', `Escribinos por ${contact}. Si es un error técnico, contá qué hiciste, el navegador que usás y, si podés, una captura.`],
 ];
 
+const figs = Object.fromEntries(GUIDES.filter((g) => g[3]).map((g) => [g[0], g[3]]));
+
+// Reemplazos editados desde el panel. Si una página no tiene reemplazo se usa el texto de este archivo.
+let OV = {};
+const ov = (id) => OV[id] || {};
+const titleOf = (id, fallback) => (ov(id).title ? esc(ov(id).title) : fallback);
+const leadOf = (id, fallback) => ov(id).lead || fallback;
+const guidesNow = () => (ov('guias').guides ? ov('guias').guides.map((g) => [g.id, esc(g.title), () => g.html, figs[g.id]]) : GUIDES);
+const faqNow = () => (ov('guias').faq ? ov('guias').faq.map((f) => [esc(f.c || 'General'), esc(f.q), f.a]) : FAQ);
+const extraNow = (id) => (ov(id).extra || []).map((x, i) => `<section class="sec" id="x${i + 1}"><h2 class="sec-title">${esc(x.t)}</h2><div class="prose">${x.html}</div></section>`).join('');
+
 function guiasPage() {
+  const guides = guidesNow();
+  const faq = faqNow();
   const cats = [...new Set(faq.map((f) => f[0]))];
   const toc = [...guides.map((g) => [g[0], g[1]]), ['faq', 'Preguntas frecuentes']];
   return `
   ${hero({
     eyebrow: 'Guías y preguntas frecuentes',
-    title: 'Aprendé a sacarle el jugo.',
-    lead: 'Desde cómo apoyar los dedos hasta cómo funciona una llave de torneo. Si no encontrás lo que buscás, abajo hay preguntas frecuentes con buscador.',
+    title: titleOf('guias', 'Aprendé a sacarle el jugo.'),
+    lead: leadOf('guias', 'Desde cómo apoyar los dedos hasta cómo funciona una llave de torneo. Si no encontrás lo que buscás, abajo hay preguntas frecuentes con buscador.'),
     side: legalArt.guides(),
   })}
   <div class="doc">
@@ -265,7 +284,7 @@ const legal = {
         <li>Los rankings, las medallas y los títulos son virtuales y no tienen valor económico. Si un torneo ofreciera algo más, se informará en su descripción.</li>
         <li>Las decisiones de organización de un torneo (llave, plazos, descalificaciones, desempates) son definitivas, y se aplican las reglas publicadas en las guías.</li>
       </ul>`],
-      ['Propiedad intelectual', `<p>El nombre y el logotipo «neanbit» pertenecen a su titular. El código del servicio está publicado en <a href="${REPO}" target="_blank" rel="noopener noreferrer">GitHub</a> y se rige por las condiciones que figuren en ese repositorio.</p>
+      ['Propiedad intelectual', `<p>El nombre y el logotipo «neanbit» pertenecen a su titular. El código del servicio está publicado en <a href="{{repo}}" target="_blank" rel="noopener noreferrer">GitHub</a> y se rige por las condiciones que figuren en ese repositorio.</p>
         <p>Los textos de práctica se usan con fines de práctica. Si sos titular de derechos sobre alguno y querés que lo retiremos, escribinos y lo revisamos.</p>`],
       ['Disponibilidad y cambios del servicio', `<p>El servicio se ofrece «tal cual». Puede tener errores, interrupciones o períodos de mantenimiento, y podemos modificar o retirar funciones. Hacemos copias de seguridad periódicas, pero no garantizamos que no se pierdan datos.</p>`],
       ['Responsabilidad', `<p>En la medida que la ley lo permita, neanbit no responde por daños indirectos, pérdida de resultados, interrupciones del servicio ni por el contenido publicado por otras personas. Esto no limita los derechos que la ley no permita limitar.</p>`],
@@ -385,16 +404,17 @@ const legal = {
 
 function legalPage(id) {
   const d = legal[id];
-  const secs = d.sections.map(([t, html], i) => ({ id: `s${i + 1}`, t, html }));
+  const o = ov(id);
+  const secs = (o.sections ? o.sections.map((x) => [esc(x.t), x.html]) : d.sections).map(([t, html], i) => ({ id: `s${i + 1}`, t, html }));
   return `
-  ${hero({ eyebrow: d.eyebrow, title: d.title, lead: d.lead, side: d.art(), meta: id === 'normas' ? '' : `Última actualización: ${UPDATED}` })}
+  ${hero({ eyebrow: d.eyebrow, title: titleOf(id, d.title), lead: leadOf(id, d.lead), side: d.art(), meta: id === 'normas' ? '' : 'Última actualización: {{fecha}}' })}
   <div class="doc">
     <nav class="toc" aria-label="En esta página"><p class="sq">En esta página</p>${secs.map((s, i) => `<a href="#${s.id}" data-anchor="${s.id}"><i>${String(i + 1).padStart(2, '0')}</i>${s.t}</a>`).join('')}</nav>
     <article class="doc-body prose legal">
       ${secs.map((s) => `<section id="${s.id}"><h2>${s.t}</h2>${s.html}</section>`).join('')}
       <nav class="doc-more" aria-label="Más documentos">
         <p class="sq">Otros documentos</p>
-        ${['terminos', 'privacidad', 'cookies', 'normas'].filter((k) => k !== id).map((k) => `<a href="${paths[k]}" data-page="${k}">${legal[k].title}</a>`).join('')}
+        ${['terminos', 'privacidad', 'cookies', 'normas'].filter((k) => k !== id).map((k) => `<a href="${paths[k]}" data-page="${k}">${titleOf(k, legal[k].title)}</a>`).join('')}
       </nav>
     </article>
   </div>`;
@@ -455,7 +475,7 @@ function wire(root) {
 function render(id) {
   const body = $('#page-body');
   body.className = 'page';
-  body.innerHTML = defs[id].render(ctx);
+  body.innerHTML = fill(defs[id].render(ctx));
   wire(body);
   current = id;
 }
@@ -472,7 +492,7 @@ function open(id, { push = true, anchor = '' } = {}) {
   render(id);
   ctx.show('page');
   if (push && location.pathname !== paths[id]) history.pushState({ page: id }, '', paths[id]);
-  document.title = `${defs[id].title} · neanbit type`;
+  document.title = `${ov(id).title || defs[id].title} · neanbit type`;
   window.scrollTo(0, 0);
   if (anchor) requestAnimationFrame(() => scrollToAnchor(anchor));
 }
@@ -510,9 +530,32 @@ export const pages = {
     const id = idOf(location.pathname);
     if (id) open(id, { push: false });
   },
+  // Reemplazos editados desde el panel (viene de /api/config). Si hay una página abierta se vuelve a dibujar.
+  setContent(c) {
+    OV = c && c.pages ? c.pages : {};
+    const site = (c && c.site) || {};
+    SITE.contact = site.contact || 'neanbit';
+    SITE.updated = site.updated || '30 de octubre de 2026';
+    SITE.repo = site.repo || 'https://github.com/neanbit/neanbit-type';
+    if (current && !$('#page').hidden) render(current);
+  },
   setInfo(info) {
     ctx.info = info;
     if (current === 'info' && !$('#page').hidden) render('info');
   },
   title: 'neanbit type',
 };
+
+// Textos originales, para que el panel los muestre como punto de partida (ver scripts/export-content.mjs).
+// El orden de las páginas legales y de sus secciones es el que se ve en el sitio.
+export const defaults = () => ({
+  site: { ...SITE },
+  info: { title: 'Escribir mejor, medirte y competir.', lead: 'neanbit type es un lugar para practicar mecanografía en español: carreras contra el reloj, duelos 1 contra 1 en vivo y torneos de eliminación directa. Se juega en el navegador, sin instalar nada.' },
+  guias: {
+    title: 'Aprendé a sacarle el jugo.',
+    lead: 'Desde cómo apoyar los dedos hasta cómo funciona una llave de torneo. Si no encontrás lo que buscás, abajo hay preguntas frecuentes con buscador.',
+    guides: GUIDES.map(([id, title, body]) => ({ id, title, html: body().trim() })),
+    faq: FAQ.map(([c, q, a]) => ({ c, q, a })),
+  },
+  legal: Object.fromEntries(Object.entries(legal).map(([id, d]) => [id, { title: d.title, lead: d.lead, sections: d.sections.map(([t, html]) => ({ t, html: html.trim() })) }])),
+});

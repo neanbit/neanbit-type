@@ -51,3 +51,12 @@ Una tecla y un cursor. El logo termina en un cuadrado de color: ese cuadrado es 
 - La velocidad del texto propio y del ritmo no se verificó con teclados reales (probado con Playwright).
 - Sonido: no se pudo oír en el entorno de prueba; revisá volúmenes.
 - Probar la revancha con mala conexión (invitación vencida a los 30 s) en vivo.
+
+## Tercera tanda: editable desde el panel
+- Nuevas claves de `settings` que lee `/api/config`: `features`, `progress` y `content` (ver README). Los valores de fábrica de niveles están en `server/levels.js`; `levelOf` ya no tiene números fijos.
+- `users.xp_bonus`: ajuste manual de XP que se suma encima de lo calculado (columna nueva, se crea sola).
+- Textos de las páginas: `js/pages.js` acepta reemplazos (`pages.setContent`). Los textos tienen marcadores `{{contacto}}`, `{{fecha}}` y `{{repo}}`. El HTML pasa por `server/html-safe.js` (lista blanca) al guardar en el panel y al servir.
+- `scripts/export-content.mjs` genera `server/content-defaults.json` (los textos originales para el panel). **Hay que correrlo y copiar el archivo al panel cada vez que cambie un texto en `js/pages.js`.**
+- Las funciones apagadas se ocultan con `data-feature` + `html[data-off]` (CSS); `js/features.js`. El servidor no impide una revancha ni un compartir: solo se ocultan.
+- Las páginas legales siguen sin ser asesoramiento legal, y ahora cualquiera con acceso al panel puede cambiarlas.
+- Si la dirección es una página (por ejemplo `/terminos`), la app espera hasta 1,2 s a que lleguen los textos editados antes de mostrarla.

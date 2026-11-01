@@ -275,3 +275,10 @@ td.empty { padding: 2.5rem 0; color: var(--muted); text-align: center; }
 
 .flat { background: transparent; border-color: transparent; box-shadow: none; color: var(--muted); }
 .flat:hover { color: var(--text); border-color: var(--line); }
+
+/* funciones apagadas desde el panel */
+[data-off~="share"] [data-feature="share"], [data-off~="rematch"] [data-feature="rematch"], [data-off~="sound"] [data-feature="sound"],
+[data-off~="pace"] [data-feature="pace"], [data-off~="mytexts"] [data-feature="mytexts"], [data-off~="levels"] [data-feature="levels"],
+[data-off~="goal"] [data-feature="goal"] { display: none !important; }
+[data-off~="levels"][data-off~="goal"] .progress { display: none !important; }
+[data-off~="levels"] .progress, [data-off~="goal"] .progress { grid-template-columns: 1fr; }

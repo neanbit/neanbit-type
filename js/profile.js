@@ -1,3 +1,4 @@
+import { features } from './features.js';
 import { avatarInner } from './avatar.js';
 import { $, esc, svg, icons, medalImg, countBadge } from './ui.js';
 import { setVitrina } from './vitrina.js';
@@ -104,7 +105,7 @@ export function renderProfile(p, opts) {
   $('#pf-statslink').hidden = !isMe;
 
   const tags = [`<span class="tag accent">${p.role === 'admin' ? 'Admin' : 'Piloto'}</span>`];
-  if (p.level) tags.push(`<span class="tag">Nivel ${p.level.level} · ${esc(p.level.title)}</span>`);
+  if (p.level && features.levels) tags.push(`<span class="tag">Nivel ${p.level.level} · ${esc(p.level.title)}</span>`);
   if (p.country) tags.push(`<span class="tag">${esc(p.country)}</span>`);
   if (p.discord) tags.push(`<button class="tag" data-copy="${esc(p.discord)}" title="Copiar usuario">Discord: ${esc(p.discord)}</button>`);
   if (p.website) tags.push(`<a class="tag" href="${esc(p.website)}" target="_blank" rel="noopener noreferrer nofollow">${esc(siteName(p.website))} ${svg(icons.link)}</a>`);

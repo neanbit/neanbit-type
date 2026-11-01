@@ -10,6 +10,8 @@ import { seed } from './seed.js';
 import { createDuels } from './duels.js';
 import { createTournaments } from './tournaments.js';
 import { clientIp, createLimiter } from './limits.js';
+import { cleanProgress, countsOf, levelFrom } from './levels.js';
+import { cleanContent } from './content.js';
 import { CONDITIONS, ensureMedalSchema, grantCount, groupOf, loadIcons, medalFile, medalValues, realTourneyWins, tierOf } from './medals.js';
 
 const scrypt = promisify(scryptCb);
@@ -45,6 +47,7 @@ try { db.exec('alter table users add column avatar_v integer not null default 0'
 try { db.exec('alter table users add column verified integer not null default 0'); } catch {}
 try { db.exec("alter table users add column shown text not null default '[]'"); } catch {}
 try { db.exec('alter table users add column goal integer not null default 5'); } catch {}
+try { db.exec('alter table users add column xp_bonus integer not null default 0'); } catch {}
 for (const col of ['bio', 'country', 'layout', 'switches', 'discord', 'title', 'website']) {
   try { db.exec(`alter table users add column ${col} text not null default ''`); } catch {}
 }
@@ -272,21 +275,23 @@ function homeSummary(userId, tz) {
   };
 }
 
-// Niveles: la experiencia (XP) sale de lo ya guardado, no hay tabla nueva.
-// 10 por carrera (15 en Hardcore), +5 si fue sin errores, +20 por duelo ganado, +150 por torneo ganado.
-// Nivel = 1 + raíz(XP / 50): el 2 llega a 50 XP, el 3 a 200, el 5 a 800, el 10 a 4050.
-const RANKS = [[1, 'Novato'], [3, 'Aprendiz'], [6, 'Mecanógrafo'], [10, 'Escribano'], [15, 'Veloz'], [22, 'Experto'], [30, 'Maestro'], [40, 'Leyenda']];
+// Niveles: la experiencia (XP) sale de lo ya guardado, no hay tabla nueva. Los valores (XP por carrera, escala, títulos)
+// se leen de `settings.progress`, que se edita desde el panel (ver server/levels.js). `users.xp_bonus` es un ajuste manual del panel.
+const progress = () => cleanProgress(setting('progress'));
 function levelOf(userId) {
-  const r = db.prepare('select count(*) as n, coalesce(sum(hc), 0) as h, coalesce(sum(acc = 100), 0) as p from races where user_id = ?').get(userId);
-  const wins = db.prepare('select count(*) as n from duels where winner_id = ?').get(userId).n;
-  const titles = db.prepare('select count(*) as n from tournaments where winner_id = ?').get(userId).n;
-  const xp = (r.n - r.h) * 10 + r.h * 15 + r.p * 5 + wins * 20 + titles * 150;
-  const level = Math.floor(Math.sqrt(xp / 50)) + 1;
-  const from = 50 * (level - 1) ** 2;
-  const to = 50 * level ** 2;
-  const title = [...RANKS].reverse().find(([min]) => level >= min)[1];
-  return { xp, level, from, to, title };
+  const bonus = db.prepare('select xp_bonus from users where id = ?').get(userId)?.xp_bonus || 0;
+  return levelFrom(countsOf(db, userId), setting('progress'), bonus);
 }
+
+// Funciones que se pueden apagar desde el panel (settings.features). Todas vienen encendidas por defecto.
+const FEATURES = ['share', 'rematch', 'sound', 'pace', 'mytexts', 'levels', 'goal'];
+function features() {
+  const raw = setting('features') || {};
+  return Object.fromEntries(FEATURES.map((k) => [k, raw[k] !== false]));
+}
+
+// Textos de páginas editados desde el panel (settings.content). Se limpian otra vez al servir (ver server/content.js).
+const content = () => cleanContent(setting('content'));
 
 // Paginado de rankings: 10 por página, la página se acota al rango que existe.
 function pageOf(url, total) {
@@ -388,7 +393,7 @@ async function api(req, res, url) {
 
   if (key === 'GET /api/config') {
     const announcement = db.prepare('select id, title, body from announcements where active = 1 order by at desc limit 1').get() || null;
-    return send(res, 200, { maintenance: maintenance(), announcement, info: setting('info') });
+    return send(res, 200, { maintenance: maintenance(), announcement, info: setting('info'), features: features(), content: content(), goalMax: progress().goalMax });
   }
 
   if (key === 'POST /api/profile') {
@@ -429,7 +434,7 @@ async function api(req, res, url) {
     db.exec('begin immediate');
     try {
       id = Math.max(seqNow(), db.prepare('select coalesce(max(id), 0) as n from users').get().n) + 1;
-      db.prepare('insert into users (id, handle, name, hash, role, created) values (?, ?, ?, ?, ?, ?)').run(id, h, name.trim(), hash, role, Date.now());
+      db.prepare('insert into users (id, handle, name, hash, role, created, goal) values (?, ?, ?, ?, ?, ?, ?)').run(id, h, name.trim(), hash, role, Date.now(), progress().goalDefault);
       saveSeq(id);
       db.exec('commit');
     } catch (err) {
@@ -488,7 +493,8 @@ async function api(req, res, url) {
   if (key === 'POST /api/goal') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
     const { goal } = await readBody(req);
-    if (!Number.isInteger(goal) || goal < 1 || goal > 50) return send(res, 400, { error: 'La meta va de 1 a 50 carreras.' });
+    const gmax = progress().goalMax;
+    if (!Number.isInteger(goal) || goal < 1 || goal > gmax) return send(res, 400, { error: `La meta va de 1 a ${gmax} carreras.` });
     db.prepare('update users set goal = ? where id = ?').run(goal, me.id);
     return send(res, 200, { goal });
   }

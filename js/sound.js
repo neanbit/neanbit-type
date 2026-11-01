@@ -1,5 +1,6 @@
 // Sonido de teclas, sintetizado con Web Audio (no hay archivos de audio). Apagado por defecto.
 import { load, save } from './store.js';
+import { features } from './features.js';
 
 const GAIN = { low: 0.05, high: 0.15 };
 let level = ['off', 'low', 'high'].includes(load('sound', 'off')) ? load('sound', 'off') : 'off';
@@ -73,6 +74,7 @@ export const sound = {
   },
   // kind: key, space, error, done
   play(kind) {
+    if (!features.sound) return;
     if (level === 'off') return;
     const c = ctx();
     if (!c) return;
