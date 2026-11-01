@@ -27,14 +27,22 @@ export function cleanProgress(raw) {
   return { xp, step: num(r.step, 10, 1000, d.step), titles, goalDefault: num(r.goalDefault, 1, goalMax, Math.min(d.goalDefault, goalMax)), goalMax };
 }
 
-// counts: { races, hc, perfect, wins, titles }. `races` incluye las Hardcore.
-export function levelFrom(counts, rawProgress, bonus = 0) {
+// XP total (ya sumada) a nivel. Es lo que usa la app desde que la XP se guarda al ocurrir (ver server/xp.js).
+export function levelOfXp(total, rawProgress) {
   const p = cleanProgress(rawProgress);
-  const xp = Math.max(0, (counts.races - counts.hc) * p.xp.race + counts.hc * p.xp.hc + counts.perfect * p.xp.perfect
-    + counts.wins * p.xp.duel + counts.titles * p.xp.tourney + (Number(bonus) || 0));
+  const xp = Math.max(0, Math.trunc(Number(total)) || 0);
   const level = Math.floor(Math.sqrt(xp / p.step)) + 1;
   const title = [...p.titles].reverse().find(([min]) => level >= min)[1];
   return { xp, level, from: p.step * (level - 1) ** 2, to: p.step * level ** 2, title };
+}
+
+// Cálculo anterior, por conteos. Solo lo usa la migración de xp.js para comprobar que el total nuevo coincide con el viejo.
+// counts: { races, hc, perfect, wins, titles }. `races` incluye las Hardcore.
+export function levelFrom(counts, rawProgress, bonus = 0) {
+  const p = cleanProgress(rawProgress);
+  const xp = (counts.races - counts.hc) * p.xp.race + counts.hc * p.xp.hc + counts.perfect * p.xp.perfect
+    + counts.wins * p.xp.duel + counts.titles * p.xp.tourney + (Number(bonus) || 0);
+  return levelOfXp(xp, rawProgress);
 }
 
 // Lee los conteos de un usuario (las tablas `races`, `duels` y `tournaments` ya existen en la app).

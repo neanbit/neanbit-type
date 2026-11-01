@@ -5,7 +5,7 @@ const GRACE_MS = 90000;
 const MAX_RACE_MS = 300000;
 const MAX_CPM = 1800;
 
-export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) {
+export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, xp }) {
   db.exec(`
     create table if not exists duels (
       id integer primary key, a_id integer not null, b_id integer not null, text_id integer not null,
@@ -249,13 +249,17 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors }) 
         const info = db.prepare('insert into duels (a_id, b_id, text_id, winner_id, a_cpm, a_acc, b_cpm, b_acc, forfeit, at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
           .run(d.a.id, d.b.id, d.textId, winner ? winner.id : null, da?.cpm ?? null, da?.acc ?? null, dbb?.cpm ?? null, dbb?.acc ?? null, forfeit ? 1 : 0, Date.now());
         duelId = Number(info.lastInsertRowid);
-        const add = db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc, duel) values (?, ?, ?, ?, ?, 0, ?)');
+        const add = db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc, duel, xp) values (?, ?, ?, ?, ?, 0, ?, ?)');
+        const at = Date.now();
         for (const [x, r] of [[d.a, da], [d.b, dbb]]) {
           if (!r) continue;
-          add.run(x.id, d.textId, r.cpm, r.acc, Date.now(), duelId);
+          const gain = xp.race(x.id, 0, r.acc, at);
+          add.run(x.id, d.textId, r.cpm, r.acc, at, duelId, gain.xp);
+          xp.credit(x.id, gain.xp);
           saveErrors(x.id, 'c', r.chars);
           saveErrors(x.id, 'w', r.words);
         }
+        if (winner) xp.event(winner.id, 'duel', duelId, at);
         bump();
       } catch (err) {
         console.error(err);

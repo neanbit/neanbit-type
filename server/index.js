@@ -10,7 +10,8 @@ import { seed } from './seed.js';
 import { createDuels } from './duels.js';
 import { createTournaments } from './tournaments.js';
 import { clientIp, createLimiter } from './limits.js';
-import { cleanProgress, countsOf, levelFrom } from './levels.js';
+import { cleanProgress } from './levels.js';
+import { setupXp } from './xp.js';
 import { cleanContent } from './content.js';
 import { CONDITIONS, ensureMedalSchema, grantCount, groupOf, loadIcons, medalFile, medalValues, realTourneyWins, tierOf } from './medals.js';
 
@@ -105,6 +106,8 @@ function setting(key) {
     return null;
   }
 }
+
+const xp = setupXp(db, setting);
 
 function maintenance() {
   try {
@@ -275,13 +278,10 @@ function homeSummary(userId, tz) {
   };
 }
 
-// Niveles: la experiencia (XP) sale de lo ya guardado, no hay tabla nueva. Los valores (XP por carrera, escala, títulos)
-// se leen de `settings.progress`, que se edita desde el panel (ver server/levels.js). `users.xp_bonus` es un ajuste manual del panel.
+// Niveles: la XP se guarda al ocurrir (races.xp y la tabla xp_events) y el total vive en users.xp; ver server/xp.js.
+// Los valores (XP por carrera, escala, títulos) se leen de `settings.progress`, que se edita desde el panel (server/levels.js).
 const progress = () => cleanProgress(setting('progress'));
-function levelOf(userId) {
-  const bonus = db.prepare('select xp_bonus from users where id = ?').get(userId)?.xp_bonus || 0;
-  return levelFrom(countsOf(db, userId), setting('progress'), bonus);
-}
+const levelOf = (userId) => xp.levelOf(userId);
 
 // Funciones que se pueden apagar desde el panel (settings.features). Todas vienen encendidas por defecto.
 const FEATURES = ['share', 'rematch', 'sound', 'pace', 'mytexts', 'levels', 'goal'];
@@ -482,12 +482,15 @@ async function api(req, res, url) {
     const last = db.prepare('select max(at) as a from races where user_id = ?').get(me.id).a || 0;
     if (Date.now() - last < 3000) return send(res, 429, { error: 'Demasiado rápido.' });
     const before = levelOf(me.id);
-    db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc) values (?, ?, ?, ?, ?, ?)')
-      .run(me.id, textId, cpm, acc, Date.now(), hc);
+    const now = Date.now();
+    const gain = xp.race(me.id, hc, acc, now);
+    db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc, xp) values (?, ?, ?, ?, ?, ?, ?)')
+      .run(me.id, textId, cpm, acc, now, hc, gain.xp);
+    xp.credit(me.id, gain.xp);
     version++;
     saveErrors(me.id, 'c', chars);
     saveErrors(me.id, 'w', words);
-    return send(res, 201, { ok: true, xp: { before, after: levelOf(me.id) } });
+    return send(res, 201, { ok: true, xp: { before, after: levelOf(me.id), gain: gain.xp, mult: gain.mult } });
   }
 
   if (key === 'POST /api/goal') {
@@ -739,9 +742,9 @@ async function serveStatic(req, res, pathname) {
   }
 }
 
-const duels = createDuels({ db, sessionUser, maintenance, bump: () => { version++; }, saveErrors });
+const duels = createDuels({ db, sessionUser, maintenance, bump: () => { version++; }, saveErrors, xp });
 const tourneys = createTournaments({
-  db, duels, maintenance, bump: () => { version++; },
+  db, duels, maintenance, xp, bump: () => { version++; },
   earnedMedal: (userId, medalId) => medalsOf(userId).some((m) => m.id === medalId && m.earned),
 });
 

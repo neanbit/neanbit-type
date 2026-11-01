@@ -7,7 +7,7 @@ const ACTIVE = "'jugado','abandono','progreso','desempate','no_presentacion','do
 // Los torneos se crean y administran desde neanbit-type-admin: el panel escribe en estas tablas
 // y deja órdenes en `tournament_orders`, que la app lee cada pocos segundos. La app solo expone
 // a los jugadores inscribirse, retirarse y consultar.
-export function createTournaments({ db, duels, maintenance, bump, earnedMedal }) {
+export function createTournaments({ db, duels, maintenance, bump, earnedMedal, xp }) {
   db.exec(`
     create table if not exists tournaments (
       id integer primary key, name text not null, description text not null default '',
@@ -209,7 +209,10 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal })
       if (next) settle(next.id);
     } else {
       db.prepare("update tournaments set status = 'finalizado', winner_id = ?, finished_at = ? where id = ?").run(winnerId, now(), t.id);
-      if (winnerId) push(winnerId, { t: 't_info', tid: t.id, name: t.name, event: 'champion' });
+      if (winnerId) {
+        xp.event(winnerId, 'tourney', t.id);
+        push(winnerId, { t: 't_info', tid: t.id, name: t.name, event: 'champion' });
+      }
     }
     bump();
   }
