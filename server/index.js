@@ -282,6 +282,14 @@ function homeSummary(userId, tz) {
 // Los valores (XP por carrera, escala, títulos) se leen de `settings.progress`, que se edita desde el panel (server/levels.js).
 const progress = () => cleanProgress(setting('progress'));
 const levelOf = (userId) => xp.levelOf(userId);
+// Escala de niveles para la vitrina del perfil: el nivel n empieza en step × (n − 1)² XP; los títulos cambian en los niveles indicados.
+const ladder = () => { const p = progress(); return { step: p.step, titles: p.titles }; };
+// Potenciador que rige ahora para alguien (el de mayor multiplicador, como xp.multFor); null si no hay ninguno.
+const boostOf = (userId) => {
+  const now = Date.now();
+  const b = db.prepare('select name, mult, ends from xp_boosters where starts <= ? and ends > ? and (user_id = 0 or user_id = ?) order by mult desc, ends desc limit 1').get(now, now, userId);
+  return b ? { name: b.name, mult: b.mult, ends: b.ends } : null;
+};
 
 // Funciones que se pueden apagar desde el panel (settings.features). Todas vienen encendidas por defecto.
 const FEATURES = ['share', 'rematch', 'sound', 'pace', 'mytexts', 'levels', 'goal'];
@@ -339,7 +347,7 @@ function cookie(req, value, maxAge) {
 const publicUser = (u) => ({
   handle: u.handle, name: u.name, role: u.role, av: u.avatar_v,
   bio: u.bio, country: u.country, layout: u.layout, switches: u.switches, discord: u.discord,
-  title: u.title, website: u.website, accent: u.accent, banner: u.banner, shape: u.shape,
+  website: u.website, accent: u.accent, banner: u.banner, shape: u.shape,
 });
 
 async function api(req, res, url) {
@@ -410,9 +418,9 @@ async function api(req, res, url) {
     const earned = new Set(medalsOf(me.id).filter((m) => m.earned).map((m) => m.id));
     const shown = Array.isArray(b.shown) ? [...new Set(b.shown)].filter((id) => earned.has(id)).slice(0, 6) : parseShown(me.shown);
     db.prepare(`update users set name = ?, bio = ?, country = ?, layout = ?, switches = ?, discord = ?, shown = ?,
-      title = ?, website = ?, accent = ?, banner = ?, shape = ? where id = ?`)
+      website = ?, accent = ?, banner = ?, shape = ? where id = ?`)
       .run(name, clean(b.bio, 150), clean(b.country, 30), layout, clean(b.switches, 30), clean(b.discord, 32), JSON.stringify(shown),
-        clean(b.title, 28), website, oneOf(b.accent, accents), oneOf(b.banner, banners), oneOf(b.shape, shapes), me.id);
+        website, oneOf(b.accent, accents), oneOf(b.banner, banners), oneOf(b.shape, shapes), me.id);
     return send(res, 200, { user: publicUser(db.prepare(`select ${userCols} from users where id = ?`).get(me.id)) });
   }
 
@@ -630,7 +638,7 @@ async function api(req, res, url) {
     const ids = memo('textids', () => db.prepare('select id from texts where active = 1 order by id').all().map((t) => t.id), 60000);
     const dayNumber = Math.floor((Date.now() - tz * 60000) / 86400000);
     const daily = ids.length ? ids[dayNumber % ids.length] : null;
-    const pulse = me ? { ...homeSummary(me.id, tz), rank: rankOf(me.id), hcRank: hcRankOf(me.id), level: levelOf(me.id), goal: db.prepare('select goal from users where id = ?').get(me.id).goal } : null;
+    const pulse = me ? { ...homeSummary(me.id, tz), rank: rankOf(me.id), hcRank: hcRankOf(me.id), level: levelOf(me.id), boost: boostOf(me.id), goal: db.prepare('select goal from users where id = ?').get(me.id).goal } : null;
     return send(res, 200, { community, daily, pulse, min: minForAverage });
   }
 
@@ -663,11 +671,12 @@ async function api(req, res, url) {
       name: user.name, handle: user.handle, role: user.role, since: user.created, av: user.avatar_v,
       deaths: db.prepare('select count(*) as n from deaths where user_id = ?').get(user.id).n,
       bio: user.bio, country: user.country, layout: user.layout, switches: user.switches, discord: user.discord,
-      title: user.title, website: user.website, accent: user.accent, banner: user.banner, shape: user.shape,
+      website: user.website, accent: user.accent, banner: user.banner, shape: user.shape,
       races: s.races, best: s.best, hcBest: s.hcBest,
       avg: mean(normal.slice(0, 10)), avgAll: mean(normal),
       favorite: favorite ? favorite.text_id : null,
       rank: rankOf(user.id), hcRank: hcRankOf(user.id), level: levelOf(user.id),
+      ladder: ladder(), boost: me && me.id === user.id ? boostOf(user.id) : null,
       verified: user.verified, shown: parseShown(user.shown), medals, secretLeft,
       duels: duelSummary(user.id), tourneys: tourneys.summary(user.id),
     });

@@ -60,3 +60,11 @@ Una tecla y un cursor. El logo termina en un cuadrado de color: ese cuadrado es 
 - Las funciones apagadas se ocultan con `data-feature` + `html[data-off]` (CSS); `js/features.js`. El servidor no impide una revancha ni un compartir: solo se ocultan.
 - Las páginas legales siguen sin ser asesoramiento legal, y ahora cualquiera con acceso al panel puede cambiarlas.
 - Si la dirección es una página (por ejemplo `/terminos`), la app espera hasta 1,2 s a que lleguen los textos editados antes de mostrarla.
+
+## Nivel en el perfil (etapa 26, paso 3)
+
+- El campo «Título» del perfil se retiró: ya no se pide, no se muestra y `POST /api/profile` lo ignora. La columna `users.title` se conserva sin usar, con los datos viejos.
+- `js/nivel.js` y `css/nivel.css` (nuevos): widget `#pf-level` en la cabecera (el número del nivel en un cuadrado del color del perfil, título, XP y barra) y ventana `#levels` con el avance, los próximos 5 niveles y los títulos. Se abre con un clic en el widget.
+- `/api/users/:handle` suma `ladder` (`step` y `titles`, para calcular los niveles futuros) y, solo en el perfil propio, `boost` (el potenciador que rige ahora). `/api/home` suma `boost` en `pulse`.
+- El potenciador activo se avisa en la ventana de nivel (perfil propio), en el bloque de nivel del inicio y en el resultado de carrera (`xp.mult`).
+- Clase `.lv-key` con el modificador `.xl` (no `.big`, que ya usa el editor).

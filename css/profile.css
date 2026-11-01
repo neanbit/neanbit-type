@@ -33,7 +33,6 @@
 .pf-id .pf-avatar { margin-top: -4.6rem; }
 .pf-head { min-width: 0; }
 .pf-head h2 { display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .5rem; font-size: 2rem; line-height: 1.2; letter-spacing: -.03em; }
-.pf-title { margin: .15rem 0 0; opacity: .85; }
 .pf-handle { margin: .1rem 0 0; color: var(--ink); font: .9rem var(--mono); }
 .pf-actions { display: flex; gap: .5rem; }
 
@@ -203,7 +202,6 @@ dialog.wide[open] { display: flex; flex-direction: column; max-height: min(92vh,
 .pv .pf-avatar { width: 4.2rem; height: 4.2rem; border-width: 2px; box-shadow: none; font-size: 1.6rem; }
 .pv-id b { display: flex; align-items: center; gap: .4rem; margin-top: .45rem; font-size: 1.1rem; line-height: 1.2; overflow-wrap: anywhere; }
 .pv .feat img { width: 1.3rem; height: 1.3rem; }
-.pv .pf-title { font-size: .82rem; }
 .pv .pf-handle { font-size: .78rem; }
 .pv .pf-tags, .pv .pf-bio, .pv-medals { margin: .7rem 1rem 0; }
 .pv .pf-bio { padding: .5rem .7rem; font-size: .78rem; }

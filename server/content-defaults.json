@@ -50,7 +50,7 @@
    {
     "id": "g-progreso",
     "title": "Niveles, rachas y meta diaria",
-    "html": "<p>Tu <b>nivel</b> sube con la experiencia (XP) que sale de lo que ya jugás: 10 XP por carrera (15 en Hardcore), 5 más si no tuviste errores, 20 por duelo ganado y 150 por torneo ganado. El nivel 2 llega a los 50 XP, el 3 a los 200 y el 5 a los 800. Cada tramo de niveles tiene un título, de Novato a Leyenda. Lo ves en el inicio y en tu perfil, y al terminar una carrera aparece cuánto sumaste.</p>\n    <p>La <b>racha</b> cuenta los días seguidos en que corriste al menos una carrera. Si hoy todavía no jugaste, la racha de ayer sigue viva hasta que termine el día.</p>\n    <p>La <b>meta de hoy</b> es cuántas carreras querés hacer por día (de 1 a 50). La cambiás desde el inicio con «Cambiar» y se guarda en tu cuenta.</p>"
+    "html": "<p>Tu <b>nivel</b> sube con la experiencia (XP) que sale de lo que ya jugás: 10 XP por carrera (15 en Hardcore), 5 más si no tuviste errores, 20 por duelo ganado y 150 por torneo ganado. El nivel 2 llega a los 50 XP, el 3 a los 200 y el 5 a los 800. Cada tramo de niveles tiene un título, de Novato a Leyenda. Lo ves en el inicio y en tu perfil: tocá el nivel de tu perfil para ver cuánto te falta, los próximos niveles y los títulos. Al terminar una carrera aparece cuánto sumaste, y si hay un potenciador activo, cuánto multiplica.</p>\n    <p>La <b>racha</b> cuenta los días seguidos en que corriste al menos una carrera. Si hoy todavía no jugaste, la racha de ayer sigue viva hasta que termine el día.</p>\n    <p>La <b>meta de hoy</b> es cuántas carreras querés hacer por día (de 1 a 50). La cambiás desde el inicio con «Cambiar» y se guarda en tu cuenta.</p>"
    },
    {
     "id": "g-extras",
@@ -72,7 +72,7 @@
    {
     "c": "Cuenta",
     "q": "¿Puedo cambiar mi nombre de usuario?",
-    "a": "El usuario (el que va con @) no se cambia. El <b>nombre para mostrar</b>, el título, la biografía y la foto sí, desde «Editar perfil»."
+    "a": "El usuario (el que va con @) no se cambia. El <b>nombre para mostrar</b>, la biografía y la foto sí, desde «Editar perfil»."
    },
    {
     "c": "Cuenta",
@@ -194,7 +194,7 @@
     },
     {
      "t": "El contenido que publicás",
-     "html": "<p>Tu nombre para mostrar, título, biografía, foto, país, datos de teclado, usuario de Discord y sitio web son visibles para otras personas. Seguís siendo titular de lo que subís. Nos das una licencia gratuita, no exclusiva y limitada a mostrarlo dentro del servicio mientras tengas cuenta.</p>\n        <p>Declarás que tenés derecho a usar la foto y los textos que publiques. Podemos quitar contenido que incumpla estos términos o las normas.</p>"
+     "html": "<p>Tu nombre para mostrar, biografía, foto, país, datos de teclado, usuario de Discord y sitio web son visibles para otras personas. Seguís siendo titular de lo que subís. Nos das una licencia gratuita, no exclusiva y limitada a mostrarlo dentro del servicio mientras tengas cuenta.</p>\n        <p>Declarás que tenés derecho a usar la foto y los textos que publiques. Podemos quitar contenido que incumpla estos términos o las normas.</p>"
     },
     {
      "t": "Resultados, rankings, medallas y torneos",
@@ -240,7 +240,7 @@
     },
     {
      "t": "Qué datos guardamos",
-     "html": "<table class=\"doc-table\">\n        <thead><tr><th>Dato</th><th>Detalle</th></tr></thead>\n        <tbody>\n          <tr><td>Cuenta</td><td>Nombre de usuario, nombre para mostrar, fecha de alta y rol. La contraseña se guarda <b>solo como hash</b> (scrypt), nunca en texto.</td></tr>\n          <tr><td>Perfil (opcional)</td><td>Foto, título, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, y las medallas que elegís mostrar.</td></tr>\n          <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>\n          <tr><td>Progreso</td><td>Tu meta diaria de carreras. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>\n          <tr><td>Sesión</td><td>Una cookie que mantiene tu sesión iniciada hasta 30 días. En el servidor se guarda una huella de ese código, no el código.</td></tr>\n          <tr><td>Técnicos</td><td>Tu dirección IP y datos del navegador viajan con cada solicitud. Se usan para limitar abusos y proteger el servicio y se mantienen en la memoria del servidor por minutos u horas; <b>no se guardan en la base de datos</b>.</td></tr>\n        </tbody></table>\n        <p>No pedimos tu correo, teléfono, nombre real ni documentos.</p>"
+     "html": "<table class=\"doc-table\">\n        <thead><tr><th>Dato</th><th>Detalle</th></tr></thead>\n        <tbody>\n          <tr><td>Cuenta</td><td>Nombre de usuario, nombre para mostrar, fecha de alta y rol. La contraseña se guarda <b>solo como hash</b> (scrypt), nunca en texto.</td></tr>\n          <tr><td>Perfil (opcional)</td><td>Foto, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, y las medallas que elegís mostrar.</td></tr>\n          <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>\n          <tr><td>Progreso</td><td>Tu meta diaria de carreras. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>\n          <tr><td>Sesión</td><td>Una cookie que mantiene tu sesión iniciada hasta 30 días. En el servidor se guarda una huella de ese código, no el código.</td></tr>\n          <tr><td>Técnicos</td><td>Tu dirección IP y datos del navegador viajan con cada solicitud. Se usan para limitar abusos y proteger el servicio y se mantienen en la memoria del servidor por minutos u horas; <b>no se guardan en la base de datos</b>.</td></tr>\n        </tbody></table>\n        <p>No pedimos tu correo, teléfono, nombre real ni documentos.</p>"
     },
     {
      "t": "Para qué los usamos",
@@ -248,7 +248,7 @@
     },
     {
      "t": "Qué es público y qué no",
-     "html": "<p><b>Es público</b> (lo ve cualquier persona, tenga o no cuenta): tu usuario, nombre para mostrar, foto, título, biografía, país, datos de teclado, Discord y sitio web si los completás, tus medallas, tus récords, promedios, historial reciente y tu posición en los rankings.</p>\n        <p><b>No es público</b>: tu contraseña, tu sesión, tu IP y tus estadísticas detalladas de errores por tecla y palabra. Pensá bien qué escribís en tu perfil: no incluyas datos que no quieras que vea todo el mundo.</p>"
+     "html": "<p><b>Es público</b> (lo ve cualquier persona, tenga o no cuenta): tu usuario, nombre para mostrar, foto, biografía, país, datos de teclado, Discord y sitio web si los completás, tus medallas, tus récords, promedios, historial reciente y tu posición en los rankings.</p>\n        <p><b>No es público</b>: tu contraseña, tu sesión, tu IP y tus estadísticas detalladas de errores por tecla y palabra. Pensá bien qué escribís en tu perfil: no incluyas datos que no quieras que vea todo el mundo.</p>"
     },
     {
      "t": "Con quién se comparten",
@@ -312,7 +312,7 @@
     },
     {
      "t": "Buen trato",
-     "html": "<ul>\n        <li>Tu nombre, título, biografía y foto tienen que ser aptos para todo público: sin odio, acoso, contenido sexual explícito ni amenazas.</li>\n        <li>No suplantes a otras personas ni uses datos personales de terceros.</li>\n        <li>No hagas spam ni incluyas enlaces engañosos o maliciosos.</li>\n      </ul>"
+     "html": "<ul>\n        <li>Tu nombre, biografía y foto tienen que ser aptos para todo público: sin odio, acoso, contenido sexual explícito ni amenazas.</li>\n        <li>No suplantes a otras personas ni uses datos personales de terceros.</li>\n        <li>No hagas spam ni incluyas enlaces engañosos o maliciosos.</li>\n      </ul>"
     },
     {
      "t": "Torneos y duelos",

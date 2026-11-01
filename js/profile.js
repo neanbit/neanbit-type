@@ -1,7 +1,7 @@
-import { features } from './features.js';
 import { avatarInner } from './avatar.js';
 import { $, esc, svg, icons, medalImg, countBadge } from './ui.js';
 import { setVitrina } from './vitrina.js';
+import { setNivel } from './nivel.js';
 
 export { esc };
 
@@ -98,18 +98,16 @@ export function renderProfile(p, opts) {
   const mark = p.verified ? `<span class="vf" title="${p.verified === 2 ? 'Servidor' : 'Verificado'}">${svg(icons.seal)}</span>` : '';
   const star = chosen[0] ? `<span class="feat" title="${esc(chosen[0].name)}">${medalImg(chosen[0])}</span>` : '';
   $('#pf-name').innerHTML = `${esc(p.name)}${mark}${star}`;
-  $('#pf-title').textContent = p.title || '';
-  $('#pf-title').hidden = !p.title;
   $('#pf-handle').textContent = '@' + p.handle;
   $('#pf-edit').hidden = !isMe;
   $('#pf-statslink').hidden = !isMe;
 
   const tags = [`<span class="tag accent">${p.role === 'admin' ? 'Admin' : 'Piloto'}</span>`];
-  if (p.level && features.levels) tags.push(`<span class="tag">Nivel ${p.level.level} · ${esc(p.level.title)}</span>`);
   if (p.country) tags.push(`<span class="tag">${esc(p.country)}</span>`);
   if (p.discord) tags.push(`<button class="tag" data-copy="${esc(p.discord)}" title="Copiar usuario">Discord: ${esc(p.discord)}</button>`);
   if (p.website) tags.push(`<a class="tag" href="${esc(p.website)}" target="_blank" rel="noopener noreferrer nofollow">${esc(siteName(p.website))} ${svg(icons.link)}</a>`);
   $('#pf-tags').innerHTML = tags.join('');
+  setNivel(p);
 
   $('#pf-bio').textContent = p.bio || 'Este piloto todavía no escribió su historia.';
   $('#pf-bio').classList.toggle('blank', !p.bio);

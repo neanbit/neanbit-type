@@ -9,7 +9,7 @@ const layouts = ['QWERTY', 'Dvorak', 'Colemak', 'Otro'];
 const accents = [['ambar', 'Ámbar'], ['celeste', 'Celeste'], ['menta', 'Menta'], ['rosa', 'Rosa'], ['violeta', 'Violeta'], ['lima', 'Lima'], ['hielo', 'Hielo']];
 const banners = [['liso', 'Liso'], ['rejilla', 'Rejilla'], ['diagonal', 'Diagonal'], ['puntos', 'Puntos'], ['teclas', 'Teclas'], ['ondas', 'Ondas']];
 const shapes = [['cuadrada', 'Cuadrada'], ['redondeada', 'Redondeada'], ['circulo', 'Círculo']];
-const fields = ['name', 'title', 'bio', 'country', 'switches', 'discord', 'website'];
+const fields = ['name', 'bio', 'country', 'switches', 'discord', 'website'];
 const maxShown = 6;
 
 let hooks = { user: () => null, saved: () => {} };
@@ -66,7 +66,7 @@ const dirty = () => JSON.stringify(draft) !== baseline;
 
 function paint() {
   const user = hooks.user();
-  for (const f of ['name', 'title', 'bio']) {
+  for (const f of ['name', 'bio']) {
     const box = $('#me-' + f);
     $(`[data-count="${f}"]`).textContent = `${box.value.length}/${box.maxLength}`;
   }
@@ -119,8 +119,6 @@ function paintPreview() {
   $('#pv-avatar').innerHTML = avatarInner(user);
   const first = medals.find((m) => m.id === draft.shown[0]);
   $('#pv-name').innerHTML = esc(draft.name.trim() || user.name) + (first ? `<span class="feat">${medalImg(first)}</span>` : '');
-  $('#pv-title').textContent = draft.title.trim();
-  $('#pv-title').hidden = !draft.title.trim();
   $('#pv-handle').textContent = '@' + user.handle;
   const tags = [draft.country, draft.layout, draft.switches].filter(Boolean);
   $('#pv-tags').innerHTML = tags.map((t) => `<span class="tag">${esc(t)}</span>`).join('');

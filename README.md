@@ -23,7 +23,7 @@ Para probar sin tocar datos reales: `NT_DB=/tmp/h.db PORT=3222 NT_ADMIN=ana node
 ## Qué incluye
 
 - **Modos:** aleatorio, personalizado (categoría o texto, más «Mis textos» guardados en el navegador), entrenamiento, Hardcore, duelos (con revancha) y torneos.
-- **Progreso:** niveles y experiencia, racha de días, meta diaria y rankings paginados (carreras, promedios, Hardcore, duelos, torneos).
+- **Progreso:** niveles y experiencia (el nivel se ve en el perfil como un widget que abre el detalle: avance, próximos niveles y títulos), racha de días, meta diaria y rankings paginados (carreras, promedios, Hardcore, duelos, torneos).
 - **Resultado:** animación, barra de experiencia e imagen para compartir (se dibuja en el navegador, no se sube).
 - **Ajustes:** cuatro temas (neanbit, claro, carbón y alto contraste), unidad de velocidad, sonido de teclas y ritmo del cursor (apagados por defecto).
 - **Información:** Información, Guías, preguntas frecuentes, Términos, Privacidad, Cookies y Normas, con rutas propias (`/info`, `/guias`, `/terminos`, `/privacidad`, `/cookies`, `/normas`).

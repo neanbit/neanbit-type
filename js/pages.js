@@ -164,7 +164,7 @@ const GUIDES = [
     </ol>
     <p>Si en un partido nadie termina el texto en 5 minutos, pasa quien llegó más lejos. Con igualdad se repite una vez con otro texto.</p>`, () => art.bracketDiagram()],
   ['g-progreso', 'Niveles, rachas y meta diaria', () => `
-    <p>Tu <b>nivel</b> sube con la experiencia (XP) que sale de lo que ya jugás: 10 XP por carrera (15 en Hardcore), 5 más si no tuviste errores, 20 por duelo ganado y 150 por torneo ganado. El nivel 2 llega a los 50 XP, el 3 a los 200 y el 5 a los 800. Cada tramo de niveles tiene un título, de Novato a Leyenda. Lo ves en el inicio y en tu perfil, y al terminar una carrera aparece cuánto sumaste.</p>
+    <p>Tu <b>nivel</b> sube con la experiencia (XP) que sale de lo que ya jugás: 10 XP por carrera (15 en Hardcore), 5 más si no tuviste errores, 20 por duelo ganado y 150 por torneo ganado. El nivel 2 llega a los 50 XP, el 3 a los 200 y el 5 a los 800. Cada tramo de niveles tiene un título, de Novato a Leyenda. Lo ves en el inicio y en tu perfil: tocá el nivel de tu perfil para ver cuánto te falta, los próximos niveles y los títulos. Al terminar una carrera aparece cuánto sumaste, y si hay un potenciador activo, cuánto multiplica.</p>
     <p>La <b>racha</b> cuenta los días seguidos en que corriste al menos una carrera. Si hoy todavía no jugaste, la racha de ayer sigue viva hasta que termine el día.</p>
     <p>La <b>meta de hoy</b> es cuántas carreras querés hacer por día (de 1 a 50). La cambiás desde el inicio con «Cambiar» y se guarda en tu cuenta.</p>`],
   ['g-extras', 'Textos propios, ritmo, sonido y compartir', () => `
@@ -182,7 +182,7 @@ const GUIDES = [
 
 const FAQ = [
   ['Cuenta', '¿Necesito una cuenta para jugar?', 'No. Como invitado podés correr carreras, pero no se guardan, no suman a rankings y no podés jugar duelos ni torneos. Crear una cuenta es gratis y solo pide usuario, nombre para mostrar y contraseña.'],
-  ['Cuenta', '¿Puedo cambiar mi nombre de usuario?', 'El usuario (el que va con @) no se cambia. El <b>nombre para mostrar</b>, el título, la biografía y la foto sí, desde «Editar perfil».'],
+  ['Cuenta', '¿Puedo cambiar mi nombre de usuario?', 'El usuario (el que va con @) no se cambia. El <b>nombre para mostrar</b>, la biografía y la foto sí, desde «Editar perfil».'],
   ['Cuenta', 'Me olvidé la contraseña, ¿qué hago?', 'Por ahora no hay recuperación automática. Si la perdés, escribinos y vemos cómo ayudarte. Para evitarlo, usá una contraseña que puedas recordar o un gestor de contraseñas.'],
   ['Cuenta', '¿Cómo borro mi cuenta?', `Pedilo por ${contact}. Se eliminan tu perfil, tus carreras y tus estadísticas. Los detalles están en la <a href="/privacidad" data-page="privacidad">Política de privacidad</a>.`],
   ['Cuenta', '¿Quién puede ver mi perfil?', 'Cualquiera. El perfil, el historial reciente, las medallas y tu lugar en los rankings son públicos. Tus errores por tecla y tus estadísticas detalladas solo las ves vos. No pongas en la biografía ni en la foto nada que no quieras que vea todo el mundo.'],
@@ -277,7 +277,7 @@ const legal = {
           <li>Suplantar a otra persona o usar nombres, textos o fotos ofensivos, ilegales o que vulneren derechos de terceros.</li>
         </ul>
         <p>El detalle está en las <a href="/normas" data-page="normas">Normas de la comunidad</a>.</p>`],
-      ['El contenido que publicás', `<p>Tu nombre para mostrar, título, biografía, foto, país, datos de teclado, usuario de Discord y sitio web son visibles para otras personas. Seguís siendo titular de lo que subís. Nos das una licencia gratuita, no exclusiva y limitada a mostrarlo dentro del servicio mientras tengas cuenta.</p>
+      ['El contenido que publicás', `<p>Tu nombre para mostrar, biografía, foto, país, datos de teclado, usuario de Discord y sitio web son visibles para otras personas. Seguís siendo titular de lo que subís. Nos das una licencia gratuita, no exclusiva y limitada a mostrarlo dentro del servicio mientras tengas cuenta.</p>
         <p>Declarás que tenés derecho a usar la foto y los textos que publiques. Podemos quitar contenido que incumpla estos términos o las normas.</p>`],
       ['Resultados, rankings, medallas y torneos', `<ul>
         <li>Las carreras se validan en el servidor. Podemos <b>anular carreras</b>, reiniciar estadísticas, retirar medallas o descalificar de un torneo cuando haya indicios de trampa o de error técnico.</li>
@@ -306,7 +306,7 @@ const legal = {
         <thead><tr><th>Dato</th><th>Detalle</th></tr></thead>
         <tbody>
           <tr><td>Cuenta</td><td>Nombre de usuario, nombre para mostrar, fecha de alta y rol. La contraseña se guarda <b>solo como hash</b> (scrypt), nunca en texto.</td></tr>
-          <tr><td>Perfil (opcional)</td><td>Foto, título, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, y las medallas que elegís mostrar.</td></tr>
+          <tr><td>Perfil (opcional)</td><td>Foto, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, y las medallas que elegís mostrar.</td></tr>
           <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>
           <tr><td>Progreso</td><td>Tu meta diaria de carreras. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>
           <tr><td>Sesión</td><td>Una cookie que mantiene tu sesión iniciada hasta 30 días. En el servidor se guarda una huella de ese código, no el código.</td></tr>
@@ -320,7 +320,7 @@ const legal = {
         <li>Mantener y mejorar el servicio.</li>
       </ul>
       <p>No vendemos tus datos, no mostramos publicidad y no hacemos perfiles comerciales.</p>`],
-      ['Qué es público y qué no', `<p><b>Es público</b> (lo ve cualquier persona, tenga o no cuenta): tu usuario, nombre para mostrar, foto, título, biografía, país, datos de teclado, Discord y sitio web si los completás, tus medallas, tus récords, promedios, historial reciente y tu posición en los rankings.</p>
+      ['Qué es público y qué no', `<p><b>Es público</b> (lo ve cualquier persona, tenga o no cuenta): tu usuario, nombre para mostrar, foto, biografía, país, datos de teclado, Discord y sitio web si los completás, tus medallas, tus récords, promedios, historial reciente y tu posición en los rankings.</p>
         <p><b>No es público</b>: tu contraseña, tu sesión, tu IP y tus estadísticas detalladas de errores por tecla y palabra. Pensá bien qué escribís en tu perfil: no incluyas datos que no quieras que vea todo el mundo.</p>`],
       ['Con quién se comparten', `<p>No se ceden datos a terceros para fines propios de ellos. Para que el servicio funcione intervienen estos proveedores:</p>
         <ul>
@@ -386,7 +386,7 @@ const legal = {
         <li>En duelos y torneos, nada de pactar resultados ni de abandonar a propósito para perjudicar a otra persona.</li>
       </ul>`],
       ['Buen trato', `<ul>
-        <li>Tu nombre, título, biografía y foto tienen que ser aptos para todo público: sin odio, acoso, contenido sexual explícito ni amenazas.</li>
+        <li>Tu nombre, biografía y foto tienen que ser aptos para todo público: sin odio, acoso, contenido sexual explícito ni amenazas.</li>
         <li>No suplantes a otras personas ni uses datos personales de terceros.</li>
         <li>No hagas spam ni incluyas enlaces engañosos o maliciosos.</li>
       </ul>`],

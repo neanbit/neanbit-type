@@ -13,6 +13,7 @@
 <link rel="alternate icon" href="img/mark.png">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/profile.css">
+<link rel="stylesheet" href="css/nivel.css">
 <link rel="stylesheet" href="css/home.css">
 <link rel="stylesheet" href="css/race.css">
 <link rel="stylesheet" href="css/pick.css">
@@ -71,6 +72,7 @@
           <div class="lvl" data-feature="levels">
             <div class="p-top"><b id="lv-name">Nivel 1</b><span id="lv-title">Novato</span><em id="lv-xp"></em></div>
             <div class="meter" role="progressbar" aria-label="Avance hacia el próximo nivel"><i id="lv-fill"></i></div>
+            <p class="lv-boost" id="lv-boost" hidden></p>
           </div>
           <div class="goal" data-feature="goal">
             <div class="p-top"><b>Meta de hoy</b><span id="goal-txt"></span><button class="link" id="goal-edit">Cambiar</button></div>
@@ -342,8 +344,12 @@
         <div class="pf-avatar" id="pf-avatar"><span id="pf-initial"></span><em id="pf-badge" hidden></em></div>
         <div class="pf-head">
           <h2 id="pf-name"></h2>
-          <p class="pf-title" id="pf-title" hidden></p>
           <p class="pf-handle" id="pf-handle"></p>
+          <button type="button" class="pf-level" id="pf-level" data-feature="levels" aria-haspopup="dialog" hidden>
+            <span class="lv-key" id="pf-lv-n"></span>
+            <span class="lv-txt"><b id="pf-lv-title"></b><small id="pf-lv-xp"></small></span>
+            <span class="lv-bar"><i id="pf-lv-fill"></i></span>
+          </button>
           <div class="pf-tags" id="pf-tags"></div>
         </div>
         <div class="pf-actions">
@@ -438,9 +444,6 @@
           <label class="fld">Nombre para mostrar <em data-count="name"></em>
             <input id="me-name" maxlength="15" required>
           </label>
-          <label class="fld">Título <em data-count="title"></em>
-            <input id="me-title" maxlength="28" placeholder="Una línea que te describa">
-          </label>
           <label class="fld">Biografía <em data-count="bio"></em>
             <textarea id="me-bio" maxlength="150" rows="3" placeholder="Contá algo sobre vos"></textarea>
           </label>
@@ -489,7 +492,6 @@
           <div class="pv-id">
             <div class="pf-avatar" id="pv-avatar"></div>
             <b id="pv-name"></b>
-            <p class="pf-title" id="pv-title" hidden></p>
             <p class="pf-handle" id="pv-handle"></p>
           </div>
           <div class="pf-tags" id="pv-tags"></div>
@@ -557,6 +559,25 @@
     </div>
     <div class="vt-body" id="medals-list"></div>
     <p class="note vt-secret" id="vt-secret"></p>
+  </div>
+</dialog>
+<dialog id="levels" class="wide narrow" aria-labelledby="lvd-title">
+  <div class="lvd">
+    <header class="lvd-head">
+      <span class="lv-key xl" id="lvd-n"></span>
+      <div class="lvd-who">
+        <h2 id="lvd-title"></h2>
+        <p class="note" id="lvd-sub"></p>
+      </div>
+      <button type="button" class="ghost" id="levels-close" aria-label="Cerrar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </header>
+    <div class="lvd-meter">
+      <div class="lvd-ends"><span id="lvd-from"></span><span id="lvd-to"></span></div>
+      <div class="lvd-track" role="progressbar" aria-labelledby="lvd-title" aria-valuemin="0" aria-valuemax="100" id="lvd-bar"><i id="lvd-fill"></i></div>
+      <p class="note" id="lvd-left"></p>
+    </div>
+    <p class="lvd-boost" id="lvd-boost" hidden></p>
+    <div class="lvd-body" id="lvd-body"></div>
   </div>
 </dialog>
 <dialog id="news">

@@ -543,12 +543,12 @@ function playResultFx(record) {
 document.addEventListener('race-saved', (e) => {
   const xp = e.detail && e.detail.after;
   if (!xp || $('#result').hidden || state.mode === 'duel') return;
-  const { before, after } = e.detail;
+  const { before, after, mult } = e.detail;
   const gain = after.xp - before.xp;
   const pct = (x) => Math.round(((x.xp - x.from) / (x.to - x.from)) * 100);
   const fill = $('#xp-fill');
   $('#r-xp').hidden = false;
-  $('#xp-gain').textContent = `+${gain} XP`;
+  $('#xp-gain').textContent = `+${gain} XP` + (mult > 1 ? `, potenciador x${String(mult).replace('.', ',')}` : '');
   const up = after.level > before.level;
   $('#xp-lv').textContent = up ? `Subiste al nivel ${after.level}: ${after.title}` : `Nivel ${after.level}, ${after.title}`;
   $('#r-xp').classList.toggle('up', up);

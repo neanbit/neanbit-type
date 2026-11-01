@@ -162,6 +162,9 @@ function drawProgress() {
   $('#lv-title').textContent = title;
   $('#lv-xp').textContent = `${xp - from} / ${to - from} XP`;
   $('#lv-fill').style.width = Math.round(((xp - from) / (to - from)) * 100) + '%';
+  const boost = pulse.boost;
+  $('#lv-boost').hidden = !boost;
+  if (boost) $('#lv-boost').textContent = `Potenciador activo: x${String(boost.mult).replace('.', ',')} de XP hasta el ${new Date(boost.ends).toLocaleString('es-AR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}.`;
   const goal = pulse.goal || 5;
   const done = Math.min(pulse.today, goal);
   $('#goal-txt').textContent = pulse.today >= goal ? `Meta cumplida: ${plural(pulse.today, 'carrera', 'carreras')}` : `${pulse.today} de ${goal} carreras`;
