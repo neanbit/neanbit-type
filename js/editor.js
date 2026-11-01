@@ -3,6 +3,7 @@ import { avatarInner } from './avatar.js';
 import { openCrop } from './crop.js';
 import { $, esc, svg, icons, medalImg } from './ui.js';
 import { openVitrina } from './vitrina.js';
+import { nameFx, rarityName, safePreset, setCover, setFrame } from './rewards.js';
 
 const countries = ['Argentina', 'Bolivia', 'Chile', 'Colombia', 'Costa Rica', 'Cuba', 'Ecuador', 'El Salvador', 'España', 'Estados Unidos', 'Guatemala', 'Honduras', 'México', 'Nicaragua', 'Panamá', 'Paraguay', 'Perú', 'República Dominicana', 'Uruguay', 'Venezuela', 'Otro país'];
 const layouts = ['QWERTY', 'Dvorak', 'Colemak', 'Otro'];
@@ -16,6 +17,9 @@ let hooks = { user: () => null, saved: () => {} };
 let draft = {};
 let baseline = '';
 let medals = [];
+let rw = { items: [] };
+let rwShown = '';
+const rwGroups = [['frame', 'Marco de la foto', 'Sin marco'], ['name', 'Efecto del nombre', 'Sin efecto'], ['cover', 'Portada', 'Sin portada']];
 
 $('#me-country').innerHTML = '<option value="">Sin indicar</option>' + countries.map((c) => `<option>${c}</option>`).join('');
 $('#ed-accents').innerHTML = accents.map(([id, name]) => `<button type="button" class="swatch" data-accent="${id}" data-set="accent:${id}" title="${name}" aria-label="${name}"></button>`).join('');
@@ -37,7 +41,10 @@ export async function openEditor(tab = 'identidad') {
   draft.banner = user.banner || 'liso';
   draft.shape = user.shape || 'cuadrada';
   draft.shown = [];
+  draft.equip = { frame: '', name: '', cover: '' };
   medals = [];
+  rw = { items: [] };
+  rwShown = '';
   $('#me-error').textContent = '';
   $('#ed-confirm').hidden = true;
   for (const f of fields) $('#me-' + f).value = draft[f];
@@ -45,6 +52,10 @@ export async function openEditor(tab = 'identidad') {
     const p = await api.profile(user.handle);
     medals = p.medals;
     draft.shown = p.shown.filter((id) => p.medals.some((m) => m.id === id && m.earned));
+  } catch {}
+  try {
+    rw = await api.rewards();
+    for (const k of ['frame', 'name', 'cover']) draft.equip[k] = rw.equip[k] || '';
   } catch {}
   baseline = JSON.stringify(draft);
   setTab(tab);
@@ -81,6 +92,7 @@ function paint() {
   for (const b of document.querySelectorAll('#ed-banners .pf-banner')) b.parentElement.dataset.accent = draft.accent;
   $('#ed-accent-name').textContent = accents.find(([id]) => id === draft.accent)[1];
   paintBadges();
+  paintRewards();
   paintPreview();
   $('#ed-dirty').hidden = !dirty();
 }
@@ -110,15 +122,45 @@ function paintBadges() {
   $('#ed-locked-n').textContent = locked.length;
 }
 
+const picked = (kind) => rw.items.find((i) => i.id === draft.equip[kind]) || null;
+
+// Pestaña Recompensas: todo el catálogo, con lo bloqueado atenuado y la pista de cómo conseguirlo.
+// Solo se vuelve a dibujar cuando cambia lo elegido, para que las animaciones no se reinicien al escribir en otras pestañas.
+function paintRewards() {
+  const key = JSON.stringify(draft.equip) + rw.items.length;
+  if (key === rwShown) return;
+  rwShown = key;
+  if (!rw.items.length) {
+    $('#rw-body').innerHTML = '<p class="note">Todavía no hay recompensas para mostrar.</p>';
+    return;
+  }
+  const thumb = (i) => {
+    const p = safePreset(i.preset);
+    if (i.kind === 'frame') return `<i class="rw-av" data-frame="${p}"></i>`;
+    if (i.kind === 'cover') return `<i class="rw-cv" data-cover="${p}"></i>`;
+    return `<span class="rw-fx">${nameFx('Nombre', { name: i })}</span>`;
+  };
+  $('#rw-body').innerHTML = rwGroups.map(([kind, title, none]) => {
+    const list = rw.items.filter((i) => i.kind === kind);
+    if (!list.length) return '';
+    const cards = list.map((i) => `<button type="button" class="rw-card${draft.equip[kind] === i.id ? ' on' : ''}${i.owned ? '' : ' locked'}" data-rw="${kind}:${esc(i.id)}"
+      data-rarity="${esc(i.rarity)}" aria-pressed="${draft.equip[kind] === i.id}" title="${esc(i.owned ? i.description : i.hint)}">${thumb(i)}<b>${esc(i.name)}</b><small>${esc(rarityName[i.rarity] || i.rarity)}</small></button>`).join('');
+    return `<div class="rw-group"><h3>${title}<small>${list.filter((i) => i.owned).length} de ${list.length}</small></h3>
+      <div class="rw-grid"><button type="button" class="rw-card${draft.equip[kind] ? '' : ' on'}" data-rw="${kind}:" aria-pressed="${!draft.equip[kind]}"><span class="rw-none">${none}</span></button>${cards}</div></div>`;
+  }).join('');
+}
+
 function paintPreview() {
   const user = hooks.user();
   const box = $('#ed-preview');
   box.dataset.accent = draft.accent;
   box.dataset.shape = draft.shape;
-  $('#ed-preview .pf-banner').dataset.banner = draft.banner;
+  const cosm = { frame: picked('frame'), name: picked('name'), cover: picked('cover') };
+  setCover($('#ed-preview .pf-banner'), cosm.cover, draft.banner);
+  setFrame($('#pv-avatar'), cosm.frame);
   $('#pv-avatar').innerHTML = avatarInner(user);
   const first = medals.find((m) => m.id === draft.shown[0]);
-  $('#pv-name').innerHTML = esc(draft.name.trim() || user.name) + (first ? `<span class="feat">${medalImg(first)}</span>` : '');
+  $('#pv-name').innerHTML = nameFx(draft.name.trim() || user.name, cosm) + (first ? `<span class="feat">${medalImg(first)}</span>` : '');
   $('#pv-handle').textContent = '@' + user.handle;
   const tags = [draft.country, draft.layout, draft.switches].filter(Boolean);
   $('#pv-tags').innerHTML = tags.map((t) => `<span class="tag">${esc(t)}</span>`).join('');
@@ -177,6 +219,18 @@ $('#me').addEventListener('click', (e) => {
   if (set) {
     const [key, val] = set.dataset.set.split(':');
     draft[key] = key === 'layout' && draft.layout === val ? '' : val;
+    return paint();
+  }
+  const gift = e.target.closest('[data-rw]');
+  if (gift) {
+    const [kind, id] = gift.dataset.rw.split(':');
+    const item = rw.items.find((i) => i.id === id);
+    if (id && item && !item.owned) {
+      $('#rw-hint').textContent = `${item.name}: ${item.hint}`;
+      return;
+    }
+    $('#rw-hint').textContent = '';
+    draft.equip[kind] = id;
     return paint();
   }
   const pick = e.target.closest('[data-pick]');

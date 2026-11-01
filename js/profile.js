@@ -2,6 +2,7 @@ import { avatarInner } from './avatar.js';
 import { $, esc, svg, icons, medalImg, countBadge } from './ui.js';
 import { setVitrina } from './vitrina.js';
 import { setNivel } from './nivel.js';
+import { nameFx, setCover, setFrame } from './rewards.js';
 
 export { esc };
 
@@ -87,17 +88,18 @@ export function renderProfile(p, opts) {
 
   const root = $('#profile');
   root.dataset.accent = p.accent || 'ambar';
-  $('#pf-hero .pf-banner').dataset.banner = p.banner || 'liso';
+  setCover($('#pf-hero .pf-banner'), p.cosm && p.cosm.cover, p.banner);
   $('#pf-hero').dataset.shape = p.shape || 'cuadrada';
 
   $('#pf-avatar').className = 'pf-avatar' + (rank ? (rank.dual ? ' tier-dual' : ` tier-${rank.n <= 3 ? rank.n : 10}${rank.hc ? ' hc' : ''}`) : '');
+  setFrame($('#pf-avatar'), p.cosm && p.cosm.frame);
   $('#pf-initial').innerHTML = avatarInner(p);
   $('#pf-badge').hidden = !rank;
   $('#pf-badge').textContent = rank ? rank.text : '';
 
   const mark = p.verified ? `<span class="vf" title="${p.verified === 2 ? 'Servidor' : 'Verificado'}">${svg(icons.seal)}</span>` : '';
   const star = chosen[0] ? `<span class="feat" title="${esc(chosen[0].name)}">${medalImg(chosen[0])}</span>` : '';
-  $('#pf-name').innerHTML = `${esc(p.name)}${mark}${star}`;
+  $('#pf-name').innerHTML = `${nameFx(p.name, p.cosm)}${mark}${star}`;
   $('#pf-handle').textContent = '@' + p.handle;
   $('#pf-edit').hidden = !isMe;
   $('#pf-statslink').hidden = !isMe;

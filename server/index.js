@@ -13,6 +13,7 @@ import { clientIp, createLimiter } from './limits.js';
 import { cleanProgress } from './levels.js';
 import { setupXp } from './xp.js';
 import { cleanContent } from './content.js';
+import { cosmeticsOf, ensureRewardSchema, rewardsFor, setEquip } from './rewards.js';
 import { CONDITIONS, ensureMedalSchema, grantCount, groupOf, loadIcons, medalFile, medalValues, realTourneyWins, tierOf } from './medals.js';
 
 const scrypt = promisify(scryptCb);
@@ -77,6 +78,7 @@ seedTexts();
 // Las medallas viven en la tabla `medals` (se crean y editan desde el panel). Solo una base nueva arranca con medals-base.json.
 db.exec("update medals set icon = id where icon in ('play', 'rows', 'gauge', 'bolt', 'shield', 'target')");
 ensureMedalSchema(db, JSON.parse(readFileSync(join(root, 'server', 'medals-base.json'), 'utf8')));
+ensureRewardSchema(db, JSON.parse(readFileSync(join(root, 'server', 'rewards-base.json'), 'utf8')));
 const medalIcons = loadIcons(join(root, 'server', 'medal-icons'));
 if (admin) db.prepare("update users set role = 'admin' where handle = ?").run(admin);
 
@@ -117,7 +119,7 @@ function maintenance() {
   }
 }
 
-const userCols = 'id, handle, name, hash, role, created, avatar_v, verified, shown, bio, country, layout, switches, discord, title, website, accent, banner, shape';
+const userCols = 'id, handle, name, hash, role, created, avatar_v, verified, shown, bio, country, layout, switches, discord, title, website, accent, banner, shape, equip';
 const sha = (s) => createHash('sha256').update(s).digest('hex');
 const mime = { '.png': 'image/png', '.svg': 'image/svg+xml', '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
 const limits = createLimiter();
@@ -421,10 +423,16 @@ async function api(req, res, url) {
       website = ?, accent = ?, banner = ?, shape = ? where id = ?`)
       .run(name, clean(b.bio, 150), clean(b.country, 30), layout, clean(b.switches, 30), clean(b.discord, 32), JSON.stringify(shown),
         website, oneOf(b.accent, accents), oneOf(b.banner, banners), oneOf(b.shape, shapes), me.id);
+    if (b.equip && typeof b.equip === 'object') setEquip(db, me, b.equip);
     return send(res, 200, { user: publicUser(db.prepare(`select ${userCols} from users where id = ?`).get(me.id)) });
   }
 
   if (key === 'GET /api/me') return send(res, 200, { user: me && publicUser(me) });
+
+  if (key === 'GET /api/rewards') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    return send(res, 200, rewardsFor(db, me));
+  }
 
   if (key === 'POST /api/register') {
     if (limits.hit('auth:' + ip, 10, 60000)) return tooMany(res, 'auth:' + ip, 60000, 'Demasiados intentos, esperá un minuto.');
@@ -671,7 +679,7 @@ async function api(req, res, url) {
       name: user.name, handle: user.handle, role: user.role, since: user.created, av: user.avatar_v,
       deaths: db.prepare('select count(*) as n from deaths where user_id = ?').get(user.id).n,
       bio: user.bio, country: user.country, layout: user.layout, switches: user.switches, discord: user.discord,
-      website: user.website, accent: user.accent, banner: user.banner, shape: user.shape,
+      website: user.website, accent: user.accent, banner: user.banner, shape: user.shape, cosm: cosmeticsOf(db, user),
       races: s.races, best: s.best, hcBest: s.hcBest,
       avg: mean(normal.slice(0, 10)), avgAll: mean(normal),
       favorite: favorite ? favorite.text_id : null,

@@ -30,6 +30,7 @@ export const api = {
   userRaces: (handle, page) => call('/users/' + handle + '/races?page=' + page),
   searchUsers: (q) => call('/users?q=' + encodeURIComponent(q)),
   profile: (handle) => call('/users/' + handle),
+  rewards: () => call('/rewards'),
   home: () => call('/home?tz=' + new Date().getTimezoneOffset()),
   topRaces: (scope) => call('/races/top?scope=' + scope),
   averages: (window, page = 0) => call('/ranking/average?window=' + window + '&page=' + page),
