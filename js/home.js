@@ -1,6 +1,7 @@
 import { api } from './api.js';
 import { load } from './store.js';
 import { avatarInner } from './avatar.js';
+import { frameAttr, nameLite } from './rewards.js';
 import { $, esc, svg, icons } from './ui.js';
 
 const scope = { races: 'today', avg: '10', hc: 'today', duels: 'all', tourneys: 'all' };
@@ -65,8 +66,8 @@ const boards = {
 function row(board, r, pos, own) {
   const seal = r.verified ? `<span class="vf" title="${r.verified === 2 ? 'Servidor' : 'Verificado'}">${svg(icons.seal)}</span>` : '';
   return `<li data-handle="${esc(r.handle)}" class="${own ? 'me' : ''}"><span class="pos">${pos}</span>`
-    + `<span class="av sm">${avatarInner(r)}</span>`
-    + `<span class="nm"><b>${esc(r.name)}</b>${seal}<small>${esc(board.sub(r))}</small></span>`
+    + `<span class="av sm"${frameAttr(r.cosm)}>${avatarInner(r)}</span>`
+    + `<span class="nm"><b>${nameLite(r.name, r.cosm)}</b>${seal}<small>${esc(board.sub(r))}</small></span>`
     + `<span class="val">${board.val ? board.val(r) : speed(r.cpm)}</span></li>`;
 }
 

@@ -175,6 +175,17 @@ const GUIDES = [
       <li><b>Compartir.</b> El botón «Compartir» del resultado arma una imagen en tu navegador y la podés descargar o copiar. Solo se crea cuando lo pedís y no se sube a ningún lado.</li>
       <li><b>Alto contraste.</b> Un cuarto tema, en Ajustes, con negro puro, amarillo y bordes marcados.</li>
     </ul>`],
+  ['g-recompensas', 'Recompensas', () => `
+    <p>Las recompensas son <b>marcos para la foto, efectos para el nombre y portadas</b> para el perfil. No cambian cómo jugás: son solo estilo. Las activás desde «Editar perfil», en la pestaña Recompensas. Cada una tiene una rareza (común, rara, épica o legendaria), y algunas llevan movimiento.</p>
+    <p>Se desbloquean de cuatro maneras:</p>
+    <ul>
+      <li><b>Por nivel.</b> Al llegar a cierto nivel. En la ventana de tu nivel ves cuáles te esperan y cuáles ya tenés.</li>
+      <li><b>Por medalla.</b> Al ganar una medalla en particular.</li>
+      <li><b>Por torneo.</b> Hay premios para quien gana, llega a la final, a semifinales o simplemente participa.</li>
+      <li><b>En eventos.</b> Jugando durante unas fechas. Algunas recompensas de evento <b>vencen</b> cuando el evento termina; mientras estén vigentes las podés usar, y después dejan de verse.</li>
+    </ul>
+    <p>También se pueden entregar a mano como premio. Cuando ganás una, aparece el aviso «Desbloqueaste…» con un botón para verla. Lo que ya ganaste no se pierde si cambian las reglas.</p>
+    <p>En los rankings, los duelos y las llaves de torneo, el marco y el nombre de cada persona se ven <b>quietos</b> y con la letra de siempre, para que las listas se lean bien. El movimiento y la tipografía propia se ven en el perfil.</p>`],
   ['g-medallas', 'Medallas', () => `
     <p>Las medallas se ganan solas al cumplir una condición: cantidad de carreras, velocidad máxima o promedio, carreras sin errores, Hardcore, duelos o torneos ganados. Algunas son <b>apilables</b> (se cuentan) y otras <b>secretas</b>: no se muestran hasta que las conseguís.</p>
     <p>El <b>color</b> de la medalla (bronce, gris, oro, coral o blanco) indica su categoría. En la vitrina ves cuáles tenés, cuáles te faltan y cuánto te falta para cada una. Desde «Editar perfil» elegís hasta seis para exhibir.</p>`, () => art.tierDiagram()],
@@ -188,6 +199,8 @@ const FAQ = [
   ['Cuenta', '¿Quién puede ver mi perfil?', 'Cualquiera. El perfil, el historial reciente, las medallas y tu lugar en los rankings son públicos. Tus errores por tecla y tus estadísticas detalladas solo las ves vos. No pongas en la biografía ni en la foto nada que no quieras que vea todo el mundo.'],
   ['Progreso', '¿Cómo se calcula mi nivel?', 'Con la experiencia (XP): 10 por carrera, 15 en Hardcore, 5 extra sin errores, 20 por duelo ganado y la que reparte cada torneo (se ve en su pantalla). No hay nada que activar: se calcula con tus carreras guardadas.'],
   ['Progreso', '¿Por qué se me cortó la racha?', 'La racha cuenta días seguidos con al menos una carrera guardada, según tu zona horaria. Las carreras de invitado y los textos propios no cuentan.'],
+  ['Progreso', '¿Cómo consigo marcos, efectos de nombre y portadas?', 'Se llaman recompensas. Se desbloquean al llegar a ciertos niveles, al ganar medallas, por tu puesto en un torneo o participando en eventos con fecha. En la ventana de tu nivel ves las que se consiguen por nivel, y las activás desde «Editar perfil», en Recompensas. Más detalle en la guía de Recompensas.'],
+  ['Progreso', '¿Pierdo una recompensa si cambian las reglas?', 'No. Lo que ya ganaste se conserva. La única excepción son las de evento marcadas para vencer: dejan de verse cuando el evento termina.'],
   ['Progreso', '¿Los textos propios cuentan para algo?', 'No. Sirven para practicar con lo que quieras, pero no se guardan en tu cuenta, no suman XP ni entran a rankings. Viven solo en este navegador.'],
   ['Progreso', '¿La imagen para compartir se sube a algún lado?', 'No. Se dibuja en tu navegador cuando tocás «Compartir» y vos decidís si la descargás o la mandás.'],
   ['Medición', '¿Qué diferencia hay entre CPM y WPM?', 'CPM cuenta caracteres por minuto; WPM, palabras por minuto, que son CPM dividido por cinco. 300 CPM equivalen a 60 WPM. Elegís la unidad en Ajustes.'],
@@ -306,9 +319,9 @@ const legal = {
         <thead><tr><th>Dato</th><th>Detalle</th></tr></thead>
         <tbody>
           <tr><td>Cuenta</td><td>Nombre de usuario, nombre para mostrar, fecha de alta y rol. La contraseña se guarda <b>solo como hash</b> (scrypt), nunca en texto.</td></tr>
-          <tr><td>Perfil (opcional)</td><td>Foto, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, y las medallas que elegís mostrar.</td></tr>
+          <tr><td>Perfil (opcional)</td><td>Foto, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, las medallas que elegís mostrar y las recompensas (marco, nombre, portada) que tenés puestas.</td></tr>
           <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>
-          <tr><td>Progreso</td><td>Tu meta diaria de carreras. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>
+          <tr><td>Progreso</td><td>Tu meta diaria de carreras y las recompensas que ganaste (cuál, cuándo y por qué motivo, por ejemplo «nivel 5» o el nombre de un torneo) y si ya viste el aviso. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>
           <tr><td>Sesión</td><td>Una cookie que mantiene tu sesión iniciada hasta 30 días. En el servidor se guarda una huella de ese código, no el código.</td></tr>
           <tr><td>Técnicos</td><td>Tu dirección IP y datos del navegador viajan con cada solicitud. Se usan para limitar abusos y proteger el servicio y se mantienen en la memoria del servidor por minutos u horas; <b>no se guardan en la base de datos</b>.</td></tr>
         </tbody></table>
@@ -320,7 +333,7 @@ const legal = {
         <li>Mantener y mejorar el servicio.</li>
       </ul>
       <p>No vendemos tus datos, no mostramos publicidad y no hacemos perfiles comerciales.</p>`],
-      ['Qué es público y qué no', `<p><b>Es público</b> (lo ve cualquier persona, tenga o no cuenta): tu usuario, nombre para mostrar, foto, biografía, país, datos de teclado, Discord y sitio web si los completás, tus medallas, tus récords, promedios, historial reciente y tu posición en los rankings.</p>
+      ['Qué es público y qué no', `<p><b>Es público</b> (lo ve cualquier persona, tenga o no cuenta): tu usuario, nombre para mostrar, foto, biografía, país, datos de teclado, Discord y sitio web si los completás, tus medallas, las recompensas que tengas puestas, tus récords, promedios, historial reciente y tu posición en los rankings.</p>
         <p><b>No es público</b>: tu contraseña, tu sesión, tu IP y tus estadísticas detalladas de errores por tecla y palabra. Pensá bien qué escribís en tu perfil: no incluyas datos que no quieras que vea todo el mundo.</p>`],
       ['Con quién se comparten', `<p>No se ceden datos a terceros para fines propios de ellos. Para que el servicio funcione intervienen estos proveedores:</p>
         <ul>

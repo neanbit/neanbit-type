@@ -5,7 +5,7 @@ const GRACE_MS = 90000;
 const MAX_RACE_MS = 300000;
 const MAX_CPM = 1800;
 
-export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, xp }) {
+export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, xp, rewards = null }) {
   db.exec(`
     create table if not exists duels (
       id integer primary key, a_id integer not null, b_id integer not null, text_id integer not null,
@@ -22,7 +22,11 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, xp
   let queue = [];
   let nextId = 1;
 
-  const card = (c) => ({ handle: c.handle, name: c.name, av: c.av });
+  // Tarjeta de una persona para el rival: lleva su marco y su nombre (quietos) si tiene recompensas puestas.
+  const card = (c) => {
+    const cosm = rewards ? rewards.cosm([c.handle]).get(c.handle) : null;
+    return cosm ? { handle: c.handle, name: c.name, av: c.av, cosm } : { handle: c.handle, name: c.name, av: c.av };
+  };
   const tell = (c, msg) => c.conn.send(JSON.stringify(msg));
   const fail = (c, error) => tell(c, { t: 'error', error });
   const blocked = (c) => maintenance().on && c.role !== 'admin';
@@ -260,6 +264,7 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, xp
           saveErrors(x.id, 'w', r.words);
         }
         if (winner) xp.event(winner.id, 'duel', duelId, at);
+        if (rewards) for (const x of [d.a, d.b]) rewards.auto(x.id, { events: true });
         bump();
       } catch (err) {
         console.error(err);

@@ -58,6 +58,11 @@
     "html": "<ul>\n      <li><b>Mis textos.</b> En Personalizado podés sumar un texto propio (de 40 a 800 caracteres). Se guarda solo en tu navegador, no suma al ranking ni a tus estadísticas.</li>\n      <li><b>Ritmo del cursor.</b> En Ajustes podés activar una marca fina sobre la barra de progreso que avanza al ritmo de tu promedio o de tu récord. Si la barra la pasa, vas adelante. Viene apagado.</li>\n      <li><b>Sonido de teclas.</b> Suave o fuerte, generado en el momento. Viene apagado.</li>\n      <li><b>Compartir.</b> El botón «Compartir» del resultado arma una imagen en tu navegador y la podés descargar o copiar. Solo se crea cuando lo pedís y no se sube a ningún lado.</li>\n      <li><b>Alto contraste.</b> Un cuarto tema, en Ajustes, con negro puro, amarillo y bordes marcados.</li>\n    </ul>"
    },
    {
+    "id": "g-recompensas",
+    "title": "Recompensas",
+    "html": "<p>Las recompensas son <b>marcos para la foto, efectos para el nombre y portadas</b> para el perfil. No cambian cómo jugás: son solo estilo. Las activás desde «Editar perfil», en la pestaña Recompensas. Cada una tiene una rareza (común, rara, épica o legendaria), y algunas llevan movimiento.</p>\n    <p>Se desbloquean de cuatro maneras:</p>\n    <ul>\n      <li><b>Por nivel.</b> Al llegar a cierto nivel. En la ventana de tu nivel ves cuáles te esperan y cuáles ya tenés.</li>\n      <li><b>Por medalla.</b> Al ganar una medalla en particular.</li>\n      <li><b>Por torneo.</b> Hay premios para quien gana, llega a la final, a semifinales o simplemente participa.</li>\n      <li><b>En eventos.</b> Jugando durante unas fechas. Algunas recompensas de evento <b>vencen</b> cuando el evento termina; mientras estén vigentes las podés usar, y después dejan de verse.</li>\n    </ul>\n    <p>También se pueden entregar a mano como premio. Cuando ganás una, aparece el aviso «Desbloqueaste…» con un botón para verla. Lo que ya ganaste no se pierde si cambian las reglas.</p>\n    <p>En los rankings, los duelos y las llaves de torneo, el marco y el nombre de cada persona se ven <b>quietos</b> y con la letra de siempre, para que las listas se lean bien. El movimiento y la tipografía propia se ven en el perfil.</p>"
+   },
+   {
     "id": "g-medallas",
     "title": "Medallas",
     "html": "<p>Las medallas se ganan solas al cumplir una condición: cantidad de carreras, velocidad máxima o promedio, carreras sin errores, Hardcore, duelos o torneos ganados. Algunas son <b>apilables</b> (se cuentan) y otras <b>secretas</b>: no se muestran hasta que las conseguís.</p>\n    <p>El <b>color</b> de la medalla (bronce, gris, oro, coral o blanco) indica su categoría. En la vitrina ves cuáles tenés, cuáles te faltan y cuánto te falta para cada una. Desde «Editar perfil» elegís hasta seis para exhibir.</p>"
@@ -98,6 +103,16 @@
     "c": "Progreso",
     "q": "¿Por qué se me cortó la racha?",
     "a": "La racha cuenta días seguidos con al menos una carrera guardada, según tu zona horaria. Las carreras de invitado y los textos propios no cuentan."
+   },
+   {
+    "c": "Progreso",
+    "q": "¿Cómo consigo marcos, efectos de nombre y portadas?",
+    "a": "Se llaman recompensas. Se desbloquean al llegar a ciertos niveles, al ganar medallas, por tu puesto en un torneo o participando en eventos con fecha. En la ventana de tu nivel ves las que se consiguen por nivel, y las activás desde «Editar perfil», en Recompensas. Más detalle en la guía de Recompensas."
+   },
+   {
+    "c": "Progreso",
+    "q": "¿Pierdo una recompensa si cambian las reglas?",
+    "a": "No. Lo que ya ganaste se conserva. La única excepción son las de evento marcadas para vencer: dejan de verse cuando el evento termina."
    },
    {
     "c": "Progreso",
@@ -240,7 +255,7 @@
     },
     {
      "t": "Qué datos guardamos",
-     "html": "<table class=\"doc-table\">\n        <thead><tr><th>Dato</th><th>Detalle</th></tr></thead>\n        <tbody>\n          <tr><td>Cuenta</td><td>Nombre de usuario, nombre para mostrar, fecha de alta y rol. La contraseña se guarda <b>solo como hash</b> (scrypt), nunca en texto.</td></tr>\n          <tr><td>Perfil (opcional)</td><td>Foto, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, y las medallas que elegís mostrar.</td></tr>\n          <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>\n          <tr><td>Progreso</td><td>Tu meta diaria de carreras. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>\n          <tr><td>Sesión</td><td>Una cookie que mantiene tu sesión iniciada hasta 30 días. En el servidor se guarda una huella de ese código, no el código.</td></tr>\n          <tr><td>Técnicos</td><td>Tu dirección IP y datos del navegador viajan con cada solicitud. Se usan para limitar abusos y proteger el servicio y se mantienen en la memoria del servidor por minutos u horas; <b>no se guardan en la base de datos</b>.</td></tr>\n        </tbody></table>\n        <p>No pedimos tu correo, teléfono, nombre real ni documentos.</p>"
+     "html": "<table class=\"doc-table\">\n        <thead><tr><th>Dato</th><th>Detalle</th></tr></thead>\n        <tbody>\n          <tr><td>Cuenta</td><td>Nombre de usuario, nombre para mostrar, fecha de alta y rol. La contraseña se guarda <b>solo como hash</b> (scrypt), nunca en texto.</td></tr>\n          <tr><td>Perfil (opcional)</td><td>Foto, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, las medallas que elegís mostrar y las recompensas (marco, nombre, portada) que tenés puestas.</td></tr>\n          <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>\n          <tr><td>Progreso</td><td>Tu meta diaria de carreras y las recompensas que ganaste (cuál, cuándo y por qué motivo, por ejemplo «nivel 5» o el nombre de un torneo) y si ya viste el aviso. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>\n          <tr><td>Sesión</td><td>Una cookie que mantiene tu sesión iniciada hasta 30 días. En el servidor se guarda una huella de ese código, no el código.</td></tr>\n          <tr><td>Técnicos</td><td>Tu dirección IP y datos del navegador viajan con cada solicitud. Se usan para limitar abusos y proteger el servicio y se mantienen en la memoria del servidor por minutos u horas; <b>no se guardan en la base de datos</b>.</td></tr>\n        </tbody></table>\n        <p>No pedimos tu correo, teléfono, nombre real ni documentos.</p>"
     },
     {
      "t": "Para qué los usamos",
@@ -248,7 +263,7 @@
     },
     {
      "t": "Qué es público y qué no",
-     "html": "<p><b>Es público</b> (lo ve cualquier persona, tenga o no cuenta): tu usuario, nombre para mostrar, foto, biografía, país, datos de teclado, Discord y sitio web si los completás, tus medallas, tus récords, promedios, historial reciente y tu posición en los rankings.</p>\n        <p><b>No es público</b>: tu contraseña, tu sesión, tu IP y tus estadísticas detalladas de errores por tecla y palabra. Pensá bien qué escribís en tu perfil: no incluyas datos que no quieras que vea todo el mundo.</p>"
+     "html": "<p><b>Es público</b> (lo ve cualquier persona, tenga o no cuenta): tu usuario, nombre para mostrar, foto, biografía, país, datos de teclado, Discord y sitio web si los completás, tus medallas, las recompensas que tengas puestas, tus récords, promedios, historial reciente y tu posición en los rankings.</p>\n        <p><b>No es público</b>: tu contraseña, tu sesión, tu IP y tus estadísticas detalladas de errores por tecla y palabra. Pensá bien qué escribís en tu perfil: no incluyas datos que no quieras que vea todo el mundo.</p>"
     },
     {
      "t": "Con quién se comparten",

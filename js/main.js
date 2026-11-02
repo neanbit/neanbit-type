@@ -9,6 +9,7 @@ import { renderProfile, renderHistory } from './profile.js';
 import { openVitrina } from './vitrina.js';
 import { esc, svg, icons } from './ui.js';
 import { avatarInner } from './avatar.js';
+import { frameAttr, nameLite } from './rewards.js';
 import { duel } from './duel.js';
 import { tourney } from './tourney.js';
 import { pages } from './pages.js';
@@ -341,7 +342,7 @@ async function searchPilots() {
   if (query.length < 2) { box.hidden = true; return; }
   const { rows } = await api.searchUsers(query).catch(() => ({ rows: [] }));
   box.innerHTML = rows.length
-    ? rows.map((r) => `<li data-handle="${esc(r.handle)}"><span class="av sm">${avatarInner(r)}</span>${esc(r.name)} <small>@${esc(r.handle)}</small></li>`).join('')
+    ? rows.map((r) => `<li data-handle="${esc(r.handle)}"><span class="av sm"${frameAttr(r.cosm)}>${avatarInner(r)}</span>${nameLite(r.name, r.cosm)} <small>@${esc(r.handle)}</small></li>`).join('')
     : '<li class="none">No hay pilotos con ese nombre.</li>';
   box.hidden = false;
 }

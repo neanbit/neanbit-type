@@ -71,3 +71,5 @@ dialog.wide.narrow { width: min(96vw, 600px); }
 @media (prefers-reduced-motion: reduce) {
   .lv-key, .lvd-track i { transition: none; }
 }
+
+.lvd-hint { margin: .6rem 0 0; font: .74rem var(--mono); color: var(--muted); }

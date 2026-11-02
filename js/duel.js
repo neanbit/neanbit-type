@@ -1,5 +1,6 @@
 import { api } from './api.js';
 import { avatarInner } from './avatar.js';
+import { frameAttr, nameLite } from './rewards.js';
 import { $, esc } from './ui.js';
 
 let ws = null;
@@ -141,8 +142,8 @@ function draw() {
   if (status === 'queued') $('#d-wait-msg').textContent = 'Buscando rival. En cuanto otro piloto busque duelo, arrancan.';
   $('#d-in').hidden = !incoming.size || status === 'duel';
   $('#d-incoming').innerHTML = [...incoming.values()].map((c) =>
-    `<li data-handle="${esc(c.handle)}"><span class="av sm">${avatarInner(c)}</span>`
-    + `<span class="nm"><b>${esc(c.name)}</b><small>@${esc(c.handle)} te invita a un duelo</small></span>`
+    `<li data-handle="${esc(c.handle)}"><span class="av sm"${frameAttr(c.cosm)}>${avatarInner(c)}</span>`
+    + `<span class="nm"><b>${nameLite(c.name, c.cosm)}</b><small>@${esc(c.handle)} te invita a un duelo</small></span>`
     + '<button class="primary" data-accept>Aceptar</button><button data-decline>Rechazar</button></li>').join('');
   const connected = ws && ws.readyState === WebSocket.OPEN;
   $('#d-online').textContent = connected
@@ -158,7 +159,7 @@ async function search() {
   const { rows } = await api.searchUsers(query).catch(() => ({ rows: [] }));
   const list = rows.filter((r) => !me || r.handle !== me.handle);
   box.innerHTML = list.length
-    ? list.map((r) => `<li data-handle="${esc(r.handle)}"><span class="av sm">${avatarInner(r)}</span>${esc(r.name)} <small>@${esc(r.handle)}</small></li>`).join('')
+    ? list.map((r) => `<li data-handle="${esc(r.handle)}"><span class="av sm"${frameAttr(r.cosm)}>${avatarInner(r)}</span>${nameLite(r.name, r.cosm)} <small>@${esc(r.handle)}</small></li>`).join('')
     : '<li class="none">No hay pilotos con ese nombre.</li>';
   box.hidden = false;
 }

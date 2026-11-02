@@ -20,14 +20,19 @@ const preset = (item) => (item && PRESET.test(item.preset || '') ? item.preset :
 export const safePreset = (p) => (PRESET.test(p || '') ? p : '');
 
 // Nombre con su efecto y tipografía. Sin efecto, devuelve el texto escapado.
-export function nameFx(name, cosm, { still = false } = {}) {
+export function nameFx(name, cosm, { still = false, plain = false } = {}) {
   const fx = preset(cosm && cosm.name);
   if (!fx) return esc(name);
-  const font = cosm.name.font;
+  const font = plain ? '' : cosm.name.font;
   if (font) loadFont(font);
   const style = font && FONT.test(font) ? ` style="font-family:'${font}',var(--ui)"` : '';
   return `<span class="fx" data-fx="${fx}" data-t="${esc(name)}"${style}${still ? ' data-still' : ''}>${esc(name)}</span>`;
 }
+
+// Para listas, rankings y llaves: el nombre con su efecto pero quieto y con la letra de siempre (así las filas no se desalinean),
+// y el marco de la foto como atributos listos para pegar en la etiqueta del avatar.
+export const nameLite = (name, cosm) => nameFx(name, cosm, { still: true, plain: true });
+export const frameAttr = (cosm) => { const p = preset(cosm && cosm.frame); return p ? ` data-frame="${p}" data-still` : ''; };
 
 export function setFrame(el, item) {
   const p = preset(item);

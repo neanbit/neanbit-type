@@ -1,6 +1,7 @@
 import { api } from './api.js';
 import { duel } from './duel.js';
 import { avatarInner } from './avatar.js';
+import { frameAttr, nameLite } from './rewards.js';
 import { $, esc } from './ui.js';
 
 let kit = null;
@@ -92,7 +93,7 @@ function drawList() {
 function slot(m, side, me) {
   const p = m[side];
   const cpm = side === 'a' ? m.aCpm : m.bCpm;
-  const label = p ? esc(p.name) : m.status === 'done' ? 'Sin rival' : m.round === 1 ? 'Pase' : 'Por definir';
+  const label = p ? nameLite(p.name, p.cosm) : m.status === 'done' ? 'Sin rival' : m.round === 1 ? 'Pase' : 'Por definir';
   const cls = ['tn-p'];
   if (!p) cls.push('none');
   else if (m.winner === p.handle) cls.push('win');
@@ -155,7 +156,7 @@ function drawDetail() {
   const champ = t.status === 'finalizado' && t.winner
     ? `<div class="tn-champ"><small>Campeón</small><b>${esc(t.winner.name)}</b><span>@${esc(t.winner.handle)}</span></div>` : '';
   const players = t.players.length
-    ? t.players.map((p) => `<li class="${p.status}" data-handle="${esc(p.handle)}"><span class="av sm">${avatarInner(p)}</span><span>${esc(p.name)}<small>@${esc(p.handle)}</small></span>`
+    ? t.players.map((p) => `<li class="${p.status}" data-handle="${esc(p.handle)}"><span class="av sm"${frameAttr(p.cosm)}>${avatarInner(p)}</span><span>${nameLite(p.name, p.cosm)}<small>@${esc(p.handle)}</small></span>`
       + `${p.status === 'eliminado' ? '<em>Eliminado</em>' : p.status === 'descalificado' ? '<em>Descalificado</em>' : ''}</li>`).join('')
     : '<li class="none">Todavía no hay inscriptos.</li>';
   const draw = t.status === 'inscripcion'

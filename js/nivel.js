@@ -2,10 +2,14 @@
 // Reemplaza al campo «Título» que había antes. Los datos llegan en /api/users/:handle (level, ladder y, solo en el perfil propio, boost).
 import { $, esc } from './ui.js';
 import { features } from './features.js';
+import { api } from './api.js';
+import { rarityName } from './rewards.js';
 
 const AHEAD = 5; // cuántos niveles futuros se muestran
 
 let view = null;
+let shelf = null; // recompensas que se desbloquean por nivel (solo en el perfil propio)
+const KIND = { frame: 'Marco', name: 'Nombre', cover: 'Portada' };
 
 const num = (x) => Number(x).toLocaleString('es-AR');
 const xpAt = (step, level) => step * (level - 1) ** 2;
@@ -72,14 +76,38 @@ function draw() {
   }).join('');
 
   $('#lvd-body').innerHTML = `<section class="lvd-shelf"><h3>Próximos niveles</h3><ol class="lvd-list">${ahead}</ol></section>
-    <section class="lvd-shelf"><h3>Títulos <small>${titles.filter(([min]) => level >= min).length} de ${titles.length}</small></h3><ol class="lvd-list">${ranks}</ol></section>`;
+    <section class="lvd-shelf"><h3>Títulos <small>${titles.filter(([min]) => level >= min).length} de ${titles.length}</small></h3><ol class="lvd-list">${ranks}</ol></section>
+    ${rewardsShelf(level)}`;
 }
 
-export function openNivel() {
+// Recompensas que se consiguen al llegar a un nivel, de la más cercana a la más lejana. Solo se muestran en el perfil propio
+// (el catálogo con lo que tiene cada persona es privado) y si hay alguna con esa regla.
+function rewardsShelf(level) {
+  if (!shelf || !shelf.length) return '';
+  const rows = shelf.map((r) => {
+    const got = r.owned || level >= r.lvl;
+    return `<li class="lvd-row ${got ? 'done' : 'next'}">
+      <span class="lv-key sm" data-digits="${String(r.lvl).length}">${r.lvl}</span>
+      <span class="lvd-name"><b>${esc(r.name)}</b><small>${esc(KIND[r.kind] || r.kind)}, ${esc((rarityName[r.rarity] || r.rarity).toLowerCase())}</small></span>
+      <span class="lvd-xp"><b>${r.owned ? 'Desbloqueada' : level >= r.lvl ? 'Lista' : 'Bloqueada'}</b></span></li>`;
+  }).join('');
+  return `<section class="lvd-shelf"><h3>Recompensas <small>${shelf.filter((r) => r.owned).length} de ${shelf.length}</small></h3><ol class="lvd-list">${rows}</ol>
+    <p class="lvd-hint">Se activan desde Editar perfil, en la pestaña Recompensas.</p></section>`;
+}
+
+export async function openNivel() {
   if (!view) return;
+  shelf = null;
   draw();
   $('#levels').showModal();
   $('#lvd-body').scrollTop = 0;
+  if (!view.mine) return;
+  const shown = view;
+  try {
+    const all = await api.rewards();
+    shelf = all.items.filter((i) => i.lvl > 0).sort((a, b) => a.lvl - b.lvl || a.name.localeCompare(b.name));
+  } catch { shelf = null; }
+  if (view === shown && $('#levels').open && shelf && shelf.length) draw();
 }
 
 $('#pf-level').onclick = openNivel;

@@ -2,6 +2,7 @@ import { api } from './api.js';
 import { avatarInner } from './avatar.js';
 import { initEditor, openEditor } from './editor.js';
 import { $ } from './ui.js';
+import { announce, checkNews } from './unlock.js';
 
 let user = null;
 let registering = false;
@@ -15,13 +16,19 @@ initEditor({
 });
 
 async function refreshUser() {
-  try { user = (await api.me()).user; } catch { user = null; }
+  let news = [];
+  try {
+    const r = await api.me();
+    user = r.user;
+    news = r.news || [];
+  } catch { user = null; }
   $('#who-name').textContent = user ? user.name : 'Ingresar';
   $('#who-handle').textContent = user ? '@' + user.handle : 'Crear una cuenta';
   $('#av').innerHTML = user ? avatarInner(user) : 'n';
   $('#nav-out').hidden = !user;
   $('#menu-out').hidden = !user;
   document.dispatchEvent(new CustomEvent('session', { detail: user }));
+  announce(news);
 }
 
 const viewProfile = (handle) => document.dispatchEvent(new CustomEvent('profile', { detail: handle }));
@@ -72,7 +79,11 @@ document.addEventListener('race', async (e) => {
   const { textId, cpm, acc, hc, chars, words } = e.detail;
   const saved = await api.sendRace({ textId, cpm, acc, hc: hc ? 1 : 0, chars, words }).catch(() => null);
   document.dispatchEvent(new CustomEvent('race-saved', { detail: saved && saved.xp }));
+  announce(saved && saved.news);
 });
+
+// Un duelo o un torneo pueden haber dado una recompensa (nivel, medalla o premio por puesto).
+for (const name of ['duel-result', 'duel-tinfo']) document.addEventListener(name, () => setTimeout(checkNews, 900));
 
 document.addEventListener('death', (e) => {
   if (user) api.death(e.detail.textId).catch(() => {});

@@ -7,7 +7,7 @@ const ACTIVE = "'jugado','abandono','progreso','desempate','no_presentacion','do
 // Los torneos se crean y administran desde neanbit-type-admin: el panel escribe en estas tablas
 // y deja órdenes en `tournament_orders`, que la app lee cada pocos segundos. La app solo expone
 // a los jugadores inscribirse, retirarse y consultar.
-export function createTournaments({ db, duels, maintenance, bump, earnedMedal, xp }) {
+export function createTournaments({ db, duels, maintenance, bump, earnedMedal, xp, rewards = null }) {
   db.exec(`
     create table if not exists tournaments (
       id integer primary key, name text not null, description text not null default '',
@@ -211,14 +211,17 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
   // los eliminados como participación. Los descalificados no reciben nada. El índice único de xp_events evita pagar dos veces.
   function awardXp(t, winnerId) {
     const r = rewardsOf(t);
-    if (winnerId) xp.event(winnerId, 'tourney', t.id, Date.now(), r.champ);
+    const prize = (userId, place) => { if (rewards) rewards.place(userId, place, t.name); };
+    if (winnerId) { xp.event(winnerId, 'tourney', t.id, Date.now(), r.champ); prize(winnerId, 'champ'); }
     const out = db.prepare("select user_id, out_round from tournament_players where tournament_id = ? and status = 'eliminado'").all(t.id);
     for (const p of out) {
       if (p.user_id === winnerId) continue;
-      if (p.out_round >= t.rounds) xp.event(p.user_id, 'tourney_final', t.id, Date.now(), r.final);
-      else if (t.rounds >= 2 && p.out_round === t.rounds - 1) xp.event(p.user_id, 'tourney_semi', t.id, Date.now(), r.semi);
-      else xp.event(p.user_id, 'tourney_part', t.id, Date.now(), r.part);
+      if (p.out_round >= t.rounds) { xp.event(p.user_id, 'tourney_final', t.id, Date.now(), r.final); prize(p.user_id, 'final'); }
+      else if (t.rounds >= 2 && p.out_round === t.rounds - 1) { xp.event(p.user_id, 'tourney_semi', t.id, Date.now(), r.semi); prize(p.user_id, 'semi'); }
+      else { xp.event(p.user_id, 'tourney_part', t.id, Date.now(), r.part); prize(p.user_id, 'part'); }
     }
+    // Con la XP del torneo puede haber subido un nivel o ganado una medalla (por ejemplo «Campeón»): se revisan las reglas de todos.
+    if (rewards) for (const p of [{ user_id: winnerId }, ...out]) if (p.user_id) rewards.auto(p.user_id);
   }
 
   function finishMatch(m, winnerId, result, duelId = null) {
@@ -470,15 +473,16 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
     const people = db.prepare(`select p.user_id as id, p.seed, p.status, p.out_round as outRound, u.handle, u.name, u.avatar_v as av
       from tournament_players p join users u on u.id = p.user_id where p.tournament_id = ? order by case when p.seed > 0 then p.seed else 9999 end, p.joined_at`).all(t.id);
     const byId = new Map(people.map((p) => [p.id, p]));
+    const cosm = rewards ? rewards.cosm(people.map((p) => p.handle)) : new Map();
     const who = (uid) => {
       const p = uid ? byId.get(uid) : null;
-      return p ? { handle: p.handle, name: p.name, av: p.av, seed: p.seed, status: p.status } : null;
+      return p ? { handle: p.handle, name: p.name, av: p.av, seed: p.seed, status: p.status, cosm: cosm.get(p.handle) } : null;
     };
     const matches = db.prepare(`select m.id, m.round, m.slot, m.a_id, m.b_id, m.winner_id, m.status, m.result, m.deadline,
       d.a_cpm, d.b_cpm from tournament_matches m left join duels d on d.id = m.duel_id where m.tournament_id = ? order by m.round, m.slot`).all(t.id)
       .map((m) => ({ id: m.id, round: m.round, slot: m.slot, a: who(m.a_id), b: who(m.b_id), winner: m.winner_id ? who(m.winner_id)?.handle : null,
         status: m.status, result: m.result, deadline: m.deadline, aCpm: m.a_cpm, bCpm: m.b_cpm }));
-    const out = { ...view(t, me?.id), players: people.map((p) => ({ handle: p.handle, name: p.name, av: p.av, seed: p.seed, status: p.status, outRound: p.outRound })),
+    const out = { ...view(t, me?.id), players: people.map((p) => ({ handle: p.handle, name: p.name, av: p.av, seed: p.seed, status: p.status, outRound: p.outRound, cosm: cosm.get(p.handle) })),
       count: playerCount(t.id), matches, now: null };
     if (me) {
       const m = db.prepare("select * from tournament_matches where tournament_id = ? and status in ('ready', 'live') and (a_id = ? or b_id = ?)").get(t.id, me.id, me.id);

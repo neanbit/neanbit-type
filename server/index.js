@@ -13,7 +13,7 @@ import { clientIp, createLimiter } from './limits.js';
 import { cleanProgress } from './levels.js';
 import { setupXp } from './xp.js';
 import { cleanContent } from './content.js';
-import { cosmeticsOf, ensureRewardSchema, rewardsFor, setEquip } from './rewards.js';
+import { autoGrant, cosmeticsMany, cosmeticsOf, ensureRewardSchema, grantPlace, markSeen, rewardsFor, setEquip, unseen } from './rewards.js';
 import { CONDITIONS, ensureMedalSchema, grantCount, groupOf, loadIcons, medalFile, medalValues, realTourneyWins, tierOf } from './medals.js';
 
 const scrypt = promisify(scryptCb);
@@ -293,6 +293,38 @@ const boostOf = (userId) => {
   return b ? { name: b.name, mult: b.mult, ends: b.ends } : null;
 };
 
+// Recompensas automáticas (nivel, medalla, evento): se revisan cuando la persona juega, al abrir la app y al barrer tras un cambio
+// de reglas en el panel. Nunca frenan lo que se estaba haciendo: si algo falla, se anota y la acción sigue.
+function autoRewards(userId, { events = false } = {}) {
+  try {
+    return autoGrant(db, userId, {
+      level: levelOf(userId).level, events,
+      medals: () => new Set(medalsOf(userId).filter((m) => m.earned).map((m) => m.id)),
+    });
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+}
+// Marco y nombre de quienes aparecen en una lista (rankings, búsqueda): se agregan solo a la página que se envía.
+const withCosm = (rows) => {
+  const m = cosmeticsMany(db, rows.map((r) => r.handle));
+  return m.size ? rows.map((r) => (m.has(r.handle) ? { ...r, cosm: m.get(r.handle) } : r)) : rows;
+};
+const rewardHooks = {
+  auto: autoRewards,
+  place: (userId, place, note) => { try { return grantPlace(db, userId, place, note); } catch (err) { console.error(err); return []; } },
+  cosm: (handles) => cosmeticsMany(db, handles),
+};
+// Barrido de todos los usuarios cuando el panel cambia las reglas (settings.rewards_rev) y al arrancar.
+let rewardsRev = null;
+function sweepRewards() {
+  const rev = JSON.stringify(setting('rewards_rev') ?? 0);
+  if (rev === rewardsRev) return;
+  rewardsRev = rev;
+  for (const u of db.prepare('select id from users').all()) autoRewards(u.id);
+}
+
 // Funciones que se pueden apagar desde el panel (settings.features). Todas vienen encendidas por defecto.
 const FEATURES = ['share', 'rematch', 'sound', 'pace', 'mytexts', 'levels', 'goal'];
 function features() {
@@ -427,11 +459,28 @@ async function api(req, res, url) {
     return send(res, 200, { user: publicUser(db.prepare(`select ${userCols} from users where id = ?`).get(me.id)) });
   }
 
-  if (key === 'GET /api/me') return send(res, 200, { user: me && publicUser(me) });
+  if (key === 'GET /api/me') {
+    if (me) autoRewards(me.id);
+    return send(res, 200, { user: me && publicUser(me), news: me ? unseen(db, me.id) : [] });
+  }
 
   if (key === 'GET /api/rewards') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    autoRewards(me.id);
     return send(res, 200, rewardsFor(db, me));
+  }
+
+  // Avisos «Desbloqueaste…» pendientes. POST los marca como vistos.
+  if (key === 'GET /api/rewards/news') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    if (limits.hit('rn:' + me.id, 60, 60000)) return tooMany(res, 'rn:' + me.id, 60000);
+    return send(res, 200, { news: unseen(db, me.id) });
+  }
+  if (key === 'POST /api/rewards/seen') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    if (limits.hit('rn:' + me.id, 60, 60000)) return tooMany(res, 'rn:' + me.id, 60000);
+    markSeen(db, me.id);
+    return send(res, 200, { ok: true });
   }
 
   if (key === 'POST /api/register') {
@@ -506,7 +555,8 @@ async function api(req, res, url) {
     version++;
     saveErrors(me.id, 'c', chars);
     saveErrors(me.id, 'w', words);
-    return send(res, 201, { ok: true, xp: { before, after: levelOf(me.id), gain: gain.xp, mult: gain.mult } });
+    autoRewards(me.id, { events: true });
+    return send(res, 201, { ok: true, xp: { before, after: levelOf(me.id), gain: gain.xp, mult: gain.mult }, news: unseen(db, me.id) });
   }
 
   if (key === 'POST /api/goal') {
@@ -572,7 +622,7 @@ async function api(req, res, url) {
       const best = db.prepare('select max(cpm) as c from races where user_id = ? and hc = 0 and at >= ?').get(me.id, since).c;
       if (best) mine = { pos: 1 + db.prepare('select count(distinct user_id) as n from races where hc = 0 and at >= ? and cpm > ?').get(since, best).n, cpm: best };
     }
-    return send(res, 200, { rows, me: mine });
+    return send(res, 200, { rows: withCosm(rows), me: mine });
   }
 
   if (key === 'GET /api/ranking/average') {
@@ -580,7 +630,7 @@ async function api(req, res, url) {
     const all = memo('avg' + window, () => averages(window));
     const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
     const pg = pageOf(url, all.length);
-    return send(res, 200, { rows: all.slice(pg.from, pg.from + 10), total: all.length, page: pg.page, me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null, min: minForAverage });
+    return send(res, 200, { rows: withCosm(all.slice(pg.from, pg.from + 10)), total: all.length, page: pg.page, me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null, min: minForAverage });
   }
 
   if (key === 'GET /api/ranking') {
@@ -593,7 +643,7 @@ async function api(req, res, url) {
       where r.at >= ? and r.hc = ? group by u.id order by cpm desc, u.id`).all(since, since, hc));
     const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
     const pg = pageOf(url, all.length);
-    return send(res, 200, { rows: all.slice(pg.from, pg.from + 10), total: all.length, page: pg.page, me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null });
+    return send(res, 200, { rows: withCosm(all.slice(pg.from, pg.from + 10)), total: all.length, page: pg.page, me: at > -1 ? { pos: at + 1, cpm: all[at].cpm } : null });
   }
 
   if (key === 'GET /api/ranking/duels') {
@@ -606,14 +656,14 @@ async function api(req, res, url) {
       group by u.id having wins > 0 order by wins desc, (wins * 1.0 / count(*)) desc, u.id`).all(since));
     const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
     const pg = pageOf(url, all.length);
-    return send(res, 200, { rows: all.slice(pg.from, pg.from + 10), total: all.length, page: pg.page, me: at > -1 ? { pos: at + 1, wins: all[at].wins, duels: all[at].duels } : null });
+    return send(res, 200, { rows: withCosm(all.slice(pg.from, pg.from + 10)), total: all.length, page: pg.page, me: at > -1 ? { pos: at + 1, wins: all[at].wins, duels: all[at].duels } : null });
   }
 
   if (key === 'GET /api/ranking/tourneys') {
     const all = memo('tourneys', () => tourneys.ranking());
     const at = me ? all.findIndex((r) => r.handle === me.handle) : -1;
     return send(res, 200, {
-      rows: all.slice(0, 10).map(({ uid, ...r }) => r),
+      rows: withCosm(all.slice(0, 10).map(({ uid, ...r }) => r)),
       me: at > -1 ? { pos: at + 1, titles: all[at].titles, wins: all[at].wins, played: all[at].played } : null,
     });
   }
@@ -655,7 +705,7 @@ async function api(req, res, url) {
     const q = String(url.searchParams.get('q') || '').toLowerCase().replace(/[^\p{L}\p{N}_ .-]/gu, '');
     if (q.length < 2) return send(res, 200, { rows: [] });
     const rows = db.prepare('select handle, name, avatar_v as av from users where handle like ? or lower(name) like ? limit 6').all(`%${q}%`, `%${q}%`);
-    return send(res, 200, { rows });
+    return send(res, 200, { rows: withCosm(rows) });
   }
 
   const route = /^\/api\/users\/([a-z0-9_]{3,15})(\/races)?$/.exec(url.pathname);
@@ -684,7 +734,7 @@ async function api(req, res, url) {
       avg: mean(normal.slice(0, 10)), avgAll: mean(normal),
       favorite: favorite ? favorite.text_id : null,
       rank: rankOf(user.id), hcRank: hcRankOf(user.id), level: levelOf(user.id),
-      ladder: ladder(), boost: me && me.id === user.id ? boostOf(user.id) : null,
+      ladder: ladder(), mine: !!(me && me.id === user.id), boost: me && me.id === user.id ? boostOf(user.id) : null,
       verified: user.verified, shown: parseShown(user.shown), medals, secretLeft,
       duels: duelSummary(user.id), tourneys: tourneys.summary(user.id),
     });
@@ -759,9 +809,9 @@ async function serveStatic(req, res, pathname) {
   }
 }
 
-const duels = createDuels({ db, sessionUser, maintenance, bump: () => { version++; }, saveErrors, xp });
+const duels = createDuels({ db, sessionUser, maintenance, bump: () => { version++; }, saveErrors, xp, rewards: rewardHooks });
 const tourneys = createTournaments({
-  db, duels, maintenance, xp, bump: () => { version++; },
+  db, duels, maintenance, xp, rewards: rewardHooks, bump: () => { version++; },
   earnedMedal: (userId, medalId) => medalsOf(userId).some((m) => m.id === medalId && m.earned),
 });
 
@@ -819,4 +869,6 @@ setInterval(() => {
     db.exec('pragma wal_checkpoint(truncate)');
   } catch (err) { console.error(err); }
 }, 3600000).unref();
+setTimeout(() => { try { sweepRewards(); } catch (err) { console.error(err); } }, 3000).unref();
+setInterval(() => { try { sweepRewards(); } catch (err) { console.error(err); } }, 60000).unref();
 process.on('unhandledRejection', (err) => console.error('unhandledRejection', err));
