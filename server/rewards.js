@@ -42,6 +42,12 @@ export function ensureRewardSchema(db, base) {
   db.prepare("update rewards set preset = 'aureola' where kind = 'frame' and preset = 'halo'").run();
   db.prepare("update rewards set name = 'Aureola' where id = 'frame-halo' and name = 'Halo'").run();
   db.prepare("update rewards set description = 'Un aro de luz flotando sobre la cabeza.' where id = 'frame-halo' and description = 'Un halo de luz flotando sobre la foto.'").run();
+  // v13: las paletas ahora también cambian el fondo y los cuadros. Solo se actualiza el texto si nadie lo editó desde el panel.
+  for (const [id, was, now] of [
+    ['palette-amanecer', 'Dorado suave, como la primera luz sobre las nubes.', 'Cielo al alba: fondo estrellado y cuadros con brillo dorado.'],
+    ['palette-ascua', 'Naranja de brasa para los acentos del perfil.', 'Fondo de brasas: cuadros con borde incandescente y resplandor.'],
+    ['palette-bombon', 'Rosa de caramelo para los acentos del perfil.', 'Fondo de lunares y cuadros con costuras de caramelo.'],
+  ]) db.prepare('update rewards set description = ? where id = ? and description = ?').run(now, id, was);
   if (done >= top) return;
   const ins = db.prepare(`insert or ignore into rewards (id, kind, preset, name, description, rarity, theme, anim, font, rule, enabled, pos, hidden)
     values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`);

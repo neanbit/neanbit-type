@@ -61,6 +61,7 @@ async function loadCatalog() {
 
 function show(name) {
   document.body.classList.toggle('profile-view', name === 'profile');
+  if (name !== 'profile') delete document.documentElement.dataset.palette; // la paleta de un perfil vale solo mientras se lo mira
   document.body.classList.toggle('racing', name === 'race');
   $('#more-menu').hidden = true;
   screens.forEach((s) => ($('#' + s).hidden = s !== name));

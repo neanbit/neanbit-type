@@ -755,7 +755,7 @@
   "rarity": "epica",
   "theme": "celestial",
   "anim": 0,
-  "description": "Dorado suave, como la primera luz sobre las nubes.",
+  "description": "Cielo al alba: fondo estrellado y cuadros con brillo dorado.",
   "since": 3,
   "hidden": 1
  },
@@ -767,7 +767,7 @@
   "rarity": "rara",
   "theme": "fuego",
   "anim": 0,
-  "description": "Naranja de brasa para los acentos del perfil.",
+  "description": "Fondo de brasas: cuadros con borde incandescente y resplandor.",
   "since": 3
  },
  {
@@ -778,7 +778,7 @@
   "rarity": "rara",
   "theme": "dulce",
   "anim": 0,
-  "description": "Rosa de caramelo para los acentos del perfil.",
+  "description": "Fondo de lunares y cuadros con costuras de caramelo.",
   "since": 3,
   "hidden": 1
  }

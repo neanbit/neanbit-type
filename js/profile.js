@@ -102,7 +102,7 @@ export function renderProfile(p, opts) {
 
   const root = $('#profile');
   root.dataset.accent = p.accent || 'ambar';
-  setPalette(root, p.cosm && p.cosm.palette);
+  setPalette(document.documentElement, p.cosm && p.cosm.palette);
   setCover($('#pf-hero .pf-banner'), p.cosm && p.cosm.cover, p.banner);
   $('#pf-hero').dataset.shape = p.shape || 'cuadrada';
 
