@@ -20,13 +20,10 @@ export function setNivel(p) {
   btn.hidden = !ok;
   view = ok ? p : null;
   if (!ok) return;
-  const { xp, level, from, to, title } = p.level;
+  const { level, title } = p.level;
   $('#pf-lv-n').textContent = level;
-  $('#pf-lv-n').dataset.digits = String(level).length;
-  $('#pf-lv-title').textContent = title;
-  $('#pf-lv-xp').textContent = `${num(xp)} XP, faltan ${num(to - xp)} para el ${level + 1}`;
-  $('#pf-lv-fill').style.width = Math.round(((xp - from) / (to - from)) * 100) + '%';
-  btn.setAttribute('aria-label', `Nivel ${level}, ${title}. Ver el detalle`);
+  btn.title = `Nivel ${level}, ${title}`;
+  btn.setAttribute('aria-label', `Nivel ${level}, ${title}. Ver el progreso`);
 }
 
 function row(kind, level, name, note, xp, gap) {

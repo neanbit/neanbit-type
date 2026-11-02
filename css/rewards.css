@@ -102,6 +102,32 @@
 @keyframes rw-sweep { to { background-position: -50% 0; } }
 [data-fx="neon-pulso"] { color: #d9fdff; text-shadow: 0 0 6px #00e5ff, 0 0 16px #00e5ff; animation: rw-neon 1.8s ease-in-out infinite; }
 @keyframes rw-neon { 50% { text-shadow: 0 0 3px #00e5ff, 0 0 8px #00e5ff; color: #a5f3fc; } }
+[data-fx="glitch"] { position: relative; color: var(--text); font-size: .74em; text-shadow: 1px 0 #ff2a6d88, -1px 0 #05d9e888; animation: rw-glitch-base 3.6s infinite; }
+[data-fx="glitch"]::before, [data-fx="glitch"]::after { content: attr(data-t); position: absolute; left: 0; top: 0; padding: inherit; font: inherit; letter-spacing: inherit; line-height: inherit; white-space: nowrap; opacity: 0; pointer-events: none; }
+[data-fx="glitch"]::before { color: #ff2a6d; animation: rw-glitch-a 3.6s infinite; }
+[data-fx="glitch"]::after { color: #05d9e8; animation: rw-glitch-b 3.6s infinite; }
+/* Casi todo el ciclo el nombre está quieto (solo con el borde de color); la falla dura una fracción de segundo */
+@keyframes rw-glitch-base { 0%, 85%, 100% { transform: none; } 87% { transform: translateX(1px) skewX(-5deg); } 90% { transform: translateX(-1px) skewX(4deg); } 93% { transform: none; } }
+@keyframes rw-glitch-a { 0%, 85%, 99%, 100% { opacity: 0; transform: none; } 86% { opacity: 1; transform: translate(-3px, 0); clip-path: inset(6% 0 64% 0); } 89% { opacity: 1; transform: translate(3px, 0); clip-path: inset(46% 0 26% 0); } 92% { opacity: 1; transform: translate(-2px, 0); clip-path: inset(22% 0 48% 0); } 95% { opacity: 1; transform: translate(2px, 0); clip-path: inset(68% 0 6% 0); } 97% { opacity: 0; } }
+@keyframes rw-glitch-b { 0%, 85%, 99%, 100% { opacity: 0; transform: none; } 87% { opacity: 1; transform: translate(3px, 0); clip-path: inset(58% 0 14% 0); } 90% { opacity: 1; transform: translate(-3px, 0); clip-path: inset(12% 0 60% 0); } 93% { opacity: 1; transform: translate(2px, 0); clip-path: inset(40% 0 34% 0); } 96% { opacity: 1; transform: translate(-2px, 0); clip-path: inset(0 0 74% 0); } 98% { opacity: 0; } }
+[data-fx="sangre"], [data-fx="aurora"], [data-fx="holograma"], [data-fx="galaxia"] {
+  color: transparent; -webkit-background-clip: text; background-clip: text;
+}
+[data-fx="plata"] { background-image: linear-gradient(180deg, #ffffff, #d5dde8 45%, #8b97a8 55%, #eef2f7); }
+[data-fx="contorno"] { color: transparent; -webkit-text-stroke: 1.5px var(--ink); letter-spacing: .03em; }
+[data-fx="sombra"] { color: var(--text); text-shadow: 2px 2px 0 var(--accent), 4px 4px 0 color-mix(in srgb, var(--accent) 40%, transparent); }
+[data-fx="oro"] { background-image: linear-gradient(180deg, #fff2b0, #f5c242 42%, #b8860b 58%, #ffe08a); filter: drop-shadow(0 1px 0 #5a3d0099); }
+[data-fx="neon-rosa"] { color: #ffe3f6; text-shadow: 0 0 4px #fff, 0 0 10px #ff2bd6, 0 0 22px #ff2bd6, 0 0 40px #b300ff; }
+[data-fx="matrix"] { color: #7dff9b; text-shadow: 0 0 6px #00ff6a, 0 0 14px #00c853; animation: rw-tube 3s steps(1) infinite; }
+[data-fx="arcoiris"] { background-image: linear-gradient(90deg, #ff0040, #ff9500, #ffee00, #34c759, #00c7ff, #5856ff, #d946ef, #ff0040); background-size: 200% 100%; animation: rw-slide 4s linear infinite; }
+[data-fx="veneno"] { background-image: linear-gradient(90deg, #b6ff00, #16a34a, #8b5cf6, #b6ff00); background-size: 200% 100%; filter: drop-shadow(0 0 5px #84cc1688); animation: rw-slide 3s linear infinite; }
+[data-fx="sakura"] { background-image: linear-gradient(90deg, #fbcfe8, #f472b6, #fde7f3, #f9a8d4, #fbcfe8); background-size: 200% 100%; filter: drop-shadow(0 0 6px #f472b688); animation: rw-slide 6s linear infinite, rw-float 4s ease-in-out infinite; font-size: 1.12em; }
+[data-fx="brasa"] { background-image: linear-gradient(0deg, #ff1a00, #ff7a00 40%, #ffd000 78%, #fff3a0); background-size: 100% 200%; filter: drop-shadow(0 0 6px #ff5500aa); animation: rw-flicker 1.2s ease-in-out infinite; }
+@keyframes rw-flicker { 0%, 100% { background-position: 0 0; filter: drop-shadow(0 0 5px #ff5500aa); } 50% { background-position: 0 40%; filter: drop-shadow(0 0 10px #ff8800cc); } }
+[data-fx="escarcha"] { background-image: linear-gradient(100deg, #8fdcff 0 40%, #ffffff 50%, #8fdcff 60% 100%); background-size: 250% 100%; background-position: 100% 0; filter: drop-shadow(0 0 5px #7dd3fc88); animation: rw-sweep 3.5s ease-in-out infinite; }
+@keyframes rw-sweep { to { background-position: -50% 0; } }
+[data-fx="neon-pulso"] { color: #d9fdff; text-shadow: 0 0 6px #00e5ff, 0 0 16px #00e5ff; animation: rw-neon 1.8s ease-in-out infinite; }
+@keyframes rw-neon { 50% { text-shadow: 0 0 3px #00e5ff, 0 0 8px #00e5ff; color: #a5f3fc; } }
 [data-fx="glitch"] { position: relative; color: var(--text); font-size: .74em; }
 [data-fx="glitch"]::before, [data-fx="glitch"]::after { content: attr(data-t); position: absolute; inset: 0; padding: .05em 0; line-height: 1.15; white-space: nowrap; overflow: hidden; }
 [data-fx="glitch"]::before { left: 2px; color: #ff2a6d; clip-path: inset(0 0 55% 0); animation: rw-glitch 2.4s steps(1) infinite; }
@@ -152,13 +178,29 @@
   background-size: 180px 150px, 180px 150px, 260px 190px, 260px 190px, 100% 100%, 100% 100%, 100% 100%; animation: rw-drift 40s linear infinite;
 }
 @keyframes rw-drift { to { background-position: -180px 0, -180px 0, -260px 0, -260px 0, 0 0, 0 0, 0 0; } }
-[data-cover="retro"] { position: relative; background: radial-gradient(circle at 50% 66%, #ffe66d 0 15%, #ff5e9c 16% 25%, transparent 26%), linear-gradient(180deg, #1a0536, #4a0f6a 55%, #ff3d9a); }
-[data-cover="retro"]::before {
-  content: ""; position: absolute; left: -60%; right: -60%; bottom: 0; height: 52%;
-  background: repeating-linear-gradient(90deg, #ff4fd8 0 1px, transparent 1px 44px), repeating-linear-gradient(0deg, #ff4fd8 0 1px, transparent 1px 22px), #12002b;
-  transform: perspective(110px) rotateX(58deg); transform-origin: 50% 100%; animation: rw-grid 1.4s linear infinite;
+/* Retrowave: cielo con estrellas, sol con cortes y un piso en perspectiva. El piso es un plano 3D que se desplaza solo con transform
+   (no vuelve a pintar nada en cada cuadro). Todo se mide con la altura de la portada (cqh), así se ve igual en grande y en miniatura. */
+[data-cover="retro"] {
+  position: relative; overflow: hidden; isolation: isolate; container-type: size; perspective: 90cqh; perspective-origin: 50% 92%;
+  background:
+    radial-gradient(1px 1px at 9% 12%, #fff, transparent), radial-gradient(1px 1px at 23% 26%, #ffffffaa, transparent), radial-gradient(1.2px 1.2px at 71% 14%, #fff, transparent),
+    radial-gradient(1px 1px at 88% 30%, #ffffffaa, transparent), radial-gradient(1px 1px at 41% 8%, #ffffffcc, transparent),
+    linear-gradient(180deg, transparent calc(56% - 5px), #ff9de299 56%, transparent calc(56% + 7px)),
+    linear-gradient(180deg, #0b0120 0, #240a52 32%, #6a1b8a 50%, #d92b8f 56%, #12002b 56%);
 }
-@keyframes rw-grid { to { background-position: 0 0, 0 22px, 0 0; } }
+[data-cover="retro"]::after {
+  content: ""; position: absolute; z-index: -1; left: 50%; bottom: 44cqh; height: 50cqh; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%;
+  background: linear-gradient(180deg, #ffe66d 8%, #ff9a5c 52%, #ff2e93 96%);
+  -webkit-mask: linear-gradient(#000, #000) top / 100% 44% no-repeat, repeating-linear-gradient(180deg, #000 0 3.4cqh, transparent 3.4cqh 4.8cqh) bottom / 100% 56% no-repeat;
+  mask: linear-gradient(#000, #000) top / 100% 44% no-repeat, repeating-linear-gradient(180deg, #000 0 3.4cqh, transparent 3.4cqh 4.8cqh) bottom / 100% 56% no-repeat;
+}
+[data-cover="retro"]::before {
+  content: ""; position: absolute; z-index: 1; left: -150%; right: -150%; top: -195cqh; height: 600cqh; transform-origin: 50% 50%; transform: rotateX(68deg);
+  background: repeating-linear-gradient(90deg, #ff4fd8 0 2px, transparent 2px 60cqh), repeating-linear-gradient(180deg, #ff4fd8 0 2px, transparent 2px 35cqh);
+  -webkit-mask: linear-gradient(180deg, transparent 0, #000 30%); mask: linear-gradient(180deg, transparent 0, #000 30%);
+  animation: rw-grid 1.8s linear infinite; will-change: transform;
+}
+@keyframes rw-grid { to { transform: rotateX(68deg) translateY(35cqh); } }
 [data-cover="prisma"] { background: linear-gradient(120deg, #ff0040, #ff9500, #ffee00, #34c759, #00c7ff, #5856ff, #d946ef, #ff0040); background-size: 300% 100%; animation: rw-prism 12s linear infinite; }
 @keyframes rw-prism { to { background-position: 300% 0; } }
 .rw-cv { display: block; height: 3rem; border-radius: 3px; overflow: hidden; }
@@ -178,7 +220,7 @@
 [data-theme="claro"] [data-frame="halo"]::after { border-color: #e0a800; box-shadow: 0 0 8px #f5c24299; }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-frame], [data-frame]::before, [data-frame]::after, [data-fx], [data-fx]::before, [data-fx]::after, [data-cover], [data-cover]::before { animation: none !important; }
+  [data-frame], [data-frame]::before, [data-frame]::after, [data-fx], [data-fx]::before, [data-fx]::after, [data-cover], [data-cover]::before, [data-cover]::after { animation: none !important; }
 }
 
 /* ---------- Pestaña «Recompensas» del editor ---------- */

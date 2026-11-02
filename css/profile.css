@@ -20,7 +20,7 @@
 #profile { max-width: 1080px; margin-inline: auto; }
 
 /* cabecera */
-.pf-hero { margin-bottom: 1.5rem; border: 1px solid var(--line); border-radius: var(--r); }
+.pf-hero { position: relative; margin-bottom: 1.5rem; border: 1px solid var(--line); border-radius: var(--r); }
 .pf-banner { --c: color-mix(in srgb, var(--accent) 28%, transparent); position: relative; display: block; height: 8rem; overflow: hidden; border-radius: var(--r) var(--r) 0 0; border-bottom: 1px solid var(--line); background-color: color-mix(in srgb, var(--accent) 9%, var(--raise)); }
 .pf-banner[data-banner="rejilla"] { background-image: linear-gradient(var(--c) 1px, transparent 1px), linear-gradient(90deg, var(--c) 1px, transparent 1px); background-size: 24px 24px; }
 .pf-banner[data-banner="diagonal"] { background-image: repeating-linear-gradient(135deg, var(--c) 0 2px, transparent 2px 16px); }
@@ -39,7 +39,7 @@
 .pf-avatar { --tier: var(--line); position: relative; display: grid; place-items: center; width: 8.5rem; height: 8.5rem; background: var(--bg-deep); border: 3px solid var(--tier); border-radius: var(--pf-r, 8px); box-shadow: 0 5px 0 color-mix(in srgb, var(--tier) 55%, var(--bg)); color: var(--ink); font: 700 3.4rem var(--ui); }
 [data-shape="circulo"] .pf-avatar { box-shadow: none; }
 .pf-avatar img { display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
-#pf-initial { display: contents; }
+#pf-initial { display: contents; border-radius: inherit; }
 .pf-avatar em { position: absolute; bottom: -1.2rem; left: 50%; transform: translateX(-50%); padding: .1rem .7rem; background: var(--bg-deep); border: 1px solid var(--tier); border-radius: 3px; color: var(--tier); font: 500 .78rem var(--mono); font-style: normal; white-space: nowrap; }
 .tier-1 { --tier: var(--ink); }
 .tier-2 { --tier: #aab4c3; }
@@ -48,6 +48,10 @@
 .pf-avatar.hc { --tier: var(--bad); }
 .pf-avatar.tier-dual { border-color: var(--ink) var(--bad) var(--bad) var(--ink); }
 .pf-avatar.tier-dual em { border-color: var(--ink); color: var(--ink); }
+/* Con un marco puesto, el anillo tapaba la etiqueta: pasa a ser una chapa llena, por encima del anillo y con un corte del color del fondo */
+.pf-avatar[data-frame] em { z-index: 6; bottom: calc(-1.25rem - var(--fw)); padding: .12rem .75rem; background: var(--tier); border-color: var(--tier); box-shadow: 0 0 0 3px var(--bg); color: #0b1220; font-weight: 600; }
+.pf-avatar.hc[data-frame] em { color: #fff; }
+.pf-avatar.tier-dual[data-frame] em { background: var(--ink); border-color: var(--ink); color: #0b1220; }
 
 .vf { display: inline-flex; color: var(--ink); }
 .vf svg { width: 22px; height: 22px; }
@@ -226,6 +230,7 @@ button.bad { border-color: var(--bad); color: var(--bad); }
   .pf-grid { grid-template-columns: 1fr; }
   .pf-stats { grid-template-columns: 1fr 1fr; }
   .pf-id { grid-template-columns: 1fr; justify-items: start; gap: 1rem; }
+  .pf-id .pf-avatar { margin-bottom: 1.2rem; }
   .ed-body { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); height: 72vh; }
   .ed-tabs { flex-direction: row; padding: .5rem; border-right: 0; border-bottom: 1px solid var(--line); }
   .ed-tabs button { width: auto; }
@@ -237,5 +242,5 @@ button.bad { border-color: var(--bad); color: var(--bad); }
   .slots { grid-template-columns: 1fr 1fr; }
 }
 
-/* marca de registro sobre la cabecera (el panel ya dibuja la de abajo a la derecha) */
-.pf-hero > .pf-banner::after { content: ""; position: absolute; top: 0; left: 0; width: 16px; height: 16px; border-top: 2px solid var(--accent); border-left: 2px solid var(--accent); }
+/* marca de registro sobre la cabecera (el panel ya dibuja la de abajo a la derecha). Va en el héroe y no en la portada, para que las portadas puedan usar sus propios ::before y ::after */
+.pf-hero::after { content: ""; position: absolute; top: 0; left: 0; width: 16px; height: 16px; border-top: 2px solid var(--accent); border-left: 2px solid var(--accent); pointer-events: none; }

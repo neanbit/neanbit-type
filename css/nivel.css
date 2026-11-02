@@ -1,19 +1,19 @@
 /* Nivel en el perfil. El widget es una tecla (mismo borde inferior que los botones) con el número del nivel en un cuadrado
    del color del perfil; la ventana repite ese número y lista lo que viene. Los colores salen de data-accent. */
 
-/* widget de la cabecera */
-.pf-level { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "key txt" "key bar"; align-items: center; gap: .2rem .85rem; width: min(100%, 22rem); margin-top: .8rem; padding: .55rem .9rem .55rem .55rem; background: var(--bg-deep); box-shadow: none; text-align: left; }
-.pf-level[hidden] { display: none; }
-.pf-level:hover .lv-key { transform: translateY(-1px); }
-.pf-level:active .lv-key { transform: none; }
-.lv-key { grid-area: key; display: grid; place-items: center; width: 3.1rem; height: 3.1rem; background: var(--accent); border-radius: 4px; box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 55%, #000); color: var(--on-accent); font: 500 1.55rem/1 var(--mono); letter-spacing: -.04em; transition: transform .12s; }
+/* widget de la cabecera: una chapa chica al lado del nombre, como el sello de verificado */
+#pf-name { display: contents; }
+.lv-chip { display: inline-flex; align-items: baseline; gap: .35em; margin-left: .1rem; padding: .2rem .6rem; background: color-mix(in srgb, var(--accent) 14%, transparent); border: 1px solid color-mix(in srgb, var(--ink) 55%, transparent); border-radius: 3px; box-shadow: none; color: var(--ink); font: 600 .74rem/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: background .12s, border-color .12s; }
+.lv-chip i { font-style: normal; font-weight: 500; opacity: .75; }
+.lv-chip b { font-weight: 600; }
+.lv-chip:hover { background: color-mix(in srgb, var(--accent) 26%, transparent); border-color: var(--ink); }
+.lv-chip:active { transform: none; box-shadow: none; }
+.lv-chip[hidden] { display: none; }
+.lv-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.lv-key { display: grid; place-items: center; width: 3.1rem; height: 3.1rem; background: var(--accent); border-radius: 4px; box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 55%, #000); color: var(--on-accent); font: 500 1.55rem/1 var(--mono); letter-spacing: -.04em; }
 .lv-key[data-digits="3"] { font-size: 1.2rem; }
 .lv-key[data-digits="4"] { font-size: .95rem; }
-.lv-txt { grid-area: txt; display: grid; min-width: 0; align-self: end; }
-.lv-txt b { font-size: 1rem; line-height: 1.25; letter-spacing: -.01em; }
-.lv-txt small { color: var(--muted); font: .7rem/1.4 var(--mono); overflow-wrap: anywhere; }
-.lv-bar { grid-area: bar; align-self: start; height: 4px; margin-top: .25rem; background: var(--line); }
-.lv-bar i { display: block; width: 0; height: 100%; background: var(--ink); }
 
 /* ventana */
 dialog.wide.narrow { width: min(96vw, 600px); }
