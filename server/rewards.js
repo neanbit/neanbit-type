@@ -7,7 +7,10 @@ export const RARITIES = ['comun', 'rara', 'epica', 'legendaria'];
 
 // Tipografías permitidas para los efectos de nombre (todas de Google Fonts, ya permitidas por la CSP).
 export const FONTS = ['Orbitron', 'Pacifico', 'Press Start 2P', 'Cinzel', 'Bungee', 'Righteous', 'Audiowide', 'Permanent Marker',
-  'Creepster', 'Special Elite', 'Monoton', 'Lobster', 'Caveat', 'Rubik Mono One', 'Michroma', 'Unbounded', 'Share Tech Mono'];
+  'Creepster', 'Special Elite', 'Monoton', 'Lobster', 'Caveat', 'Rubik Mono One', 'Michroma', 'Unbounded', 'Share Tech Mono',
+  // v10
+  'Fredoka', 'Bangers', 'Chewy', 'Cinzel Decorative', 'UnifrakturCook', 'Rye', 'Black Ops One', 'Shrikhand', 'Nosifer',
+  'Sacramento', 'Silkscreen', 'VT323', 'Bungee Shade', 'Dancing Script'];
 
 export const presetOk = (s) => typeof s === 'string' && /^[a-z0-9-]{1,24}$/.test(s);
 
@@ -25,6 +28,8 @@ export function ensureRewardSchema(db, base) {
     create index if not exists user_rewards_by_reward on user_rewards (reward_id);
   `);
   try { db.exec("alter table users add column equip text not null default '{}'"); } catch {}
+  // hidden = 1: mientras la persona no la tenga, no aparece en su colección (ni como bloqueada). Funciona como las medallas secretas.
+  try { db.exec('alter table rewards add column hidden integer not null default 0'); } catch {}
   // seen = 0: la persona todavía no vio el aviso «Desbloqueaste…». Las filas que ya existían se dan por vistas.
   try { db.exec('alter table user_rewards add column seen integer not null default 1'); } catch {}
   // El catálogo base se carga por versiones: cada recompensa lleva `since` y solo se agregan las que superan la última cargada.
@@ -32,9 +37,13 @@ export function ensureRewardSchema(db, base) {
   const mark = db.prepare("select value from settings where key = 'rewards_seed'").get();
   const done = mark ? Number(mark.value) || 0 : 0;
   const top = Math.max(0, ...base.map((r) => r.since || 1));
+  // v10: el halo pasó a llamarse Aureola y tiene un dibujo nuevo. Solo se renombra si nadie lo editó desde el panel.
+  db.prepare("update rewards set preset = 'aureola' where kind = 'frame' and preset = 'halo'").run();
+  db.prepare("update rewards set name = 'Aureola' where id = 'frame-halo' and name = 'Halo'").run();
+  db.prepare("update rewards set description = 'Un aro de luz flotando sobre la cabeza.' where id = 'frame-halo' and description = 'Un halo de luz flotando sobre la foto.'").run();
   if (done >= top) return;
-  const ins = db.prepare(`insert or ignore into rewards (id, kind, preset, name, description, rarity, theme, anim, font, rule, enabled, pos)
-    values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`);
+  const ins = db.prepare(`insert or ignore into rewards (id, kind, preset, name, description, rarity, theme, anim, font, rule, enabled, pos, hidden)
+    values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`);
   const at = db.prepare('select coalesce(max(pos), 0) as n from rewards').get().n;
   let pos = at;
   db.exec('begin');
@@ -42,7 +51,7 @@ export function ensureRewardSchema(db, base) {
     for (const r of base) {
       if ((r.since || 1) <= done) continue;
       ins.run(r.id, r.kind, r.preset, r.name, r.description || '', r.rarity || 'comun', r.theme || '', r.anim ? 1 : 0, r.font || '',
-        JSON.stringify(r.rule || { type: 'manual' }), ++pos);
+        JSON.stringify(r.rule || { type: 'manual' }), ++pos, r.hidden ? 1 : 0);
     }
     db.prepare("insert into settings (key, value) values ('rewards_seed', ?) on conflict(key) do update set value = excluded.value").run(String(top));
     db.exec('commit');
@@ -142,7 +151,8 @@ export function rewardsFor(db, user) {
     .filter((o) => o.expires === 0 || o.expires > now).map((o) => [o.reward_id, o]));
   let medals = new Map();
   try { medals = new Map(db.prepare('select id, name from medals where secret = 0').all().map((m) => [m.id, `«${m.name}»`])); } catch {}
-  const items = db.prepare('select * from rewards where enabled = 1 order by pos, name').all().map((r) => {
+  // Las ocultas (hidden = 1) solo aparecen cuando la persona las tiene: así lo que no se puede conseguir no llena la colección de candados.
+  const items = db.prepare('select * from rewards where enabled = 1 order by pos, name').all().filter((r) => !r.hidden || owned.has(r.id)).map((r) => {
     const has = owned.get(r.id);
     return { ...pub(r), lvl: levelOfRule(r.rule), owned: !!has, source: has ? has.source : '', expires: has ? has.expires : 0, hint: has ? '' : ruleText(r.rule, medals) };
   });

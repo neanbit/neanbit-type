@@ -184,7 +184,7 @@ const GUIDES = [
       <li><b>Por torneo.</b> Hay premios para quien gana, llega a la final, a semifinales o simplemente participa.</li>
       <li><b>En eventos.</b> Jugando durante unas fechas. Algunas recompensas de evento <b>vencen</b> cuando el evento termina; mientras estén vigentes las podés usar, y después dejan de verse.</li>
     </ul>
-    <p>También se pueden entregar a mano como premio. Cuando ganás una, aparece el aviso «Desbloqueaste…» con un botón para verla. Lo que ya ganaste no se pierde si cambian las reglas.</p>
+    <p>También se pueden entregar a mano como premio. Algunas se ven con un candado y la pista de cómo conseguirlas; otras están <b>ocultas</b> y recién aparecen en tu colección cuando las ganás, como las medallas secretas. Cuando ganás una, aparece el aviso «Desbloqueaste…» con un botón para verla. Lo que ya ganaste no se pierde si cambian las reglas.</p>
     <p>En los rankings, los duelos y las llaves de torneo, el marco y el nombre de cada persona se ven <b>quietos</b> y con la letra de siempre, para que las listas se lean bien. El movimiento y la tipografía propia se ven en el perfil.</p>`],
   ['g-medallas', 'Medallas', () => `
     <p>Las medallas se ganan solas al cumplir una condición: cantidad de carreras, velocidad máxima o promedio, carreras sin errores, Hardcore, duelos o torneos ganados. Algunas son <b>apilables</b> (se cuentan) y otras <b>secretas</b>: no se muestran hasta que las conseguís.</p>

@@ -72,14 +72,59 @@
   content: ""; z-index: 3; left: 50%; width: 52%; aspect-ratio: 100 / 64; transform: translateX(-50%);
   bottom: calc(100% + var(--bw) + 1px); background: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20100%2064'%3E%20%3Cdefs%3E%3ClinearGradient%20id%3D'g'%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'1'%3E%3Cstop%20offset%3D'0'%20stop-color%3D'%23fff2b0'%2F%3E%3Cstop%20offset%3D'.55'%20stop-color%3D'%23f5c242'%2F%3E%3Cstop%20offset%3D'1'%20stop-color%3D'%23a8771a'%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%20%3Cpath%20d%3D'M6%2058%20L10%2016%20L32%2038%20L50%208%20L68%2038%20L90%2016%20L94%2058%20Z'%20fill%3D'url(%23g)'%20stroke%3D'%235a3d00'%20stroke-width%3D'3'%20stroke-linejoin%3D'round'%2F%3E%20%3Cpath%20d%3D'M8%2052%20H92'%20stroke%3D'%235a3d00'%20stroke-width%3D'2.5'%20opacity%3D'.6'%2F%3E%20%3Ccircle%20cx%3D'10'%20cy%3D'13'%20r%3D'5'%20fill%3D'%23ff4d6d'%20stroke%3D'%235a3d00'%20stroke-width%3D'1.5'%2F%3E%3Ccircle%20cx%3D'50'%20cy%3D'6'%20r%3D'5.5'%20fill%3D'%2338bdf8'%20stroke%3D'%235a3d00'%20stroke-width%3D'1.5'%2F%3E%3Ccircle%20cx%3D'90'%20cy%3D'13'%20r%3D'5'%20fill%3D'%23ff4d6d'%20stroke%3D'%235a3d00'%20stroke-width%3D'1.5'%2F%3E%20%3C%2Fsvg%3E") center / contain no-repeat; filter: drop-shadow(0 2px 3px #0008);
 }
-[data-frame="halo"] { --fg: #fde68a66; animation: rw-breathe 3.4s ease-in-out infinite; }
-[data-frame="halo"]::before { background: conic-gradient(from var(--ang), #fffbe6, #fde68a, #fffbe6, #fef3c7, #fffbe6); animation: rw-spin 10s linear infinite; }
-[data-frame="halo"]::after {
-  content: ""; z-index: 3; left: 50%; width: 58%; height: 16%; transform: translateX(-50%); bottom: calc(100% + var(--bw) + 5px);
-  border: max(2px, calc(var(--fw) * .7)) solid #fff7c2; border-radius: 50%; box-shadow: 0 0 10px #fde68a, inset 0 0 6px #fde68a; animation: rw-float 3s ease-in-out infinite;
+
+/* Aureola: aro de luz inclinado que flota sobre la cabeza, con un brillo que respira. El marco es un anillo blanco dorado. */
+@keyframes rw-aura { 0%, 100% { filter: drop-shadow(0 0 4px #ffe9a0aa); } 50% { filter: drop-shadow(0 -2px 11px #ffe9a0); } }
+@keyframes rw-bob { 0%, 100% { transform: translateX(-50%) translateY(0) rotate(-6deg); } 50% { transform: translateX(-50%) translateY(-3px) rotate(-3deg); } }
+[data-frame="aureola"] { --fg: #ffe9a066; animation: rw-aura 4s ease-in-out infinite; }
+[data-frame="aureola"]::before { background: conic-gradient(from var(--ang), #fffdf2, #ffe9a3, #ffffff, #ffd86b, #fffdf2, #fff1c2, #fffdf2); animation: rw-spin 14s linear infinite; }
+[data-frame="aureola"]::after {
+  content: ""; z-index: 3; left: 50%; width: 66%; height: 21%; bottom: calc(100% + var(--bw) + 8px); transform: translateX(-50%) rotate(-6deg);
+  padding: max(3px, calc(var(--fw) * .9)); border-radius: 50%;
+  background: conic-gradient(from var(--ang), #fff8d6, #ffd24d, #fffef5, #f5b82e, #fff8d6);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; animation: rw-spin 6s linear infinite, rw-bob 3.4s ease-in-out infinite;
 }
+
+/* Caramelo: anillo de rayas pastel y un corazón. Hace juego con «Algodón de azúcar» y la portada «Confites». */
+@keyframes rw-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.14); } }
+[data-frame="caramelo"] { --fg: #ff9ac877; animation: rw-breathe 3.6s ease-in-out infinite; }
+[data-frame="caramelo"]::before { background: repeating-conic-gradient(from var(--ang), #ff8fc1 0 10deg, #ffffff 10deg 20deg, #ffc4df 20deg 30deg, #ffffff 30deg 40deg); animation: rw-spin 12s linear infinite; }
+[data-frame="caramelo"]::after {
+  content: ""; z-index: 3; top: calc((var(--bw) + var(--fw) + 5px) * -1); right: calc((var(--bw) + var(--fw) + 5px) * -1); width: 30%; aspect-ratio: 1;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%20%3Cstop%20offset='0'%20stop-color='%23ffb3d4'/%3E%3Cstop%20offset='1'%20stop-color='%23ff4f9a'/%3E%3C/linearGradient%3E%3C/defs%3E%20%3Cpath%20d='M12%2021.3%2010.6%2020C5.4%2015.4%202%2012.3%202%208.5%202%205.4%204.4%203%207.5%203c1.7%200%203.4.8%204.5%202.1C13.100%203.800%2014.800%203%2016.500%203%2019.600%203%2022%205.400%2022%208.500c0%203.800-3.400%206.900-8.600%2011.500z'%20fill='url%28%23g%29'%20stroke='%23fff'%20stroke-width='1.600'%20stroke-linejoin='round'/%3E%3Cpath%20d='M6.500%207.200c.8-.9%201.900-1.100%202.800-.6'%20fill='none'%20stroke='%23fff'%20stroke-width='1.300'%20stroke-linecap='round'%20opacity='.9'/%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 2px #0005); animation: rw-pulse 1.8s ease-in-out infinite;
+}
+
+/* Enredadera: anillo de musgo y oro con luciérnagas. Hace juego con «Bosque» (nombre y portada). */
+[data-frame="enredadera"] { --fg: #9be15d66; animation: rw-breathe 4.4s ease-in-out infinite; }
+[data-frame="enredadera"]::before { background: conic-gradient(from var(--ang), #14532d, #4ade80, #d9f99d, #166534, #facc15, #15803d, #14532d); animation: rw-spin 16s linear infinite; }
+[data-frame="enredadera"]::after {
+  content: ""; z-index: 3; inset: calc((var(--bw) + 3px + var(--fw)) * -1); padding: var(--fw); border-radius: calc(var(--pf-r, 8px) + var(--bw) + 3px + var(--fw));
+  background: radial-gradient(circle at 14% 26%, #fbffc4 0 1.4px, #d4f35a77 2.2px, transparent 4.5px), radial-gradient(circle at 52% 4%, #fbffc4 0 1.4px, #d4f35a77 2.2px, transparent 4.5px),
+    radial-gradient(circle at 90% 40%, #fbffc4 0 1.4px, #d4f35a77 2.2px, transparent 4.5px), radial-gradient(circle at 64% 96%, #fbffc4 0 1.4px, #d4f35a77 2.2px, transparent 4.5px),
+    radial-gradient(circle at 20% 82%, #fbffc4 0 1.4px, #d4f35a77 2.2px, transparent 4.5px);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; animation: rw-twinkle 2.8s ease-in-out infinite;
+}
+
+/* Circuito: doble anillo de segmentos cian y magenta, uno gira para cada lado. Hace juego con «Cibernético» y la portada «Circuito». */
+[data-frame="circuito"] { --fg: #00f0ff88; animation: rw-breathe 2.2s ease-in-out infinite; }
+[data-frame="circuito"]::before { background: repeating-conic-gradient(from var(--ang), #00f0ff 0 16deg, transparent 16deg 20deg, #ff2bd6 20deg 36deg, transparent 36deg 40deg); animation: rw-spin 7s linear infinite; }
+[data-frame="circuito"]::after {
+  content: ""; z-index: 3; inset: calc((var(--bw) + 3px + var(--fw) + 4px) * -1); padding: 1px; border-radius: calc(var(--pf-r, 8px) + var(--bw) + 3px + var(--fw) + 4px);
+  background: repeating-conic-gradient(from var(--ang), #7df9ff 0 6deg, transparent 6deg 15deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; animation: rw-spin 11s linear infinite reverse;
+}
+
+/* Cuero: anillo de cuero curtido con costura. Hace juego con «Oeste» y la portada «Dunas». */
+[data-frame="cuero"] { --fg: #00000000; }
+[data-frame="cuero"]::before { background: linear-gradient(135deg, #a5693a, #6b3d1c 45%, #8e5429 70%, #4e2a12); }
+[data-frame="cuero"]::after {
+  content: ""; z-index: 3; inset: calc((var(--bw) + 3px + var(--fw) * .5 + 1px) * -1); padding: 2px; border-radius: calc(var(--pf-r, 8px) + var(--bw) + 3px + var(--fw) * .5 + 1px);
+  background: repeating-conic-gradient(#f3dcaa 0 4deg, transparent 4deg 9deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+}
+
 .rw-av { position: relative; display: block; width: 2.6rem; height: 2.6rem; margin: .45rem auto; background: var(--bg-deep); border-radius: 8px; }
-.rw-av[data-frame="corona"], .rw-av[data-frame="halo"] { margin-top: 1.1rem; }
+.rw-av[data-frame="corona"], .rw-av[data-frame="aureola"] { margin-top: 1.1rem; }
 
 /* ---------- Efectos de nombre ---------- */
 [data-fx] { display: inline-block; padding: .05em 0; font-synthesis: none; line-height: 1.15; }
@@ -110,29 +155,6 @@
 @keyframes rw-glitch-base { 0%, 85%, 100% { transform: none; } 87% { transform: translateX(1px) skewX(-5deg); } 90% { transform: translateX(-1px) skewX(4deg); } 93% { transform: none; } }
 @keyframes rw-glitch-a { 0%, 85%, 99%, 100% { opacity: 0; transform: none; } 86% { opacity: 1; transform: translate(-3px, 0); clip-path: inset(6% 0 64% 0); } 89% { opacity: 1; transform: translate(3px, 0); clip-path: inset(46% 0 26% 0); } 92% { opacity: 1; transform: translate(-2px, 0); clip-path: inset(22% 0 48% 0); } 95% { opacity: 1; transform: translate(2px, 0); clip-path: inset(68% 0 6% 0); } 97% { opacity: 0; } }
 @keyframes rw-glitch-b { 0%, 85%, 99%, 100% { opacity: 0; transform: none; } 87% { opacity: 1; transform: translate(3px, 0); clip-path: inset(58% 0 14% 0); } 90% { opacity: 1; transform: translate(-3px, 0); clip-path: inset(12% 0 60% 0); } 93% { opacity: 1; transform: translate(2px, 0); clip-path: inset(40% 0 34% 0); } 96% { opacity: 1; transform: translate(-2px, 0); clip-path: inset(0 0 74% 0); } 98% { opacity: 0; } }
-[data-fx="sangre"], [data-fx="aurora"], [data-fx="holograma"], [data-fx="galaxia"] {
-  color: transparent; -webkit-background-clip: text; background-clip: text;
-}
-[data-fx="plata"] { background-image: linear-gradient(180deg, #ffffff, #d5dde8 45%, #8b97a8 55%, #eef2f7); }
-[data-fx="contorno"] { color: transparent; -webkit-text-stroke: 1.5px var(--ink); letter-spacing: .03em; }
-[data-fx="sombra"] { color: var(--text); text-shadow: 2px 2px 0 var(--accent), 4px 4px 0 color-mix(in srgb, var(--accent) 40%, transparent); }
-[data-fx="oro"] { background-image: linear-gradient(180deg, #fff2b0, #f5c242 42%, #b8860b 58%, #ffe08a); filter: drop-shadow(0 1px 0 #5a3d0099); }
-[data-fx="neon-rosa"] { color: #ffe3f6; text-shadow: 0 0 4px #fff, 0 0 10px #ff2bd6, 0 0 22px #ff2bd6, 0 0 40px #b300ff; }
-[data-fx="matrix"] { color: #7dff9b; text-shadow: 0 0 6px #00ff6a, 0 0 14px #00c853; animation: rw-tube 3s steps(1) infinite; }
-[data-fx="arcoiris"] { background-image: linear-gradient(90deg, #ff0040, #ff9500, #ffee00, #34c759, #00c7ff, #5856ff, #d946ef, #ff0040); background-size: 200% 100%; animation: rw-slide 4s linear infinite; }
-[data-fx="veneno"] { background-image: linear-gradient(90deg, #b6ff00, #16a34a, #8b5cf6, #b6ff00); background-size: 200% 100%; filter: drop-shadow(0 0 5px #84cc1688); animation: rw-slide 3s linear infinite; }
-[data-fx="sakura"] { background-image: linear-gradient(90deg, #fbcfe8, #f472b6, #fde7f3, #f9a8d4, #fbcfe8); background-size: 200% 100%; filter: drop-shadow(0 0 6px #f472b688); animation: rw-slide 6s linear infinite, rw-float 4s ease-in-out infinite; font-size: 1.12em; }
-[data-fx="brasa"] { background-image: linear-gradient(0deg, #ff1a00, #ff7a00 40%, #ffd000 78%, #fff3a0); background-size: 100% 200%; filter: drop-shadow(0 0 6px #ff5500aa); animation: rw-flicker 1.2s ease-in-out infinite; }
-@keyframes rw-flicker { 0%, 100% { background-position: 0 0; filter: drop-shadow(0 0 5px #ff5500aa); } 50% { background-position: 0 40%; filter: drop-shadow(0 0 10px #ff8800cc); } }
-[data-fx="escarcha"] { background-image: linear-gradient(100deg, #8fdcff 0 40%, #ffffff 50%, #8fdcff 60% 100%); background-size: 250% 100%; background-position: 100% 0; filter: drop-shadow(0 0 5px #7dd3fc88); animation: rw-sweep 3.5s ease-in-out infinite; }
-@keyframes rw-sweep { to { background-position: -50% 0; } }
-[data-fx="neon-pulso"] { color: #d9fdff; text-shadow: 0 0 6px #00e5ff, 0 0 16px #00e5ff; animation: rw-neon 1.8s ease-in-out infinite; }
-@keyframes rw-neon { 50% { text-shadow: 0 0 3px #00e5ff, 0 0 8px #00e5ff; color: #a5f3fc; } }
-[data-fx="glitch"] { position: relative; color: var(--text); font-size: .74em; }
-[data-fx="glitch"]::before, [data-fx="glitch"]::after { content: attr(data-t); position: absolute; inset: 0; padding: .05em 0; line-height: 1.15; white-space: nowrap; overflow: hidden; }
-[data-fx="glitch"]::before { left: 2px; color: #ff2a6d; clip-path: inset(0 0 55% 0); animation: rw-glitch 2.4s steps(1) infinite; }
-[data-fx="glitch"]::after { left: -2px; color: #05d9e8; clip-path: inset(55% 0 0 0); animation: rw-glitch 2.4s steps(1) infinite reverse; }
-@keyframes rw-glitch { 0%, 100% { clip-path: inset(0 0 55% 0); transform: translateX(0); } 20% { clip-path: inset(10% 0 60% 0); transform: translateX(-3px); } 40% { clip-path: inset(50% 0 20% 0); transform: translateX(3px); } 60% { clip-path: inset(30% 0 40% 0); transform: translateX(-1px); } 80% { clip-path: inset(70% 0 5% 0); transform: translateX(2px); } }
 [data-fx="sangre"] { background-image: linear-gradient(180deg, #ff3b3b, #8a0000 65%, #3b0000); filter: drop-shadow(0 0 4px #b0000088); animation: rw-bleed 3s ease-in-out infinite; }
 @keyframes rw-bleed { 50% { filter: drop-shadow(0 0 9px #ff000099); } }
 [data-fx="aurora"] { background-image: linear-gradient(90deg, #34d399, #22d3ee, #a78bfa, #f472b6, #34d399); background-size: 200% 100%; filter: drop-shadow(0 0 5px #22d3ee66); animation: rw-slide 5s linear infinite; font-size: 1.08em; }
@@ -142,6 +164,34 @@
   background-size: 100% 100%, 100% 100%, 100% 100%, 300% 100%; filter: drop-shadow(0 0 5px #7c3aed99); animation: rw-galaxy 7s linear infinite; font-size: .92em;
 }
 @keyframes rw-galaxy { to { background-position: 0 0, 0 0, 0 0, 300% 0; } }
+
+
+/* ---------- Efectos de nombre nuevos (v10) ---------- */
+[data-fx="luz"], [data-fx="algodon"], [data-fx="bosque"], [data-fx="oeste"] { color: transparent; -webkit-background-clip: text; background-clip: text; }
+/* Luz divina: blanco cálido con un barrido dorado y resplandor */
+[data-fx="luz"] { background-image: linear-gradient(100deg, #fff1b8 0 38%, #ffffff 50%, #ffd76a 62%, #fff1b8 100% ); background-size: 260% 100%; background-position: 100% 0;
+  filter: drop-shadow(0 0 6px #ffe9a0cc); animation: rw-sweep 4.2s ease-in-out infinite; }
+/* Algodón de azúcar: degradado pastel con borde blanco suave */
+[data-fx="algodon"] { background-image: linear-gradient(90deg, #ff9ccf, #c9a8ff, #9ad8ff, #ffb3dc, #ff9ccf); background-size: 220% 100%;
+  filter: drop-shadow(0 1.5px 0 #fff) drop-shadow(0 0 5px #ff9ccf99); animation: rw-slide 7s linear infinite; font-size: 1.1em; }
+/* Bosque: verdes y oro viejo con una sombra profunda */
+[data-fx="bosque"] { background-image: linear-gradient(90deg, #d9f99d, #4ade80, #facc15, #22c55e, #d9f99d); background-size: 240% 100%;
+  filter: drop-shadow(0 1px 0 #052e16) drop-shadow(0 0 5px #4ade8066); animation: rw-slide 9s linear infinite; font-size: 1.12em; }
+/* Cibernético: cian con falla cromática y parpadeo de tubo */
+[data-fx="cyber"] { color: #e9fdff; text-shadow: 2px 0 #ff2bd6, -2px 0 #00f0ff, 0 0 10px #00f0ff88; animation: rw-tube 3.4s linear infinite; font-size: .8em; letter-spacing: .02em; }
+/* Oeste: letras de oro viejo estampadas, con sombra dura */
+[data-fx="oeste"] { background-image: linear-gradient(180deg, #f6dca0, #d19a4a 48%, #8a5522 52%, #d9a55a); filter: drop-shadow(1px 1px 0 #3b2008) drop-shadow(2px 2px 0 #3b200899); letter-spacing: .02em; }
+/* Gótico: blanco hueso con una sombra roja que late */
+@keyframes rw-ember { 50% { text-shadow: 0 2px 0 #5c0a14, 0 0 16px #ff2a4dcc; } }
+[data-fx="gotico"] { color: #f6efe6; text-shadow: 0 2px 0 #5c0a14, 0 0 8px #b3122d99; animation: rw-ember 3.2s ease-in-out infinite; font-size: 1.12em; }
+/* Chicle: relleno rosa claro y contorno grueso con relieve, como un cartel de historieta */
+@keyframes rw-pop { 0%, 100% { transform: rotate(-2deg) scale(1); } 50% { transform: rotate(1deg) scale(1.05); } }
+[data-fx="chicle"] { color: #ffe3f1; text-shadow: -2px -2px 0 #ff3d8b, 2px -2px 0 #ff3d8b, -2px 2px 0 #ff3d8b, 2px 2px 0 #ff3d8b, 0 -2px 0 #ff3d8b, 0 2px 0 #ff3d8b, -2px 0 0 #ff3d8b, 2px 0 0 #ff3d8b, 0 5px 0 #b3175f;
+  animation: rw-pop 2.6s ease-in-out infinite; margin: 0 .12em; }
+/* Terminal: fósforo ámbar con cursor */
+@keyframes rw-caret { 50% { opacity: 0; } }
+[data-fx="terminal"] { color: #ffb000; text-shadow: 0 0 6px #ff9d00bb, 0 0 14px #ff9d0055; font-size: 1.18em; }
+[data-fx="terminal"]::after { content: "_"; margin-left: .05em; animation: rw-caret 1s steps(1) infinite; }
 
 /* ---------- Portadas ---------- */
 [data-cover] { background-repeat: no-repeat; }
@@ -203,6 +253,62 @@
 @keyframes rw-grid { to { transform: rotateX(68deg) translateY(35cqh); } }
 [data-cover="prisma"] { background: linear-gradient(120deg, #ff0040, #ff9500, #ffee00, #34c759, #00c7ff, #5856ff, #d946ef, #ff0040); background-size: 300% 100%; animation: rw-prism 12s linear infinite; }
 @keyframes rw-prism { to { background-position: 300% 0; } }
+
+/* Nubes: amanecer con dos capas de nubes que avanzan despacio. Hace juego con «Luz divina» y la «Aureola». */
+[data-cover="nubes"] {
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='360'%20height='128'%20viewBox='0%200%20360%20128'%3E%3Cg%20fill='%23fff'%3E%20%3Cellipse%20cx='100'%20cy='112'%20rx='84'%20ry='20'%20fill-opacity='.95'/%3E%3Cellipse%20cx='130'%20cy='96'%20rx='44'%20ry='24'%20fill-opacity='.95'/%3E%3Cellipse%20cx='82'%20cy='102'%20rx='34'%20ry='18'%20fill-opacity='.95'/%3E%20%3Cellipse%20cx='260'%20cy='118'%20rx='90'%20ry='20'%20fill-opacity='.9'/%3E%3Cellipse%20cx='290'%20cy='100'%20rx='48'%20ry='24'%20fill-opacity='.9'/%3E%3Cellipse%20cx='236'%20cy='106'%20rx='38'%20ry='17'%20fill-opacity='.9'/%3E%3C/g%3E%20%3Cg%20fill='%23ffd9b8'%20fill-opacity='.55'%3E%3Cellipse%20cx='100'%20cy='124'%20rx='90'%20ry='8'/%3E%3Cellipse%20cx='262'%20cy='126'%20rx='90'%20ry='8'/%3E%3C/g%3E%3C/svg%3E") repeat-x 0 100% / 360px 128px, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='480'%20height='128'%20viewBox='0%200%20480%20128'%3E%3Cg%20fill='%23fff'%20fill-opacity='.55'%3E%20%3Cellipse%20cx='70'%20cy='86'%20rx='62'%20ry='15'/%3E%3Cellipse%20cx='96'%20cy='72'%20rx='34'%20ry='17'/%3E%3Cellipse%20cx='52'%20cy='78'%20rx='26'%20ry='13'/%3E%20%3Cellipse%20cx='290'%20cy='60'%20rx='70'%20ry='14'/%3E%3Cellipse%20cx='318'%20cy='47'%20rx='36'%20ry='16'/%3E%3Cellipse%20cx='268'%20cy='52'%20rx='28'%20ry='12'/%3E%20%3Cellipse%20cx='430'%20cy='100'%20rx='46'%20ry='11'/%3E%3Cellipse%20cx='448'%20cy='90'%20rx='24'%20ry='11'/%3E%3C/g%3E%3C/svg%3E") repeat-x 0 40% / 480px 128px,
+    radial-gradient(circle at 82% 30%, #fffbe6 0 4%, #ffe9a066 9%, transparent 22%), linear-gradient(180deg, #5aa2ee, #9cc9f5 52%, #ffe2b8 100%);
+  animation: rw-clouds 40s linear infinite;
+}
+@keyframes rw-clouds { to { background-position: -360px 100%, -480px 40%, 0 0, 0 0; } }
+
+/* Confites: fondo rosa pastel con corazones, estrellas y lunares que flotan hacia arriba. Hace juego con «Caramelo» y «Algodón de azúcar». */
+[data-cover="confites"] {
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='160'%20height='160'%20viewBox='0%200%20160%20160'%3E%20%3Cg%20fill='%23fff'%20fill-opacity='.9'%3E%3Cpath%20d='M30%2044%2025.500%2039.800C18%2033%2013%2028.500%2013%2022.800%2013%2018.200%2016.500%2014.800%2021%2014.800c2.500%200%205%201.200%206.500%203.100C29%2016%2031.500%2014.800%2034%2014.800c4.500%200%208%203.400%208%208%200%205.700-5%2010.200-12.500%2017z'%20transform='translate%287%204%29'/%3E%3C/g%3E%20%3Cg%20fill='%23ffd1e6'%3E%3Cpath%20d='M118%20120%20113.500%20115.800C106%20109%20101%20104.500%20101%2098.800%20101%2094.200%20104.500%2090.800%20109%2090.800c2.500%200%205%201.200%206.500%203.100C117%2092%20119.500%2090.800%20122%2090.800c4.500%200%208%203.400%208%208%200%205.700-5%2010.200-12.500%2017z'/%3E%3C/g%3E%20%3Cg%20fill='%23fff'%3E%3Cpath%20d='M112%2026l3.200%207.200%207.800.8-5.900%205.200%201.700%207.700L112%2042.800l-6.800%204.100%201.700-7.700-5.900-5.200%207.800-.8z'%20fill-opacity='.85'/%3E%3Cpath%20d='M44%20118l2.400%205.400%205.800.6-4.400%203.900%201.300%205.700L44%20130.700l-5.100%203%201.300-5.700-4.400-3.900%205.800-.6z'%20fill-opacity='.8'/%3E%3C/g%3E%20%3Cg%3E%3Ccircle%20cx='80'%20cy='72'%20r='5'%20fill='%23fff'%20fill-opacity='.8'/%3E%3Ccircle%20cx='144'%20cy='64'%20r='3.500'%20fill='%23e9d5ff'/%3E%3Ccircle%20cx='20'%20cy='96'%20r='4'%20fill='%23c8e7ff'/%3E%3Ccircle%20cx='76'%20cy='140'%20r='3'%20fill='%23fff'%20fill-opacity='.9'/%3E%3Ccircle%20cx='150'%20cy='148'%20r='5'%20fill='%23ffe3f1'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 160px 160px, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='220'%20height='220'%20viewBox='0%200%20220%20220'%3E%20%3Cg%20fill='%23ffc2dd'%3E%3Cpath%20d='M60%2070%2055.500%2065.800C48%2059%2043%2054.500%2043%2048.800%2043%2044.200%2046.500%2040.800%2051%2040.800c2.500%200%205%201.200%206.500%203.100C59%2042%2061.500%2040.800%2064%2040.800c4.500%200%208%203.400%208%208%200%205.700-5%2010.200-12.500%2017z'%20transform='scale%281.300%29%20translate%280%204%29'/%3E%3C/g%3E%20%3Cg%20fill='%23fff'%20fill-opacity='.85'%3E%3Cpath%20d='M170%20150l4.200%209.400%2010.200%201-7.700%206.800%202.200%2010L170%20171.600l-8.900%205.600%202.200-10-7.700-6.800%2010.200-1z'/%3E%3C/g%3E%20%3Cg%3E%3Ccircle%20cx='168'%20cy='40'%20r='7'%20fill='%23e9d5ff'/%3E%3Ccircle%20cx='30'%20cy='170'%20r='6'%20fill='%23fff'%20fill-opacity='.8'/%3E%3Ccircle%20cx='110'%20cy='120'%20r='4'%20fill='%23bfe3ff'/%3E%3C/g%3E%3C/svg%3E") 40px 30px / 220px 220px,
+    radial-gradient(circle, #ffffff55 0 3px, transparent 3.6px) 0 0 / 28px 28px, linear-gradient(135deg, #ffc9e1, #f5b6ee 48%, #bde0ff);
+  animation: rw-sweets 14s linear infinite;
+}
+@keyframes rw-sweets { to { background-position: 0 -160px, 40px -190px, 0 0, 0 0; } }
+
+/* Bosque: pinos en dos planos con luciérnagas que flotan. Hace juego con «Enredadera» y el nombre «Bosque». */
+[data-cover="bosque"] {
+  background: radial-gradient(2.4px 2.4px at 30px 40px, #f4ffb0, transparent), radial-gradient(2px 2px at 110px 90px, #e9ff80, transparent), radial-gradient(3px 3px at 70px 120px, #fbffd0, transparent),
+    radial-gradient(2.4px 2.4px at 170px 50px, #f4ffb0, transparent), url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201000%20200'%20preserveAspectRatio='none'%3E%3Cg%20fill='%23041c13'%3E%20%3Cpath%20d='M0%20200V160L50%20160%2070%20118%2054%20118%2084%2064%2068%2064%20100%206%20132%2064%20116%2064%20146%20118%20130%20118%20150%20160%20250%20160%20270%20124%20254%20124%20284%2072%20268%2072%20300%2016%20332%2072%20316%2072%20346%20124%20330%20124%20350%20160%20470%20160%20488%20120%20472%20120%20502%2066%20486%2066%20518%208%20550%2066%20534%2066%20564%20120%20548%20120%20568%20160%20700%20160%20720%20122%20704%20122%20734%2070%20718%2070%20750%2012%20782%2070%20766%2070%20796%20122%20780%20122%20800%20160%20910%20160%20930%20126%20914%20126%20944%2076%20928%2076%20960%2020%20992%2076%20976%2076%201000%20120V200Z'/%3E%3C/g%3E%3C/svg%3E") center bottom / 100% 46% no-repeat, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201000%20200'%20preserveAspectRatio='none'%3E%3Cg%20fill='%230d3b2a'%3E%20%3Cpath%20d='M0%20200V150L24%20150%2040%20120%2028%20120%2050%2084%2038%2084%2060%2040%2082%2084%2070%2084%2092%20120%2080%20120%2096%20150%20130%20150%20140%20110%20128%20110%20150%2070%20138%2070%20160%2028%20182%2070%20170%2070%20192%20110%20180%20110%20194%20150%20240%20150%20252%20118%20240%20118%20262%2082%20250%2082%20272%2044%20294%2082%20282%2082%20304%20118%20292%20118%20306%20150%20360%20150%20372%20116%20360%20116%20382%2076%20370%2076%20392%2036%20414%2076%20402%2076%20424%20116%20412%20116%20426%20150%20480%20150%20492%20120%20480%20120%20502%2084%20490%2084%20512%2046%20534%2084%20522%2084%20544%20120%20532%20120%20546%20150%20600%20150%20612%20112%20600%20112%20622%2072%20610%2072%20632%2030%20654%2072%20642%2072%20664%20112%20652%20112%20666%20150%20720%20150%20732%20118%20720%20118%20742%2080%20730%2080%20752%2042%20774%2080%20762%2080%20784%20118%20772%20118%20786%20150%20840%20150%20852%20114%20840%20114%20862%2074%20850%2074%20872%2032%20894%2074%20882%2074%20904%20114%20892%20114%20906%20150%20960%20150%20972%20120%20960%20120%20982%2084%20970%2084%20992%2046%201000%2060V200Z'/%3E%3C/g%3E%3C/svg%3E") center bottom / 100% 66% no-repeat,
+    radial-gradient(ellipse at 50% 112%, #2f7a4d99, transparent 60%), linear-gradient(180deg, #06141a, #0c2b27 70%, #14412f);
+  background-size: 190px 150px, 190px 150px, 260px 190px, 260px 190px, 100% 46%, 100% 66%, 100% 100%, 100% 100%;
+  animation: rw-fireflies 9s ease-in-out infinite alternate;
+}
+@keyframes rw-fireflies { from { background-position: 0 0, 0 0, 0 0, 0 0, center bottom, center bottom, 0 0, 0 0; } to { background-position: 22px -30px, -18px -22px, 16px -40px, -24px -14px, center bottom, center bottom, 0 0, 0 0; } }
+
+/* Circuito: placa oscura con pistas cian y pulsos de datos. Hace juego con el marco «Circuito» y el nombre «Cibernético». */
+[data-cover="circuito"] {
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='160'%20viewBox='0%200%20240%20160'%3E%3Cg%20fill='none'%20stroke-width='2.500'%20stroke-linecap='round'%3E%20%3Cpath%20d='M96%2050H150'%20stroke='%23a5f3fc'%20stroke-dasharray='14%20120'/%3E%3Cpath%20d='M0%2030H60'%20stroke='%23f0abfc'%20stroke-dasharray='12%20140'/%3E%3Cpath%20d='M44%20110H120'%20stroke='%23a5f3fc'%20stroke-dasharray='16%20140'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 240px 160px, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='160'%20viewBox='0%200%20240%20160'%3E%3Cg%20fill='none'%20stroke='%2322d3ee'%20stroke-opacity='.4'%20stroke-width='1.500'%3E%20%3Cpath%20d='M0%2030H60L80%2050H150L170%2030H240'/%3E%3Cpath%20d='M0%2090H40L60%20110H120L140%2090H200L220%20110H240'/%3E%3Cpath%20d='M30%20160V130L50%20110'/%3E%3Cpath%20d='M120%200V30'/%3E%3Cpath%20d='M180%20160V130H210L230%20150'/%3E%3Cpath%20d='M100%20110V160'/%3E%3C/g%3E%20%3Cg%20fill='%230a1420'%20stroke='%2322d3ee'%20stroke-opacity='.75'%20stroke-width='1.500'%3E%3Ccircle%20cx='60'%20cy='30'%20r='3'/%3E%3Ccircle%20cx='170'%20cy='30'%20r='3'/%3E%3Ccircle%20cx='40'%20cy='90'%20r='3'/%3E%3Ccircle%20cx='140'%20cy='90'%20r='3'/%3E%3Ccircle%20cx='50'%20cy='110'%20r='3'/%3E%3Ccircle%20cx='210'%20cy='130'%20r='3'/%3E%3Ccircle%20cx='120'%20cy='30'%20r='3'/%3E%3C/g%3E%20%3Cg%20fill='%23e879f9'%20fill-opacity='.65'%3E%3Crect%20x='148'%20y='47'%20width='4'%20height='6'/%3E%3Crect%20x='118'%20y='107'%20width='4'%20height='6'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 240px 160px, radial-gradient(ellipse at 20% 120%, #c026d344, transparent 60%), radial-gradient(ellipse at 90% -20%, #06b6d444, transparent 55%), linear-gradient(180deg, #050b17, #0b1730);
+  animation: rw-data 4s linear infinite;
+}
+@keyframes rw-data { to { background-position: 240px 0, 0 0, 0 0, 0 0, 0 0; } }
+
+/* Dunas: atardecer en el desierto. Hace juego con el marco «Cuero» y el nombre «Oeste». */
+[data-cover="dunas"] {
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201000%20200'%20preserveAspectRatio='none'%3E%20%3Cpath%20fill='%23c2693a'%20d='M0%20120C120%2096%20220%2084%20340%20100S560%20128%20700%20104%20900%2082%201000%2096V200H0Z'/%3E%20%3Cpath%20fill='%238f4326'%20d='M0%20150C140%20120%20260%20122%20400%20140S640%20168%20780%20138%20940%20124%201000%20130V200H0Z'/%3E%20%3Cpath%20fill='%234d2218'%20d='M0%20178C160%20160%20300%20164%20460%20176S720%20192%20860%20170%20960%20166%201000%20168V200H0Z'/%3E%20%3Cg%20fill='none'%20stroke='%23ffd9a0'%20stroke-opacity='.35'%20stroke-width='1.500'%3E%3Cpath%20d='M60%20112C140%20100%20200%2096%20270%20104'/%3E%3Cpath%20d='M520%20126C600%20114%20660%20112%20730%20118'/%3E%3C/g%3E%20%3Cg%20fill='%232a110d'%3E%3Cpath%20d='M820%20168v-22h3v10l7-8h3l-8%209%209%2011z'%20transform='translate%280%20-3%29'/%3E%3C/g%3E%3C/svg%3E") center bottom / 100% 82% no-repeat, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cdefs%3E%3CradialGradient%20id='s'%20cx='.5'%20cy='.5'%20r='.5'%3E%3Cstop%20offset='0'%20stop-color='%23fff4c2'/%3E%3Cstop%20offset='.62'%20stop-color='%23ffc861'/%3E%3Cstop%20offset='.7'%20stop-color='%23ff9a3c'/%3E%3Cstop%20offset='1'%20stop-color='%23ff9a3c'%20stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='url%28%23s%29'/%3E%3C/svg%3E") 66% 52% / auto 86% no-repeat,
+    linear-gradient(180deg, #2b1a4f, #8a3a5e 34%, #e2683c 66%, #f9b25c 100%);
+}
+
+/* Luna de sangre: luna roja, murciélagos que cruzan el cielo y árboles secos. Hace juego con «Carmesí» y el nombre «Gótico». */
+[data-cover="lunasangre"] {
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='420'%20height='160'%20viewBox='0%200%20420%20160'%3E%3Cg%20fill='%2312030a'%3E%20%3Cpath%20d='M60%2040c-6-8-14-8-20-4%204%200%208%202%2010%206-6-2-12%200-16%206%206-2%2010%200%2012%204l4-4%203%206%203-6%204%204c2-4%206-6%2012-4-4-6-10-8-16-6%202-4%206-6%2010-6-6-4-14-4-20%204z'%20transform='translate%280%208%29'/%3E%20%3Cpath%20d='M250%2090c-5-7-12-7-17-3%203%200%207%202%208%205-5-2-10%200-13%205%205-2%208%200%2010%203l3-3%202%205%203-5%203%203c2-3%205-5%2010-3-3-5-8-7-13-5%202-3%205-5%208-5-5-4-12-4-17%203z'%20transform='scale%28.8%29%20translate%2880%2020%29'/%3E%20%3Cpath%20d='M350%2030c-4-5-9-5-13-2%202%200%205%201%206%204-4-1-8%200-10%204%204-1%206%200%208%202l2-2%202%204%202-4%202%202c2-2%204-3%208-2-2-4-6-5-10-4%201-3%204-4%206-4-4-3-9-3-13%202z'%20transform='scale%28.7%29%20translate%28200%2070%29'/%3E%3C/g%3E%3C/svg%3E") 0 8% / 420px 160px repeat-x, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201000%20200'%20preserveAspectRatio='none'%3E%3Cg%20fill='%2312030a'%3E%20%3Cpath%20d='M0%20200V176L60%20170%20120%20176%20180%20168V200Z'/%3E%3Cpath%20d='M120%20200%20124%20120%20112%2096%20102%2070%20112%2074%20116%20100%20126%2084%20124%2056%20132%2060%20134%2088%20146%2070%20156%2072%20144%20100%20136%20124%20142%20200Z'/%3E%20%3Cpath%20d='M300%20200V180L400%20172%20520%20178%20640%20170%20760%20176V200Z'/%3E%3Cpath%20d='M860%20200%20864%20110%20850%2086%20840%2056%20850%2062%20856%2092%20868%2070%20866%2040%20874%2046%20876%2078%20890%2060%20900%2062%20886%2092%20878%20120%20884%20200Z'/%3E%20%3Cpath%20d='M700%20200V180L820%20174%201000%20178V200Z'/%3E%3C/g%3E%3C/svg%3E") center bottom / 100% 52% no-repeat, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cdefs%3E%3CradialGradient%20id='m'%20cx='.42'%20cy='.38'%20r='.7'%3E%3Cstop%20offset='0'%20stop-color='%23ff8b6e'/%3E%3Cstop%20offset='.55'%20stop-color='%23c4202f'/%3E%3Cstop%20offset='1'%20stop-color='%235a0716'/%3E%3C/radialGradient%3E%20%3CradialGradient%20id='h'%20cx='.5'%20cy='.5'%20r='.5'%3E%3Cstop%20offset='.6'%20stop-color='%23ff2a4d'%20stop-opacity='.32'/%3E%3Cstop%20offset='1'%20stop-color='%23ff2a4d'%20stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%20%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='url%28%23h%29'/%3E%3Ccircle%20cx='50'%20cy='50'%20r='33'%20fill='url%28%23m%29'/%3E%3Cg%20fill='%237a0c1d'%20fill-opacity='.55'%3E%3Ccircle%20cx='38'%20cy='40'%20r='6'/%3E%3Ccircle%20cx='58'%20cy='60'%20r='8'/%3E%3Ccircle%20cx='55'%20cy='36'%20r='3.500'/%3E%3Ccircle%20cx='40'%20cy='62'%20r='4'/%3E%3C/g%3E%3C/svg%3E") 72% 28% / auto 130% no-repeat,
+    radial-gradient(ellipse at 50% 120%, #7a0c1d88, transparent 60%), linear-gradient(180deg, #070109, #1c0612 60%, #3a0a16);
+  animation: rw-bats 26s linear infinite;
+}
+@keyframes rw-bats { to { background-position: 420px 8%, center bottom, 72% 28%, 0 0, 0 0; } }
+
+/* Pétalos: atardecer rosado con pétalos de cerezo cayendo. Hace juego con el marco y el nombre «Sakura». */
+[data-cover="petalos"] {
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%20viewBox='0%200%20180%20180'%3E%3Cg%20fill='%23ffd4e5'%3E%20%3Cpath%20d='M30%2030c8-10%2020-8%2022%202-6%208-18%2012-22-2z'%20transform='rotate%2824%2040%2034%29'/%3E%3Cpath%20d='M120%2070c8-10%2020-8%2022%202-6%208-18%2012-22-2z'%20transform='rotate%28-30%20130%2074%29'/%3E%20%3Cpath%20d='M70%20130c8-10%2020-8%2022%202-6%208-18%2012-22-2z'%20transform='rotate%2870%2080%20134%29'/%3E%3Cpath%20d='M150%20150c6-8%2016-6%2018%202-5%206-14%209-18-2z'%20transform='rotate%28-10%20158%20152%29'/%3E%3C/g%3E%20%3Cg%20fill='%23fff'%20fill-opacity='.8'%3E%3Cpath%20d='M100%2020c6-8%2015-6%2017%202-5%206-14%209-17-2z'%20transform='rotate%2840%20108%2024%29'/%3E%3Cpath%20d='M14%20110c6-8%2015-6%2017%202-5%206-14%209-17-2z'%20transform='rotate%28-50%2022%20114%29'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 180px 180px, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='260'%20height='260'%20viewBox='0%200%20260%20260'%3E%3Cg%20fill='%23f9a8c9'%3E%20%3Cpath%20d='M60%2050c10-13%2026-10%2028%203-8%2010-24%2015-28-3z'%20transform='rotate%28-20%2072%2056%29'/%3E%3Cpath%20d='M190%20110c10-13%2026-10%2028%203-8%2010-24%2015-28-3z'%20transform='rotate%2850%20200%20116%29'/%3E%20%3Cpath%20d='M120%20210c10-13%2026-10%2028%203-8%2010-24%2015-28-3z'%20transform='rotate%28120%20132%20216%29'/%3E%3C/g%3E%3C/svg%3E") 60px 40px / 260px 260px, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201000%20200'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%235a2a5e'%20fill-opacity='.7'%20d='M0%20200V150L120%20126%20200%20140%20330%2096%20450%20138%20560%20120%20700%20150%20840%20118%201000%20150V200Z'/%3E%20%3Cpath%20fill='%232e1239'%20d='M0%20200V176L150%20160%20260%20176%20400%20150%20520%20178%20660%20158%20800%20180%201000%20160V200Z'/%3E%3C/svg%3E") center bottom / 100% 56% no-repeat,
+    radial-gradient(circle at 78% 34%, #fff6e8 0 6%, #ffd0e066 14%, transparent 30%), linear-gradient(180deg, #4a1d5c, #c2508f 55%, #ffb3c8 100%);
+  animation: rw-petals 12s linear infinite;
+}
+@keyframes rw-petals { to { background-position: 60px 180px, -40px 300px, center bottom, 0 0, 0 0; } }
+
 .rw-cv { display: block; height: 3rem; border-radius: 3px; overflow: hidden; }
 
 /* Tema claro: los efectos pensados para fondo oscuro se oscurecen para que se lean */
@@ -216,8 +322,17 @@
 [data-theme="claro"] [data-fx="veneno"] { background-image: linear-gradient(90deg, #4d7c0f, #15803d, #6d28d9, #4d7c0f); filter: none; }
 [data-theme="claro"] [data-fx="aurora"] { background-image: linear-gradient(90deg, #0b8a5a, #0a7ea4, #6d4bd1, #b02470, #0b8a5a); filter: none; }
 [data-theme="claro"] [data-fx="galaxia"] { background-image: linear-gradient(90deg, #5b21b6, #0a7ea4, #b02470, #6d28d9, #5b21b6); filter: none; }
-[data-theme="claro"] [data-frame="halo"]::before { background: conic-gradient(from var(--ang), #d4a017, #f5c242, #d4a017, #e8b82a, #d4a017); }
-[data-theme="claro"] [data-frame="halo"]::after { border-color: #e0a800; box-shadow: 0 0 8px #f5c24299; }
+
+[data-theme="claro"] [data-fx="luz"] { background-image: linear-gradient(100deg, #b8860b 0 38%, #e0a800 50%, #8a5a00 62%, #b8860b 100%); filter: none; }
+[data-theme="claro"] [data-fx="algodon"] { background-image: linear-gradient(90deg, #d6428f, #8b5cf6, #0a7ea4, #c2358a, #d6428f); filter: none; }
+[data-theme="claro"] [data-fx="bosque"] { background-image: linear-gradient(90deg, #4d7c0f, #15803d, #a16207, #166534, #4d7c0f); filter: none; }
+[data-theme="claro"] [data-fx="cyber"] { color: #0e7490; text-shadow: 1px 0 #c026d3aa, -1px 0 #0891b2aa; }
+[data-theme="claro"] [data-fx="gotico"] { color: #4a0612; text-shadow: 0 1px 0 #ffffff99, 0 0 6px #b3122d44; animation: none; }
+[data-theme="claro"] [data-fx="terminal"] { color: #9a5b00; text-shadow: 0 0 5px #ff9d0044; }
+[data-theme="claro"] [data-fx="chicle"] { color: #fff; }
+[data-theme="claro"] [data-frame="aureola"]::before { background: conic-gradient(from var(--ang), #d4a017, #f5c242, #fff2b0, #d4a017, #e8b82a, #d4a017); }
+[data-theme="claro"] [data-frame="aureola"]::after { background: conic-gradient(from var(--ang), #e0a800, #f5c242, #b8860b, #f0b400, #e0a800); }
+[data-theme="claro"] [data-frame="aureola"] { --fg: #e0a80044; }
 
 @media (prefers-reduced-motion: reduce) {
   [data-frame], [data-frame]::before, [data-frame]::after, [data-fx], [data-fx]::before, [data-fx]::after, [data-cover], [data-cover]::before, [data-cover]::after { animation: none !important; }
