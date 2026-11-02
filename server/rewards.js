@@ -152,9 +152,14 @@ export function rewardsFor(db, user) {
   let medals = new Map();
   try { medals = new Map(db.prepare('select id, name from medals where secret = 0').all().map((m) => [m.id, `«${m.name}»`])); } catch {}
   // Las ocultas (hidden = 1) solo aparecen cuando la persona las tiene: así lo que no se puede conseguir no llena la colección de candados.
+  // Cuántos tipos distintos tiene cada temática en todo el catálogo (ocultas incluidas): con 2 o más es un combo (`combo` trae esa cantidad), igual que en el panel.
+  const kindsOf = new Map();
+  for (const r of db.prepare("select theme, kind from rewards where enabled = 1 and theme != ''").all()) {
+    kindsOf.set(r.theme, (kindsOf.get(r.theme) || new Set()).add(r.kind));
+  }
   const items = db.prepare('select * from rewards where enabled = 1 order by pos, name').all().filter((r) => !r.hidden || owned.has(r.id)).map((r) => {
     const has = owned.get(r.id);
-    return { ...pub(r), lvl: levelOfRule(r.rule), owned: !!has, source: has ? has.source : '', expires: has ? has.expires : 0, hint: has ? '' : ruleText(r.rule, medals) };
+    return { ...pub(r), combo: kindsOf.get(r.theme)?.size || 0, lvl: levelOfRule(r.rule), owned: !!has, source: has ? has.source : '', expires: has ? has.expires : 0, hint: has ? '' : ruleText(r.rule, medals) };
   });
   const eq = parseEquip(user.equip);
   const equip = {};

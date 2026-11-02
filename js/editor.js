@@ -127,14 +127,15 @@ function paintBadges() {
 const THEME_LABELS = { arcoiris: 'Arcoíris', oceano: 'Océano', tecnologia: 'Tecnología', comic: 'Cómic', neon: 'Neón' };
 const themeLabel = (t) => THEME_LABELS[t] || t.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
 
-// Sinergias (combos): temáticas con piezas de al menos dos tipos distintos entre las que la persona ve.
+// Sinergias (combos), con el mismo criterio del panel: una temática con piezas de al menos dos tipos en todo el catálogo.
+// Acá solo se listan los combos de los que la persona tiene alguna pieza, ordenados como en el panel.
 function synergies() {
   const by = new Map();
-  for (const i of rw.items) if (i.theme) by.set(i.theme, [...(by.get(i.theme) || []), i]);
+  for (const i of rw.items) if (i.theme && i.combo >= 2) by.set(i.theme, [...(by.get(i.theme) || []), i]);
   return [...by.entries()]
-    .filter(([, v]) => new Set(v.map((x) => x.kind)).size >= 2)
-    .map(([theme, v]) => ({ theme, label: themeLabel(theme), total: v.length, owned: v.filter((x) => x.owned).length }))
-    .sort((a, b) => b.owned - a.owned || a.label.localeCompare(b.label, 'es'));
+    .filter(([, v]) => v.some((x) => x.owned))
+    .map(([theme, v]) => ({ theme, label: themeLabel(theme), kinds: v[0].combo, owned: v.filter((x) => x.owned).length }))
+    .sort((a, b) => b.kinds - a.kinds || a.label.localeCompare(b.label, 'es'));
 }
 
 const picked = (kind) => rw.items.find((i) => i.id === draft.equip[kind]) || null;
@@ -160,7 +161,7 @@ function paintRewards() {
   const chips = syn.length
     ? `<div class="rw-syn" role="group" aria-label="Filtrar por sinergia"><span>Sinergia</span>
         <button type="button" data-syn="" class="${rwTheme ? '' : 'on'}" aria-pressed="${!rwTheme}">Todas</button>
-        ${syn.map((c) => `<button type="button" data-syn="${esc(c.theme)}" class="${rwTheme === c.theme ? 'on' : ''}" aria-pressed="${rwTheme === c.theme}">${esc(c.label)}<i>${c.owned}/${c.total}</i></button>`).join('')}</div>`
+        ${syn.map((c) => `<button type="button" data-syn="${esc(c.theme)}" class="${rwTheme === c.theme ? 'on' : ''}" aria-pressed="${rwTheme === c.theme}">${esc(c.label)}<i>${c.owned}</i></button>`).join('')}</div>`
     : '';
   const sel = syn.find((c) => c.theme === rwTheme);
   const bar = sel ? `<p class="rw-syn-note">Combo ${esc(sel.label)}: las piezas de este grupo combinan entre sí. Elegí una de cada tipo para llevar la sinergia completa.</p>` : '';
