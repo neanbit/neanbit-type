@@ -451,6 +451,7 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
 
   const view = (t, uid) => {
     const winner = t.winner_id ? card(t.winner_id) : null;
+    if (winner && rewards) { const c = rewards.cosm([winner.handle]).get(winner.handle); if (c) winner.cosm = c; }
     const row = uid ? db.prepare('select status from tournament_players where tournament_id = ? and user_id = ?').get(t.id, uid) : null;
     return {
       id: t.id, name: t.name, description: t.description, status: t.status, size: t.size, rounds: t.rounds,

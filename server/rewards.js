@@ -110,7 +110,7 @@ const ruleText = (rule, medals) => {
     return { champ: 'Premio para quien gane un torneo.', final: 'Premio para quien llegue a la final de un torneo.',
       semi: 'Premio para quien llegue a las semifinales de un torneo.', part: 'Premio por participar en un torneo.' }[r.place];
   }
-  if (r.type === 'event') return `Se consigue jugando entre el ${day(r.from)} y el ${day(r.to)}.`;
+  if (r.type === 'event') return Date.now() >= r.to ? `Fue un evento del ${day(r.from)} al ${day(r.to)}, ya terminó.` : `Se consigue jugando entre el ${day(r.from)} y el ${day(r.to)}.`;
   return 'Se entrega como premio o en eventos.';
 };
 

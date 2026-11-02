@@ -24,6 +24,7 @@ Para probar sin tocar datos reales: `NT_DB=/tmp/h.db PORT=3222 NT_ADMIN=ana node
 
 - **Modos:** aleatorio, personalizado (categoría o texto, más «Mis textos» guardados en el navegador), entrenamiento, Hardcore, duelos (con revancha) y torneos.
 - **Progreso:** niveles y experiencia (el nivel se ve en el perfil como un widget que abre el detalle: avance, próximos niveles y títulos), racha de días, meta diaria y rankings paginados (carreras, promedios, Hardcore, duelos, torneos).
+- **Recompensas:** marcos de foto, efectos de nombre y portadas, con rareza. Se desbloquean por nivel, medalla, puesto en un torneo o evento con fechas (o a mano desde el panel) y avisan con «Desbloqueaste…». Se activan desde Editar perfil. En rankings, duelos y torneos se ven quietos.
 - **Resultado:** animación, barra de experiencia e imagen para compartir (se dibuja en el navegador, no se sube).
 - **Ajustes:** cuatro temas (neanbit, claro, carbón y alto contraste), unidad de velocidad, sonido de teclas y ritmo del cursor (apagados por defecto).
 - **Información:** Información, Guías, preguntas frecuentes, Términos, Privacidad, Cookies y Normas, con rutas propias (`/info`, `/guias`, `/terminos`, `/privacidad`, `/cookies`, `/normas`).
@@ -54,7 +55,7 @@ Archivos que deben ser idénticos en la app y el panel: `server/medals.js`, `ser
 index.html        única página; las pantallas se muestran con show(nombre)
 css/              estilos por pantalla
 js/               módulos del front (main.js arma todo; pages.js tiene los textos)
-server/           index.js (API y estáticos), duels.js, tournaments.js, medals.js, levels.js, limits.js, seed.js
+server/           index.js (API y estáticos), duels.js, tournaments.js, medals.js, levels.js, rewards.js (recompensas y reglas), limits.js, seed.js
 scripts/          backup, auditoría de seguridad y export-content.mjs
 ```
 

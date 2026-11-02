@@ -255,7 +255,7 @@
 [data-fx][data-still] { max-width: 100%; vertical-align: bottom; }
 
 /* ---------- Aviso «Desbloqueaste…» ---------- */
-#rw-news { position: fixed; inset: auto 1rem 1rem auto; z-index: 60; display: grid; gap: .5rem; width: min(22rem, calc(100vw - 2rem));
+#rw-news { position: fixed; inset: 4.8rem 1rem auto auto; z-index: 60; display: grid; gap: .5rem; width: min(22rem, calc(100vw - 2rem));
   margin: 0; padding: 0; border: 0; background: none; overflow: visible; }
 #rw-news:empty { display: none; }
 .rw-news-card { --rare: var(--muted); display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto auto; align-items: center; gap: .6rem; padding: .55rem .5rem .55rem .6rem;
@@ -275,5 +275,5 @@
 .rw-news-x { padding: .25rem; }
 .rw-news-more { margin: 0; padding: .35rem .6rem; background: var(--bg-deep); border: 1px solid var(--line); border-radius: 4px; font: .72rem var(--mono); color: var(--muted); }
 @keyframes rw-news-in { from { opacity: 0; transform: translateY(8px); } }
-@media (max-width: 520px) { #rw-news { inset: auto .6rem .6rem .6rem; width: auto; } .rw-news-card { grid-template-columns: 3.4rem minmax(0, 1fr) auto auto; } }
+@media (max-width: 520px) { #rw-news { inset: 5.3rem .6rem auto .6rem; width: auto; } .rw-news-card { grid-template-columns: 3.4rem minmax(0, 1fr) auto auto; } }
 @media (prefers-reduced-motion: reduce) { .rw-news-card { animation: none !important; } }

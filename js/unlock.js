@@ -6,7 +6,7 @@ import { nameFx, rarityName, safePreset } from './rewards.js';
 
 const KIND = { frame: 'Marco de foto', name: 'Efecto de nombre', cover: 'Portada' };
 const SHOW = 3; // tarjetas a la vez; el resto se resume en una línea
-const STAY = 15000;
+const STAY = 10000;
 const shown = new Set();
 let box = null;
 

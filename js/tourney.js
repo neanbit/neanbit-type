@@ -79,7 +79,7 @@ function drawList() {
   const past = rows.filter((t) => t.status === 'finalizado' || t.status === 'cancelado');
   const card = (t) => {
     const mine = t.mine && t.mine.status !== 'descalificado' ? '<span class="tn-flag">Estás inscripto</span>' : '';
-    const champ = t.winner ? `<p class="tn-meta">Campeón: <b>${esc(t.winner.name)}</b></p>` : '';
+    const champ = t.winner ? `<p class="tn-meta">Campeón: <b>${nameLite(t.winner.name, t.winner.cosm)}</b></p>` : '';
     const start = t.status === 'inscripcion' && t.startsAt ? `<p class="tn-meta">Empieza el ${esc(when(t))}</p>` : '';
     return `<li><button class="tn-card" data-id="${t.id}"><span class="tn-card-top"><b>${esc(t.name)}</b>${mine}</span>`
       + `<span class="tn-chips">${chips(t)}</span>${t.description ? `<p class="tn-desc">${esc(t.description)}</p>` : ''}${start}${champ}</button></li>`;
@@ -154,7 +154,7 @@ function drawDetail() {
   $('#tn-eyebrow').textContent = 'Torneo de eliminación directa';
   $('#tn-title').textContent = t.name;
   const champ = t.status === 'finalizado' && t.winner
-    ? `<div class="tn-champ"><small>Campeón</small><b>${esc(t.winner.name)}</b><span>@${esc(t.winner.handle)}</span></div>` : '';
+    ? `<div class="tn-champ"><small>Campeón</small><b>${nameLite(t.winner.name, t.winner.cosm)}</b><span>@${esc(t.winner.handle)}</span></div>` : '';
   const players = t.players.length
     ? t.players.map((p) => `<li class="${p.status}" data-handle="${esc(p.handle)}"><span class="av sm"${frameAttr(p.cosm)}>${avatarInner(p)}</span><span>${nameLite(p.name, p.cosm)}<small>@${esc(p.handle)}</small></span>`
       + `${p.status === 'eliminado' ? '<em>Eliminado</em>' : p.status === 'descalificado' ? '<em>Descalificado</em>' : ''}</li>`).join('')
