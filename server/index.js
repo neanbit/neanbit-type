@@ -78,6 +78,8 @@ seedTexts();
 // Las medallas viven en la tabla `medals` (se crean y editan desde el panel). Solo una base nueva arranca con medals-base.json.
 db.exec("update medals set icon = id where icon in ('play', 'rows', 'gauge', 'bolt', 'shield', 'target')");
 ensureMedalSchema(db, JSON.parse(readFileSync(join(root, 'server', 'medals-base.json'), 'utf8')));
+// Aviso para el panel: esta versión de la app respeta las medallas automáticas otorgadas a mano (v11).
+db.prepare("insert or ignore into settings (key, value) values ('medals_forced', '1')").run();
 ensureRewardSchema(db, JSON.parse(readFileSync(join(root, 'server', 'rewards-base.json'), 'utf8')));
 const medalIcons = loadIcons(join(root, 'server', 'medal-icons'));
 if (admin) db.prepare("update users set role = 'admin' where handle = ?").run(admin);
@@ -226,13 +228,15 @@ function medalsOf(userId) {
     // En las manuales apilables que «cuentan como torneo ganado» se suman los torneos ganados de verdad a lo otorgado a mano.
     const given = manual ? grantCount(m, grants.get(m.id) || 0, wins) : 0;
     const have = manual ? 0 : values[m.condition] || 0;
-    const earned = manual ? given > 0 : have >= m.target;
+    // Una fila en user_medals de una medalla automática es una concesión del administrador: la tiene aunque no llegue al objetivo.
+    const forced = !manual && (grants.get(m.id) || 0) > 0;
+    const earned = manual ? given > 0 : forced || have >= m.target;
     const tier = tierOf(m.tier);
     return {
       id: m.id, name: m.name, desc: m.description, icon: `${m.icon}--${tier}`, tier, stackable: !!m.stackable, secret: !!m.secret, earned,
       count: earned && m.stackable ? Math.max(given, 1) : 1,
       group: groupOf(m.condition),
-      target: manual ? 0 : m.target, value: manual ? 0 : Math.min(have, m.target),
+      target: manual ? 0 : m.target, value: manual ? 0 : forced ? m.target : Math.min(have, m.target),
     };
   }).filter((m) => m.earned || !m.secret);
 }
