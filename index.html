@@ -32,7 +32,7 @@
     <a class="wordmark" href="#" id="logo" aria-label="neanbit, inicio"><img class="wm-ondark" src="img/wordmark-ondark.svg" alt="neanbit"><img class="wm-onlight" src="img/wordmark-onlight.svg" alt="neanbit"></a>
     <div class="pf-tools">
       <div class="pf-search">
-        <input id="pf-search" type="search" placeholder="Buscar piloto por nombre o usuario" autocomplete="off">
+        <input id="pf-search" type="search" placeholder="Buscar usuario por nombre o @usuario" autocomplete="off">
         <ul id="pf-results" hidden></ul>
       </div>
       <button id="pf-back">Volver</button>
@@ -157,15 +157,15 @@
       <article class="d-card">
         <span data-art="mode:duel"></span>
         <h3>Rival al azar</h3>
-        <p>Te emparejamos con el próximo piloto que busque un duelo. Los dos corren el mismo texto.</p>
+        <p>Te emparejamos con el próximo usuario que busque un duelo. Los dos corren el mismo texto.</p>
         <button class="primary" id="d-queue">Buscar rival</button>
       </article>
       <article class="d-card">
         <span data-art="mode:pick"></span>
-        <h3>Invitar a un piloto</h3>
+        <h3>Invitar a un usuario</h3>
         <p>Buscalo por nombre o usuario. Tiene que estar en la sala de Duelos para recibir la invitación.</p>
         <div class="d-find">
-          <input id="d-search" type="search" placeholder="Buscar piloto" autocomplete="off">
+          <input id="d-search" type="search" placeholder="Buscar usuario" autocomplete="off">
           <ul id="d-results" hidden></ul>
         </div>
       </article>
@@ -353,6 +353,7 @@
           <button id="pf-statslink" hidden>Ver estadísticas</button>
         </div>
       </div>
+      <nav class="pf-tabs" id="pf-scope" role="tablist" aria-label="Ver estadísticas de"></nav>
     </header>
     <div class="pf-grid">
       <aside class="pf-side">

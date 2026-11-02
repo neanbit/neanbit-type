@@ -100,12 +100,12 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, xp
       if (now - c.lastInvite < 2000) return fail(c, 'Esperá un momento antes de invitar de nuevo.');
       c.lastInvite = now;
       const row = db.prepare('select id from users where handle = ?').get(String(m.to || '').toLowerCase());
-      if (!row) return fail(c, 'No existe ese piloto.');
+      if (!row) return fail(c, 'No existe ese usuario.');
       if (row.id === c.id) return fail(c, 'No podés invitarte a vos mismo.');
       const target = online.get(row.id);
-      if (!target) return fail(c, 'Ese piloto no está conectado ahora.');
-      if (target.state === 'duel') return fail(c, 'Ese piloto está en un duelo.');
-      if ([...invites.values()].filter((v) => v.to === target).length >= 3) return fail(c, 'Ese piloto tiene muchas invitaciones pendientes.');
+      if (!target) return fail(c, 'Ese usuario no está conectado ahora.');
+      if (target.state === 'duel') return fail(c, 'Ese usuario está en un duelo.');
+      if ([...invites.values()].filter((v) => v.to === target).length >= 3) return fail(c, 'Ese usuario tiene muchas invitaciones pendientes.');
       const key = `${c.id}>${target.id}`;
       invites.set(key, { from: c, to: target, timer: setTimeout(() => expire(key), INVITE_MS) });
       c.state = 'inviting';

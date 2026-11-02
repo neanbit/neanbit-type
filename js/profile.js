@@ -4,6 +4,8 @@ import { setVitrina } from './vitrina.js';
 import { setNivel } from './nivel.js';
 import { nameFx, setCover, setFrame } from './rewards.js';
 
+const discordLogo = '<svg class="i brand" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19.6 5.3A16.6 16.6 0 0 0 15.5 4l-.5 1a15.400 15.400 0 0 0-6 0L8.500 4a16.600 16.600 0 0 0-4.100 1.300C1.800 9.200 1.100 13 1.400 16.700a16.700 16.700 0 0 0 5 2.500l1.100-1.700c-.6-.2-1.200-.5-1.700-.8l.4-.3a11.900 11.900 0 0 0 10.200 0l.4.3c-.5.3-1.100.6-1.700.8l1.100 1.700a16.700 16.700 0 0 0 5-2.500c.4-4.300-.7-8.100-3-11.400zM8.700 14.500c-1 0-1.800-.9-1.800-2s.8-2 1.800-2 1.800.9 1.800 2-.8 2-1.800 2zm6.600 0c-1 0-1.800-.9-1.800-2s.8-2 1.800-2 1.800.9 1.800 2-.8 2-1.800 2z"/></svg>';
+
 export { esc };
 
 function standing(p) {
@@ -24,25 +26,37 @@ let lastScope = null;
 
 const bestRoundText = (b) => (b.champion ? 'Campeón' : ['Finalista', 'Semifinales', 'Cuartos de final', 'Octavos de final'][b.rounds - b.round] || `Ronda ${b.round}`);
 
-// Selector General | Duelos | Torneos en la fila de botones del héroe. En Duelos y Torneos cambian las tarjetas y el expediente.
+// Pestañas General | Duelos | Torneos en la base de la cabecera. En Duelos y Torneos cambian las tarjetas y el expediente.
 function duelScope(p, opts) {
   const { speed, unit } = opts;
   if (scopeFor !== p.handle) { scopeFor = p.handle; scopeView = 'all'; }
   lastScope = { p, opts };
-  if (!$('#pf-scope')) {
-    const seg = document.createElement('div');
-    seg.className = 'seg d-seg';
-    seg.id = 'pf-scope';
-    seg.innerHTML = '<button data-m="all">General</button><button data-m="duel">Duelos</button><button data-m="tourney">Torneos</button>';
-    seg.onclick = (e) => {
-      const m = e.target.dataset.m;
+  const bar = $('#pf-scope');
+  if (!bar.dataset.ready) {
+    bar.dataset.ready = '1';
+    bar.onclick = (e) => {
+      const m = e.target.closest('button[data-m]')?.dataset.m;
       if (!m || m === scopeView) return;
       scopeView = m;
       renderProfile(lastScope.p, lastScope.opts);
     };
-    $('.pf-actions').prepend(seg);
+    bar.onkeydown = (e) => {
+      const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (!step) return;
+      const tabs = [...bar.querySelectorAll('button')];
+      const next = tabs[(tabs.indexOf(document.activeElement) + step + tabs.length) % tabs.length];
+      e.preventDefault();
+      next.focus();
+      next.click();
+    };
   }
-  document.querySelectorAll('#pf-scope button').forEach((b) => b.classList.toggle('on', b.dataset.m === scopeView));
+  const count = { all: p.races, duel: p.duels ? p.duels.total : 0, tourney: p.tourneys ? p.tourneys.entered : 0 };
+  const had = bar.contains(document.activeElement);
+  bar.innerHTML = [['all', 'General'], ['duel', 'Duelos'], ['tourney', 'Torneos']].map(([m, label]) => {
+    const on = m === scopeView;
+    return `<button type="button" role="tab" data-m="${m}" aria-selected="${on}" tabindex="${on ? 0 : -1}" class="${on ? 'on' : ''}">${label}<i>${count[m] || 0}</i></button>`;
+  }).join('');
+  if (had) bar.querySelector('.on').focus();
   const cards = (list) => list.map(([label, value, cls]) => `<div class="${cls}"><small>${label}</small><b>${value}</b></div>`).join('');
   const file = (list) => list.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
   if (scopeView === 'duel' && p.duels) {
@@ -104,14 +118,15 @@ export function renderProfile(p, opts) {
   $('#pf-edit').hidden = !isMe;
   $('#pf-statslink').hidden = !isMe;
 
-  const tags = [`<span class="tag accent">${p.role === 'admin' ? 'Admin' : 'Piloto'}</span>`];
+  const tags = [];
+  if (p.role === 'admin') tags.push('<span class="tag accent">Admin</span>');
   if (p.country) tags.push(`<span class="tag">${esc(p.country)}</span>`);
-  if (p.discord) tags.push(`<button class="tag" data-copy="${esc(p.discord)}" title="Copiar usuario">Discord: ${esc(p.discord)}</button>`);
+  if (p.discord) tags.push(`<button class="tag discord" data-copy="${esc(p.discord)}" title="Copiar usuario de Discord" aria-label="Copiar usuario de Discord: ${esc(p.discord)}">${discordLogo}${esc(p.discord)}</button>`);
   if (p.website) tags.push(`<a class="tag" href="${esc(p.website)}" target="_blank" rel="noopener noreferrer nofollow">${esc(siteName(p.website))} ${svg(icons.link)}</a>`);
   $('#pf-tags').innerHTML = tags.join('');
   setNivel(p);
 
-  $('#pf-bio').textContent = p.bio || 'Este piloto todavía no escribió su historia.';
+  $('#pf-bio').textContent = p.bio || 'Este usuario todavía no escribió su historia.';
   $('#pf-bio').classList.toggle('blank', !p.bio);
   const setup = [p.layout, p.switches].filter(Boolean);
   $('#pf-setup-wrap').hidden = !setup.length;

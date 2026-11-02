@@ -44,7 +44,7 @@ Una tecla y un cursor. El logo termina en un cuadrado de color: ese cuadrado es 
 - **Sonido de teclas** (`js/sound.js`): sintetizado con WebAudio, apagado por defecto (Apagado / Suave / Fuerte).
 - **Ritmo del cursor**: apagado por defecto. Marca punteada sobre la barra al ritmo de tu promedio (10 últimas) o tu récord; verde si vas adelante, rojo si atrás. Necesita 3 carreras. No se usa en duelos ni entrenamiento. La barra «late» con cada tecla.
 - **Animación del resultado**: entrada escalonada, barra de XP y estallido de partículas si es récord. Respeta `prefers-reduced-motion`.
-- El tema por defecto ahora sigue al sistema (claro u oscuro) hasta que elegís uno.
+- El tema por defecto es neanbit; solo cambia si lo elegís en Ajustes (queda guardado en este navegador).
 - La grilla de modos pasó a 3x2 (los seis modos al mismo tamaño).
 
 ### Pendiente de esta tanda

@@ -93,7 +93,7 @@ function infoPage(ctx) {
     <div>
       <p class="eyebrow">Tu perfil</p>
       <h2 class="sec-title">Estadísticas, medallas y estilo propio</h2>
-      <p>Cada piloto tiene un perfil público con su récord, su promedio, su historial y las medallas que fue ganando: por constancia, velocidad, precisión, duelos o torneos. Podés elegir seis para mostrar junto a tu nombre y personalizar el color, la cabecera y la forma de la foto.</p>
+      <p>Cada usuario tiene un perfil público con su récord, su promedio, su historial y las medallas que fue ganando: por constancia, velocidad, precisión, duelos o torneos. Podés elegir seis para mostrar junto a tu nombre y personalizar el color, la cabecera y la forma de la foto.</p>
       <p>Las estadísticas se pueden ver en tres vistas: general, duelos y torneos.</p>
     </div>
   </section>

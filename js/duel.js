@@ -139,7 +139,7 @@ function draw() {
   const waiting = status === 'queued' || status === 'inviting';
   $('#d-grid').hidden = !idle;
   $('#d-wait').hidden = !waiting;
-  if (status === 'queued') $('#d-wait-msg').textContent = 'Buscando rival. En cuanto otro piloto busque duelo, arrancan.';
+  if (status === 'queued') $('#d-wait-msg').textContent = 'Buscando rival. En cuanto otro usuario busque duelo, arrancan.';
   $('#d-in').hidden = !incoming.size || status === 'duel';
   $('#d-incoming').innerHTML = [...incoming.values()].map((c) =>
     `<li data-handle="${esc(c.handle)}"><span class="av sm"${frameAttr(c.cosm)}>${avatarInner(c)}</span>`
@@ -147,7 +147,7 @@ function draw() {
     + '<button class="primary" data-accept>Aceptar</button><button data-decline>Rechazar</button></li>').join('');
   const connected = ws && ws.readyState === WebSocket.OPEN;
   $('#d-online').textContent = connected
-    ? `${online} ${online === 1 ? 'piloto en la sala' : 'pilotos en la sala'}`
+    ? `${online} ${online === 1 ? 'usuario en la sala' : 'usuarios en la sala'}`
     : 'Sin conexión con la sala de duelos.';
   $('#d-queue').disabled = !connected;
 }
@@ -160,7 +160,7 @@ async function search() {
   const list = rows.filter((r) => !me || r.handle !== me.handle);
   box.innerHTML = list.length
     ? list.map((r) => `<li data-handle="${esc(r.handle)}"><span class="av sm"${frameAttr(r.cosm)}>${avatarInner(r)}</span>${nameLite(r.name, r.cosm)} <small>@${esc(r.handle)}</small></li>`).join('')
-    : '<li class="none">No hay pilotos con ese nombre.</li>';
+    : '<li class="none">No hay usuarios con ese nombre.</li>';
   box.hidden = false;
 }
 

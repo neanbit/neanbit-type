@@ -392,3 +392,12 @@
 @keyframes rw-news-in { from { opacity: 0; transform: translateY(8px); } }
 @media (max-width: 520px) { #rw-news { inset: 5.3rem .6rem auto .6rem; width: auto; } .rw-news-card { grid-template-columns: 3.4rem minmax(0, 1fr) auto auto; } }
 @media (prefers-reduced-motion: reduce) { .rw-news-card { animation: none !important; } }
+
+/* Filtro por sinergia (combos) en la pestaña Recompensas del editor */
+.rw-syn { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: 0 0 1rem; }
+.rw-syn > span { margin-right: .3rem; font: 500 .62rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.rw-syn button { display: inline-flex; align-items: baseline; gap: .4rem; padding: .25rem .65rem; font-size: .78rem; border-radius: 3px; background: transparent; color: var(--muted); border: 1px solid var(--line); box-shadow: none; }
+.rw-syn button i { font: 500 .66rem var(--mono); font-style: normal; }
+.rw-syn button:hover { color: var(--text); border-color: var(--ink); }
+.rw-syn button.on { color: var(--on-accent); background: var(--accent); border-color: var(--accent); font-weight: 600; }
+.rw-syn-note { margin: -.4rem 0 1rem; font-size: .8rem; color: var(--muted); }

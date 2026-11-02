@@ -19,6 +19,7 @@ let baseline = '';
 let medals = [];
 let rw = { items: [] };
 let rwShown = '';
+let rwTheme = '';
 const rwGroups = [['frame', 'Marco de la foto', 'Sin marco'], ['name', 'Efecto del nombre', 'Sin efecto'], ['cover', 'Portada', 'Sin portada']];
 
 $('#me-country').innerHTML = '<option value="">Sin indicar</option>' + countries.map((c) => `<option>${c}</option>`).join('');
@@ -45,6 +46,7 @@ export async function openEditor(tab = 'identidad') {
   medals = [];
   rw = { items: [] };
   rwShown = '';
+  rwTheme = '';
   $('#me-error').textContent = '';
   $('#ed-confirm').hidden = true;
   for (const f of fields) $('#me-' + f).value = draft[f];
@@ -122,12 +124,25 @@ function paintBadges() {
   $('#ed-locked-n').textContent = locked.length;
 }
 
+const THEME_LABELS = { arcoiris: 'Arcoíris', oceano: 'Océano', tecnologia: 'Tecnología', comic: 'Cómic', neon: 'Neón' };
+const themeLabel = (t) => THEME_LABELS[t] || t.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+
+// Sinergias (combos): temáticas con piezas de al menos dos tipos distintos entre las que la persona ve.
+function synergies() {
+  const by = new Map();
+  for (const i of rw.items) if (i.theme) by.set(i.theme, [...(by.get(i.theme) || []), i]);
+  return [...by.entries()]
+    .filter(([, v]) => new Set(v.map((x) => x.kind)).size >= 2)
+    .map(([theme, v]) => ({ theme, label: themeLabel(theme), total: v.length, owned: v.filter((x) => x.owned).length }))
+    .sort((a, b) => b.owned - a.owned || a.label.localeCompare(b.label, 'es'));
+}
+
 const picked = (kind) => rw.items.find((i) => i.id === draft.equip[kind]) || null;
 
 // Pestaña Recompensas: todo el catálogo, con lo bloqueado atenuado y la pista de cómo conseguirlo.
 // Solo se vuelve a dibujar cuando cambia lo elegido, para que las animaciones no se reinicien al escribir en otras pestañas.
 function paintRewards() {
-  const key = JSON.stringify(draft.equip) + rw.items.length;
+  const key = JSON.stringify(draft.equip) + rw.items.length + '|' + rwTheme;
   if (key === rwShown) return;
   rwShown = key;
   if (!rw.items.length) {
@@ -140,13 +155,22 @@ function paintRewards() {
     if (i.kind === 'cover') return `<i class="rw-cv" data-cover="${p}"></i>`;
     return `<span class="rw-fx">${nameFx('Nombre', { name: i })}</span>`;
   };
-  $('#rw-body').innerHTML = rwGroups.map(([kind, title, none]) => {
-    const list = rw.items.filter((i) => i.kind === kind);
+  const syn = synergies();
+  if (rwTheme && !syn.some((c) => c.theme === rwTheme)) rwTheme = '';
+  const chips = syn.length
+    ? `<div class="rw-syn" role="group" aria-label="Filtrar por sinergia"><span>Sinergia</span>
+        <button type="button" data-syn="" class="${rwTheme ? '' : 'on'}" aria-pressed="${!rwTheme}">Todas</button>
+        ${syn.map((c) => `<button type="button" data-syn="${esc(c.theme)}" class="${rwTheme === c.theme ? 'on' : ''}" aria-pressed="${rwTheme === c.theme}">${esc(c.label)}<i>${c.owned}/${c.total}</i></button>`).join('')}</div>`
+    : '';
+  const sel = syn.find((c) => c.theme === rwTheme);
+  const bar = sel ? `<p class="rw-syn-note">Combo ${esc(sel.label)}: las piezas de este grupo combinan entre sí. Elegí una de cada tipo para llevar la sinergia completa.</p>` : '';
+  $('#rw-body').innerHTML = chips + bar + rwGroups.map(([kind, title, none]) => {
+    const list = rw.items.filter((i) => i.kind === kind && (!rwTheme || i.theme === rwTheme));
     if (!list.length) return '';
     const cards = list.map((i) => `<button type="button" class="rw-card${draft.equip[kind] === i.id ? ' on' : ''}${i.owned ? '' : ' locked'}" data-rw="${kind}:${esc(i.id)}"
       data-rarity="${esc(i.rarity)}" aria-pressed="${draft.equip[kind] === i.id}" title="${esc(i.owned ? i.description : i.hint)}">${thumb(i)}<b>${esc(i.name)}</b><small>${esc(rarityName[i.rarity] || i.rarity)}</small></button>`).join('');
     return `<div class="rw-group"><h3>${title}<small>${list.filter((i) => i.owned).length} de ${list.length}</small></h3>
-      <div class="rw-grid"><button type="button" class="rw-card${draft.equip[kind] ? '' : ' on'}" data-rw="${kind}:" aria-pressed="${!draft.equip[kind]}"><span class="rw-none">${none}</span></button>${cards}</div></div>`;
+      <div class="rw-grid">${rwTheme ? '' : `<button type="button" class="rw-card${draft.equip[kind] ? '' : ' on'}" data-rw="${kind}:" aria-pressed="${!draft.equip[kind]}"><span class="rw-none">${none}</span></button>`}${cards}</div></div>`;
   }).join('');
 }
 
@@ -219,6 +243,12 @@ $('#me').addEventListener('click', (e) => {
   if (set) {
     const [key, val] = set.dataset.set.split(':');
     draft[key] = key === 'layout' && draft.layout === val ? '' : val;
+    return paint();
+  }
+  const synBtn = e.target.closest('[data-syn]');
+  if (synBtn) {
+    rwTheme = synBtn.dataset.syn;
+    rwShown = '';
     return paint();
   }
   const gift = e.target.closest('[data-rw]');

@@ -716,7 +716,7 @@ async function api(req, res, url) {
   if (req.method === 'GET' && route) {
     if (limits.hit('prof:' + ip, 90, 60000)) return tooMany(res, 'prof:' + ip, 60000);
     const user = db.prepare(`select ${userCols} from users where handle = ?`).get(route[1]);
-    if (!user) return send(res, 404, { error: 'No existe ese piloto.' });
+    if (!user) return send(res, 404, { error: 'No existe ese usuario.' });
     if (route[2]) {
       const page = Math.min(100000, Math.max(0, Math.trunc(Number(url.searchParams.get('page'))) || 0));
       const rows = db.prepare('select cpm, text_id, at from races where user_id = ? and hc = 0 order by at desc limit 10 offset ?').all(user.id, page * 10);

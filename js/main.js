@@ -24,15 +24,10 @@ let texts = [];
 let categories = [];
 const screens = ['home', 'pick', 'race', 'stats', 'profile', 'duel', 'tourney', 'page'];
 
-// Primera visita: respeta la preferencia del sistema (alto contraste o claro).
-function systemTheme() {
-  if (matchMedia('(prefers-contrast: more)').matches) return 'contraste';
-  return matchMedia('(prefers-color-scheme: light)').matches ? 'claro' : 'neanbit';
-}
-
 const state = {
   unit: load('unit', 'cpm'),
-  theme: ['neanbit', 'claro', 'carbon', 'contraste'].includes(load('theme', '')) ? load('theme', '') : systemTheme(),
+  // neanbit es el tema por defecto; solo cambia si la persona lo elige en Ajustes (queda guardado).
+  theme: ['neanbit', 'claro', 'carbon', 'contraste'].includes(load('theme', '')) ? load('theme', '') : 'neanbit',
   pace: ['off', 'avg', 'best'].includes(load('pace', 'off')) ? load('pace', 'off') : 'off',
   pacing: 0,
   last: null,
@@ -343,7 +338,7 @@ async function searchPilots() {
   const { rows } = await api.searchUsers(query).catch(() => ({ rows: [] }));
   box.innerHTML = rows.length
     ? rows.map((r) => `<li data-handle="${esc(r.handle)}"><span class="av sm"${frameAttr(r.cosm)}>${avatarInner(r)}</span>${nameLite(r.name, r.cosm)} <small>@${esc(r.handle)}</small></li>`).join('')
-    : '<li class="none">No hay pilotos con ese nombre.</li>';
+    : '<li class="none">No hay usuarios con ese nombre.</li>';
   box.hidden = false;
 }
 

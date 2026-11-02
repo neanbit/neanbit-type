@@ -1,4 +1,4 @@
-// Recompensas cosméticas en el navegador: dibuja el marco, el nombre y la portada que cada piloto tiene puesto.
+// Recompensas cosméticas en el navegador: dibuja el marco, el nombre y la portada que cada usuario tiene puesto.
 // Los efectos viven en css/rewards.css; acá solo se ponen los atributos y se cargan las tipografías cuando hacen falta.
 import { esc } from './ui.js';
 

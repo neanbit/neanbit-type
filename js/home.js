@@ -185,7 +185,7 @@ function drawDaily() {
 
 function drawCommunity(c) {
   $('#community').textContent = c
-    ? `${plural(c.users, 'piloto registrado', 'pilotos registrados')}. ${plural(c.today, 'carrera', 'carreras')} en las últimas 24 horas.`
+    ? `${plural(c.users, 'usuario registrado', 'usuarios registrados')}. ${plural(c.today, 'carrera', 'carreras')} en las últimas 24 horas.`
     : '';
 }
 
