@@ -3,7 +3,7 @@ import { avatarInner } from './avatar.js';
 import { openCrop } from './crop.js';
 import { $, esc, svg, icons, medalImg } from './ui.js';
 import { openVitrina } from './vitrina.js';
-import { nameFx, rarityName, safePreset, setCover, setFrame } from './rewards.js';
+import { nameFx, rarityName, safePreset, setCover, setFrame, setPalette } from './rewards.js';
 
 const countries = ['Argentina', 'Bolivia', 'Chile', 'Colombia', 'Costa Rica', 'Cuba', 'Ecuador', 'El Salvador', 'España', 'Estados Unidos', 'Guatemala', 'Honduras', 'México', 'Nicaragua', 'Panamá', 'Paraguay', 'Perú', 'República Dominicana', 'Uruguay', 'Venezuela', 'Otro país'];
 const layouts = ['QWERTY', 'Dvorak', 'Colemak', 'Otro'];
@@ -20,7 +20,7 @@ let medals = [];
 let rw = { items: [] };
 let rwShown = '';
 let rwTheme = '';
-const rwGroups = [['frame', 'Marco de la foto', 'Sin marco'], ['name', 'Efecto del nombre', 'Sin efecto'], ['cover', 'Portada', 'Sin portada']];
+const rwGroups = [['frame', 'Marco de la foto', 'Sin marco'], ['name', 'Efecto del nombre', 'Sin efecto'], ['cover', 'Portada', 'Sin portada'], ['palette', 'Paleta de colores', 'Sin paleta']];
 
 $('#me-country').innerHTML = '<option value="">Sin indicar</option>' + countries.map((c) => `<option>${c}</option>`).join('');
 $('#ed-accents').innerHTML = accents.map(([id, name]) => `<button type="button" class="swatch" data-accent="${id}" data-set="accent:${id}" title="${name}" aria-label="${name}"></button>`).join('');
@@ -42,7 +42,7 @@ export async function openEditor(tab = 'identidad') {
   draft.banner = user.banner || 'liso';
   draft.shape = user.shape || 'cuadrada';
   draft.shown = [];
-  draft.equip = { frame: '', name: '', cover: '' };
+  draft.equip = { frame: '', name: '', cover: '', palette: '' };
   medals = [];
   rw = { items: [] };
   rwShown = '';
@@ -57,7 +57,7 @@ export async function openEditor(tab = 'identidad') {
   } catch {}
   try {
     rw = await api.rewards();
-    for (const k of ['frame', 'name', 'cover']) draft.equip[k] = rw.equip[k] || '';
+    for (const k of ['frame', 'name', 'cover', 'palette']) draft.equip[k] = rw.equip[k] || '';
   } catch {}
   baseline = JSON.stringify(draft);
   setTab(tab);
@@ -154,6 +154,7 @@ function paintRewards() {
     const p = safePreset(i.preset);
     if (i.kind === 'frame') return `<i class="rw-av" data-frame="${p}"></i>`;
     if (i.kind === 'cover') return `<i class="rw-cv" data-cover="${p}"></i>`;
+    if (i.kind === 'palette') return `<i class="rw-pal" data-palette="${p}"></i>`;
     return `<span class="rw-fx">${nameFx('Nombre', { name: i })}</span>`;
   };
   const syn = synergies();
@@ -180,7 +181,8 @@ function paintPreview() {
   const box = $('#ed-preview');
   box.dataset.accent = draft.accent;
   box.dataset.shape = draft.shape;
-  const cosm = { frame: picked('frame'), name: picked('name'), cover: picked('cover') };
+  const cosm = { frame: picked('frame'), name: picked('name'), cover: picked('cover'), palette: picked('palette') };
+  setPalette(box, cosm.palette);
   setCover($('#ed-preview .pf-banner'), cosm.cover, draft.banner);
   setFrame($('#pv-avatar'), cosm.frame);
   $('#pv-avatar').innerHTML = avatarInner(user);

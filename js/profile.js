@@ -2,7 +2,7 @@ import { avatarInner } from './avatar.js';
 import { $, esc, svg, icons, medalImg, countBadge } from './ui.js';
 import { setVitrina } from './vitrina.js';
 import { setNivel } from './nivel.js';
-import { nameFx, setCover, setFrame } from './rewards.js';
+import { nameFx, setCover, setFrame, setPalette } from './rewards.js';
 
 const discordLogo = '<svg class="i brand" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19.6 5.3A16.6 16.6 0 0 0 15.5 4l-.5 1a15.400 15.400 0 0 0-6 0L8.500 4a16.600 16.600 0 0 0-4.100 1.300C1.800 9.200 1.100 13 1.400 16.700a16.700 16.700 0 0 0 5 2.500l1.100-1.700c-.6-.2-1.200-.5-1.700-.8l.4-.3a11.900 11.900 0 0 0 10.200 0l.4.3c-.5.3-1.100.6-1.700.8l1.100 1.700a16.700 16.700 0 0 0 5-2.500c.4-4.300-.7-8.100-3-11.400zM8.700 14.500c-1 0-1.800-.9-1.800-2s.8-2 1.800-2 1.800.9 1.800 2-.8 2-1.800 2zm6.600 0c-1 0-1.800-.9-1.800-2s.8-2 1.800-2 1.800.9 1.800 2-.8 2-1.800 2z"/></svg>';
 
@@ -102,6 +102,7 @@ export function renderProfile(p, opts) {
 
   const root = $('#profile');
   root.dataset.accent = p.accent || 'ambar';
+  setPalette(root, p.cosm && p.cosm.palette);
   setCover($('#pf-hero .pf-banner'), p.cosm && p.cosm.cover, p.banner);
   $('#pf-hero').dataset.shape = p.shape || 'cuadrada';
 

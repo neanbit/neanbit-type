@@ -9,7 +9,7 @@ const AHEAD = 5; // cuántos niveles futuros se muestran
 
 let view = null;
 let shelf = null; // recompensas que se desbloquean por nivel (solo en el perfil propio)
-const KIND = { frame: 'Marco', name: 'Nombre', cover: 'Portada' };
+const KIND = { frame: 'Marco', name: 'Nombre', cover: 'Portada', palette: 'Paleta' };
 
 const num = (x) => Number(x).toLocaleString('es-AR');
 const xpAt = (step, level) => step * (level - 1) ** 2;

@@ -746,5 +746,40 @@
   "description": "Cerezos cayendo al atardecer.",
   "since": 2,
   "hidden": 1
+ },
+ {
+  "id": "palette-amanecer",
+  "kind": "palette",
+  "preset": "amanecer",
+  "name": "Amanecer",
+  "rarity": "epica",
+  "theme": "celestial",
+  "anim": 0,
+  "description": "Dorado suave, como la primera luz sobre las nubes.",
+  "since": 3,
+  "hidden": 1
+ },
+ {
+  "id": "palette-ascua",
+  "kind": "palette",
+  "preset": "ascua",
+  "name": "Ascua",
+  "rarity": "rara",
+  "theme": "fuego",
+  "anim": 0,
+  "description": "Naranja de brasa para los acentos del perfil.",
+  "since": 3
+ },
+ {
+  "id": "palette-bombon",
+  "kind": "palette",
+  "preset": "bombon",
+  "name": "Bombón",
+  "rarity": "rara",
+  "theme": "dulce",
+  "anim": 0,
+  "description": "Rosa de caramelo para los acentos del perfil.",
+  "since": 3,
+  "hidden": 1
  }
 ]

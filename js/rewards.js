@@ -52,4 +52,11 @@ export function setCover(el, item, banner) {
   }
 }
 
+// La paleta cambia los colores generales del perfil (acento y tinta) con data-palette; sin paleta vale el color que eligió la persona.
+export function setPalette(el, item) {
+  const p = preset(item);
+  if (p) el.dataset.palette = p;
+  else delete el.dataset.palette;
+}
+
 export const rarityName = { comun: 'Común', rara: 'Rara', epica: 'Épica', legendaria: 'Legendaria' };

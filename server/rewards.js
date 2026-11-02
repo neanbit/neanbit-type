@@ -1,8 +1,9 @@
 // Recompensas cosméticas: catálogo, inventario y lo que cada persona tiene puesto.
 // Lo comparten la app y el panel (el archivo es idéntico en los dos proyectos).
 // Los efectos son presets que se dibujan con CSS (css/rewards.css); nadie sube archivos.
+// Tipos: frame (marco de la foto), name (efecto del nombre), cover (portada) y palette (colores generales del perfil, desde la v12).
 
-export const KINDS = ['frame', 'name', 'cover'];
+export const KINDS = ['frame', 'name', 'cover', 'palette'];
 export const RARITIES = ['comun', 'rara', 'epica', 'legendaria'];
 
 // Tipografías permitidas para los efectos de nombre (todas de Google Fonts, ya permitidas por la CSP).
@@ -135,7 +136,7 @@ const levelOfRule = (rule) => { const r = ruleOf(rule); return r.type === 'level
 export function cosmeticsOf(db, user) {
   const eq = parseEquip(user.equip);
   const ids = KINDS.map((k) => eq[k]).filter((v) => typeof v === 'string');
-  const out = { frame: null, name: null, cover: null };
+  const out = { frame: null, name: null, cover: null, palette: null };
   if (!ids.length) return out;
   const rows = db.prepare(`select r.* from rewards r join user_rewards ur on ur.reward_id = r.id
     where ur.user_id = ? and r.enabled = 1 and (ur.expires = 0 or ur.expires > ?) and r.id in (${ids.map(() => '?').join(',')})`)

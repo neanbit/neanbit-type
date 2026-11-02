@@ -4,7 +4,7 @@ import { api } from './api.js';
 import { $, esc, icons, svg } from './ui.js';
 import { nameFx, rarityName, safePreset } from './rewards.js';
 
-const KIND = { frame: 'Marco de foto', name: 'Efecto de nombre', cover: 'Portada' };
+const KIND = { frame: 'Marco de foto', name: 'Efecto de nombre', cover: 'Portada', palette: 'Paleta de colores' };
 const SHOW = 3; // tarjetas a la vez; el resto se resume en una línea
 const STAY = 10000;
 const shown = new Set();
@@ -14,6 +14,7 @@ function thumb(i) {
   const p = safePreset(i.preset);
   if (i.kind === 'frame') return `<i class="rw-av" data-frame="${p}"></i>`;
   if (i.kind === 'cover') return `<i class="rw-cv" data-cover="${p}"></i>`;
+  if (i.kind === 'palette') return `<i class="rw-pal" data-palette="${p}"></i>`;
   return `<span class="rw-fx">${nameFx('Nombre', { name: i })}</span>`;
 }
 
