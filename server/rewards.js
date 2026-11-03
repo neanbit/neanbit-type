@@ -11,7 +11,9 @@ export const FONTS = ['Orbitron', 'Pacifico', 'Press Start 2P', 'Cinzel', 'Bunge
   'Creepster', 'Special Elite', 'Monoton', 'Lobster', 'Caveat', 'Rubik Mono One', 'Michroma', 'Unbounded', 'Share Tech Mono',
   // v10
   'Fredoka', 'Bangers', 'Chewy', 'Cinzel Decorative', 'UnifrakturCook', 'Rye', 'Black Ops One', 'Shrikhand', 'Nosifer',
-  'Sacramento', 'Silkscreen', 'VT323', 'Bungee Shade', 'Dancing Script'];
+  'Sacramento', 'Silkscreen', 'VT323', 'Bungee Shade', 'Dancing Script',
+  // v16
+  'Mountains of Christmas', 'Limelight', 'Pirata One'];
 
 export const presetOk = (s) => typeof s === 'string' && /^[a-z0-9-]{1,24}$/.test(s);
 
