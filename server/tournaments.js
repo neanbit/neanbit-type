@@ -574,5 +574,5 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
       where played > 0 order by titles desc, wins desc, uid`).all();
   }
 
-  return { list, detail, join, leave, summary, races, raceTotals, ranking, tick };
+  return { list, detail, join, leave, summary, races, raceTotals, raceFilter, ranking, tick };
 }

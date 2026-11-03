@@ -286,7 +286,10 @@
       </div>
       <button id="stats-back">Volver</button>
     </header>
-    <div class="seg d-seg" id="s-mode"><button data-m="all" class="on">General</button><button data-m="duel">Duelos</button><button data-m="tourney">Torneos</button></div>
+    <div class="s-bar">
+      <div class="seg d-seg" id="s-mode"><button data-m="all" class="on">General</button><button data-m="duel">Duelos</button><button data-m="tourney">Torneos</button><button data-m="hc">Hardcore</button></div>
+      <div class="seg" id="s-period" aria-label="Período"><button data-n="7">7 días</button><button data-n="30" class="on">30 días</button><button data-n="90">90 días</button><button data-n="0">Todo</button></div>
+    </div>
     <div id="s-empty" class="s-empty" hidden>
       <span data-art="emptyArt"></span>
       <p id="s-empty-text">Todavía no hay carreras guardadas. Corré una y acá vas a ver cómo evolucionás.</p>
@@ -294,19 +297,39 @@
     </div>
     <div id="s-body">
       <div class="kpis" id="s-cards"></div>
+      <div class="kpis alt" id="s-cards2"></div>
 
       <section class="s-block">
-        <header><h3>Evolución</h3>
-          <div class="seg" id="s-range"><button data-n="30" class="on">Últimas 30</button><button data-n="100">Últimas 100</button></div>
+        <header><h3 id="s-chart-title">Evolución</h3>
+          <div class="seg" id="s-metric" data-for="all duel tourney"><button data-k="cpm" class="on">Velocidad</button><button data-k="acc">Precisión</button></div>
         </header>
         <div class="chart" id="s-chart"></div>
-        <p class="legend"><i class="l-line"></i>Carrera <i class="l-avg"></i>Media móvil de 5 <i class="l-rec"></i>Récord</p>
+        <p class="legend" id="s-legend"></p>
+      </section>
+
+      <section class="s-block">
+        <header><h3>Actividad</h3><span class="s-note" id="s-cal-note"></span></header>
+        <div id="s-cal"></div>
       </section>
 
       <div class="s-two">
         <section class="s-block">
-          <header><h3>Actividad, 14 días</h3></header>
-          <div class="days" id="s-days"></div>
+          <header><h3>Hora del día</h3></header>
+          <div id="s-hours"></div>
+          <p class="insight" id="s-hours-note"></p>
+        </section>
+        <section class="s-block">
+          <header><h3>Día de la semana</h3></header>
+          <div id="s-week"></div>
+          <p class="insight" id="s-week-note"></p>
+        </section>
+      </div>
+
+      <div class="s-two">
+        <section class="s-block">
+          <header><h3>Distribución de velocidad</h3></header>
+          <div id="s-hist"></div>
+          <p class="insight" id="s-hist-note"></p>
         </section>
         <section class="s-block">
           <header><h3>Velocidad por categoría</h3></header>
@@ -314,22 +337,47 @@
         </section>
       </div>
 
-      <section class="s-block" id="s-duel" hidden>
-        <header><h3>Últimos duelos</h3></header>
-        <ul class="d-recent" id="s-duel-list"></ul>
+      <section class="s-block">
+        <header><h3>Textos</h3>
+          <div class="seg" id="s-text-sort"><button data-k="plays" class="on">Más jugados</button><button data-k="best">Mejor marca</button></div>
+        </header>
+        <div class="s-scroll" id="s-texts"></div>
       </section>
 
-      <section class="s-block" id="s-tourney" hidden>
-        <header><h3>Últimos partidos de torneo</h3></header>
-        <ul class="d-recent" id="s-tourney-list"></ul>
+      <section class="s-block">
+        <header><h3>Récords personales</h3><span class="s-note" id="s-recs-note"></span></header>
+        <ol class="recs" id="s-recs"></ol>
       </section>
 
-      <section class="s-block g-only">
+      <section class="s-block" id="s-duel" data-for="duel" hidden>
+        <header><h3>Duelos</h3></header>
+        <div class="strip" id="s-duel-strip"></div>
+        <div class="s-two s-inner">
+          <div><h4>Rivales más frecuentes</h4><ul class="cats" id="s-duel-rivals"></ul></div>
+          <div><h4>Últimos duelos</h4><ul class="d-recent" id="s-duel-list"></ul></div>
+        </div>
+      </section>
+
+      <section class="s-block" id="s-tourney" data-for="tourney" hidden>
+        <header><h3>Torneos</h3></header>
+        <div class="s-two s-inner">
+          <div><h4>Rivales más frecuentes</h4><ul class="cats" id="s-tourney-rivals"></ul></div>
+          <div><h4>Últimos partidos</h4><ul class="d-recent" id="s-tourney-list"></ul></div>
+        </div>
+      </section>
+
+      <section class="s-block" id="s-hc" data-for="hc" hidden>
+        <header><h3>Textos que más te eliminan</h3></header>
+        <ul class="cats bad" id="s-hc-texts"></ul>
+        <p class="insight" id="s-hc-note"></p>
+      </section>
+
+      <section class="s-block" data-for="all">
         <header><h3>Teclas donde más fallás</h3></header>
         <div class="kb" id="s-keys"></div>
       </section>
 
-      <section class="s-block g-only">
+      <section class="s-block" data-for="all">
         <header><h3>Palabras que más te cuestan</h3><button id="s-train">Entrenar estos errores</button></header>
         <ol class="crit" id="s-words"></ol>
       </section>

@@ -23,10 +23,14 @@ const siteName = (href) => {
 let scopeView = 'all';
 let scopeFor = null;
 let lastScope = null;
+let scopeHook = () => {};
+
+export const scopeMode = () => scopeView;
+export const onScope = (fn) => { scopeHook = fn; };
 
 const bestRoundText = (b) => (b.champion ? 'Campeón' : ['Finalista', 'Semifinales', 'Cuartos de final', 'Octavos de final'][b.rounds - b.round] || `Ronda ${b.round}`);
 
-// Pestañas General | Duelos | Torneos en la base de la cabecera. En Duelos y Torneos cambian las tarjetas y el expediente.
+// Pestañas General | Duelos | Torneos | Hardcore en la base de la cabecera. Cada una cambia las tarjetas, el expediente y el historial.
 function duelScope(p, opts) {
   const { speed, unit } = opts;
   if (scopeFor !== p.handle) { scopeFor = p.handle; scopeView = 'all'; }
@@ -39,6 +43,7 @@ function duelScope(p, opts) {
       if (!m || m === scopeView) return;
       scopeView = m;
       renderProfile(lastScope.p, lastScope.opts);
+      scopeHook(m);
     };
     bar.onkeydown = (e) => {
       const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
@@ -50,9 +55,9 @@ function duelScope(p, opts) {
       next.click();
     };
   }
-  const count = { all: p.races, duel: p.duels ? p.duels.total : 0, tourney: p.tourneys ? p.tourneys.entered : 0 };
+  const count = { all: p.races, duel: p.duels ? p.duels.total : 0, tourney: p.tourneys ? p.tourneys.entered : 0, hc: p.hard ? p.hard.total : 0 };
   const had = bar.contains(document.activeElement);
-  bar.innerHTML = [['all', 'General'], ['duel', 'Duelos'], ['tourney', 'Torneos']].map(([m, label]) => {
+  bar.innerHTML = [['all', 'General'], ['duel', 'Duelos'], ['tourney', 'Torneos'], ['hc', 'Hardcore']].map(([m, label]) => {
     const on = m === scopeView;
     return `<button type="button" role="tab" data-m="${m}" aria-selected="${on}" tabindex="${on ? 0 : -1}" class="${on ? 'on' : ''}">${label}<i>${count[m] || 0}</i></button>`;
   }).join('');
@@ -89,6 +94,18 @@ function duelScope(p, opts) {
       ['Racha actual', t.streak],
       ['Mejor racha', t.bestStreak],
       ['Promedio en torneo', t.avg ? `${speed(t.avg)} ${unit}` : '-'],
+    ]);
+  } else if (scopeView === 'hc' && p.hard) {
+    const h = p.hard;
+    $('#pf-stats').innerHTML = cards([
+      ['Hardcore', h.total, ''],
+      ['Eliminaciones', h.deaths, ''],
+      ['Supervivencia', h.total + h.deaths ? h.survival + '%' : '-', ''],
+      ['Récord Hardcore', h.best ? speed(h.best) : 0, 'hot'],
+    ]);
+    $('#pf-file').innerHTML = file([
+      ['Promedio en Hardcore', h.avg ? `${speed(h.avg)} ${unit}` : '-'],
+      ['Últ. 10 en Hardcore', h.last10 ? `${speed(h.last10)} ${unit}` : '-'],
     ]);
   }
 }
@@ -160,11 +177,18 @@ export function renderProfile(p, opts) {
   $('#pf-th').textContent = 'Vel. ' + unit;
 }
 
-export function renderHistory({ rows, total }, page, { speed, textLabel }) {
+const emptyHistory = {
+  all: 'Todavía no hay carreras.',
+  duel: 'Todavía no jugaste duelos.',
+  tourney: 'Todavía no jugaste partidos de torneo.',
+  hc: 'Todavía no completaste carreras en Hardcore.',
+};
+
+export function renderHistory({ rows, total }, page, { speed, textLabel, mode = 'all' }) {
   $('#pf-history').innerHTML = rows.length
     ? rows.map((r) => `<tr><td><b>${speed(r.cpm)}</b></td><td><button class="link plain" data-text="${r.text_id}">${esc(textLabel(r.text_id))}</button></td><td>${new Date(r.at).toLocaleDateString('es-AR')}</td>
         <td><button class="ghost" data-ghost="${r.text_id}" data-cpm="${r.cpm}" title="Competir contra esta marca" aria-label="Competir contra esta marca">${svg(icons.replay)}</button></td></tr>`).join('')
-    : '<tr><td colspan="4" class="empty">Todavía no hay carreras.</td></tr>';
+    : `<tr><td colspan="4" class="empty">${emptyHistory[mode] || emptyHistory.all}</td></tr>`;
   const pages = Math.max(1, Math.ceil(total / 10));
   $('#pf-page').textContent = `Página ${page + 1} de ${pages}`;
   $('#pf-prev').disabled = page === 0;

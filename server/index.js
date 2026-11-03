@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { seed } from './seed.js';
 import { createDuels } from './duels.js';
 import { createTournaments } from './tournaments.js';
+import { createStats } from './stats.js';
 import { clientIp, createLimiter } from './limits.js';
 import { cleanProgress } from './levels.js';
 import { setupXp } from './xp.js';
@@ -161,6 +162,18 @@ function profileStats(userId) {
   const normal = db.prepare('select count(*) as races, coalesce(max(cpm), 0) as best from races where user_id = ? and hc = 0').get(userId);
   const hard = db.prepare('select count(*) as hcRaces, coalesce(max(cpm), 0) as hcBest from races where user_id = ? and hc = 1').get(userId);
   return { ...normal, ...hard };
+}
+
+function hardSummary(userId) {
+  const r = db.prepare('select count(*) as total, coalesce(max(cpm), 0) as best, coalesce(round(avg(cpm)), 0) as avg from races where user_id = ? and hc = 1').get(userId);
+  const last = db.prepare('select cpm from races where user_id = ? and hc = 1 order by at desc limit 10').all(userId);
+  const deaths = db.prepare('select count(*) as n from deaths where user_id = ?').get(userId).n;
+  const attempts = r.total + deaths;
+  return {
+    total: r.total, best: r.best, avg: r.avg, deaths,
+    last10: last.length ? Math.round(last.reduce((a, x) => a + x.cpm, 0) / last.length) : 0,
+    survival: attempts ? Math.round((r.total / attempts) * 100) : 0,
+  };
 }
 
 function duelSummary(userId, recent = 0) {
@@ -590,29 +603,9 @@ async function api(req, res, url) {
 
   if (key === 'GET /api/stats') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
-    if (url.searchParams.get('mode') === 'tourney') {
-      const agg = tourneys.raceTotals(me.id);
-      return send(res, 200, {
-        races: tourneys.races(me.id), chars: [], words: [], deaths: 0, tourney: tourneys.summary(me.id, 8),
-        totals: { races: agg.n, best: agg.best, hcRaces: 0, hcBest: 0, acc: agg.acc, since: agg.since },
-      });
-    }
-    const duelMode = url.searchParams.get('mode') === 'duel';
-    const races = db.prepare(`select cpm, acc, at, text_id, hc from races where user_id = ? and hc = 0 and duel ${duelMode ? '>' : '>='} 0 order by at desc limit 100`).all(me.id).reverse();
-    const top = (kind, n) => db.prepare('select key, n from errors where user_id = ? and kind = ? order by n desc limit ?').all(me.id, kind, n);
-    const deaths = db.prepare('select count(*) as n from deaths where user_id = ?').get(me.id).n;
-    const t = profileStats(me.id);
-    const agg = db.prepare(`select coalesce(round(avg(acc)), 0) as acc, min(at) as since, count(*) as n, coalesce(max(cpm), 0) as best from races where user_id = ? and hc = 0 and duel ${duelMode ? '>' : '>='} 0`).get(me.id);
-    if (duelMode) {
-      return send(res, 200, {
-        races, chars: [], words: [], deaths: 0, duel: duelSummary(me.id, 8),
-        totals: { races: agg.n, best: agg.best, hcRaces: 0, hcBest: 0, acc: agg.acc, since: agg.since },
-      });
-    }
-    return send(res, 200, {
-      races, chars: top('c', 40), words: top('w', 20), deaths,
-      totals: { races: t.races, best: t.best, hcRaces: t.hcRaces, hcBest: t.hcBest, acc: agg.acc, since: agg.since },
-    });
+    if (limits.hit('stats:' + me.id, 30, 60000)) return tooMany(res, 'stats:' + me.id, 60000);
+    statsFor ??= createStats({ db, tourneys, duelSummary, rankOf, hcRankOf });
+    return send(res, 200, statsFor(me.id, url.searchParams.get('mode')));
   }
 
   if (key === 'GET /api/races/top') {
@@ -719,8 +712,11 @@ async function api(req, res, url) {
     if (!user) return send(res, 404, { error: 'No existe ese usuario.' });
     if (route[2]) {
       const page = Math.min(100000, Math.max(0, Math.trunc(Number(url.searchParams.get('page'))) || 0));
-      const rows = db.prepare('select cpm, text_id, at from races where user_id = ? and hc = 0 order by at desc limit 10 offset ?').all(user.id, page * 10);
-      const total = db.prepare('select count(*) as n from races where user_id = ? and hc = 0').get(user.id).n;
+      const scopes = { all: 'hc = 0', duel: 'hc = 0 and duel > 0', tourney: `hc = 0 and ${tourneys.raceFilter}`, hc: 'hc = 1' };
+      const mode = url.searchParams.get('mode');
+      const where = Object.hasOwn(scopes, mode) ? scopes[mode] : scopes.all;
+      const rows = db.prepare(`select cpm, text_id, at from races where user_id = ? and ${where} order by at desc limit 10 offset ?`).all(user.id, page * 10);
+      const total = db.prepare(`select count(*) as n from races where user_id = ? and ${where}`).get(user.id).n;
       return send(res, 200, { rows, total });
     }
     const s = profileStats(user.id);
@@ -740,12 +736,14 @@ async function api(req, res, url) {
       rank: rankOf(user.id), hcRank: hcRankOf(user.id), level: levelOf(user.id),
       ladder: ladder(), mine: !!(me && me.id === user.id), boost: me && me.id === user.id ? boostOf(user.id) : null,
       verified: user.verified, shown: parseShown(user.shown), medals, secretLeft,
-      duels: duelSummary(user.id), tourneys: tourneys.summary(user.id),
+      duels: duelSummary(user.id), tourneys: tourneys.summary(user.id), hard: hardSummary(user.id),
     });
   }
 
   send(res, 404, { error: 'No encontrado.' });
 }
+
+let statsFor = null;
 
 function startSession(req, res, userId, status) {
   const token = randomBytes(32).toString('hex');

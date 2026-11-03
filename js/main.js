@@ -5,7 +5,7 @@ import { siteReady } from './site.js';
 import './home.js';
 import { api } from './api.js';
 import { renderStats, redrawStats } from './stats.js';
-import { renderProfile, renderHistory } from './profile.js';
+import { renderProfile, renderHistory, scopeMode, onScope } from './profile.js';
 import { openVitrina } from './vitrina.js';
 import { esc, svg, icons } from './ui.js';
 import { avatarInner } from './avatar.js';
@@ -315,8 +315,13 @@ function textLabel(id) {
   return text ? `#${id} ${text.category}` : `#${id}`;
 }
 
+let historyTurn = 0;
+
 async function loadHistory() {
-  renderHistory(await api.userRaces(view.handle, view.page), view.page, { speed, textLabel });
+  const mode = scopeMode();
+  const turn = ++historyTurn;
+  const data = await api.userRaces(view.handle, view.page, mode);
+  if (turn === historyTurn) renderHistory(data, view.page, { speed, textLabel, mode });
 }
 
 async function openProfile(handle) {
@@ -345,7 +350,8 @@ async function searchPilots() {
 
 function statsKit() {
   const category = (id) => texts.find((t) => t.id === id)?.category;
-  return { speed, unit: unitLabel(), category };
+  const chars = (id) => texts.find((t) => t.id === id)?.text.length || 0;
+  return { speed, unit: unitLabel(), category, label: textLabel, chars };
 }
 
 async function openStats() {
@@ -660,6 +666,7 @@ $('#pf-results').onclick = (e) => {
   $('#pf-search').value = '';
   openProfile(row.dataset.handle);
 };
+onScope(() => { view.page = 0; loadHistory().catch((err) => note(err.message)); });
 $('#pf-prev').onclick = () => { view.page--; loadHistory(); };
 $('#pf-next').onclick = () => { view.page++; loadHistory(); };
 $('#pf-tags').onclick = (e) => {
