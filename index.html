@@ -58,66 +58,118 @@
 
 <main>
   <section id="home">
-    <div class="hero">
-      <div class="hero-main">
-        <p class="eyebrow" id="hero-date"></p>
-        <h1 id="hero-title">Bienvenido</h1>
-        <p class="hero-sub" id="hero-sub"></p>
-        <dl class="pulse" id="pulse" hidden>
-          <div><dt>Racha</dt><dd id="p-streak">0</dd><small id="p-streak-u">días</small></div>
-          <div><dt id="p-best-l">Mejor</dt><dd id="p-best">0</dd><small>marca personal</small></div>
-          <div><dt id="p-avg-l">Promedio</dt><dd id="p-avg">0</dd><small>últimas 10</small></div>
-          <div><dt>Hoy</dt><dd id="p-today">0</dd><small id="p-today-u">carreras</small></div>
-        </dl>
-        <div class="progress" id="progress" hidden>
-          <div class="lvl" data-feature="levels">
-            <div class="p-top"><b id="lv-name">Nivel 1</b><span id="lv-title">Novato</span><em id="lv-xp"></em></div>
-            <div class="meter" role="progressbar" aria-label="Avance hacia el próximo nivel"><i id="lv-fill"></i></div>
-            <p class="lv-boost" id="lv-boost" hidden></p>
-          </div>
-          <div class="goal" data-feature="goal">
-            <div class="p-top"><b>Meta de hoy</b><span id="goal-txt"></span><button class="link" id="goal-edit">Cambiar</button></div>
-            <div class="ticks" id="goal-ticks" aria-hidden="true"></div>
-            <div class="seg" id="goal-seg" hidden><button data-g="3">3</button><button data-g="5">5</button><button data-g="10">10</button><button data-g="20">20</button><button data-g="30">30</button></div>
-          </div>
-        </div>
-        <div class="invite" id="invite">
-          <span>Estás como invitado: las carreras no se guardan ni suman al ranking.</span>
-          <button class="primary" id="invite-login">Ingresar o crear cuenta</button>
+    <div class="hm-bar">
+      <p class="hm-stats" id="hm-stats" aria-live="off"></p>
+      <div class="seg hm-unit" id="hm-unit" role="group" aria-label="Unidad de velocidad">
+        <button data-unit="cpm">CPM</button><button data-unit="wpm">WPM</button><button data-unit="zen">ZEN</button>
+      </div>
+    </div>
+
+    <div class="hm-modes">
+      <div class="hm-group">
+        <p class="eyebrow">Practicar</p>
+        <div class="hm-keys">
+          <button class="mode primary" id="go-random"><span class="m-art" data-art="mode:random"></span><kbd>1</kbd><span class="m-txt"><b>Aleatorio</b><small>Un texto al azar</small></span></button>
+          <button class="mode" id="go-pick"><span class="m-art" data-art="mode:pick"></span><kbd>2</kbd><span class="m-txt"><b>Personalizado</b><small>Elegí categoría o texto</small></span></button>
+          <button class="mode" id="go-practice"><span class="m-art" data-art="mode:practice"></span><kbd>3</kbd><span class="m-txt"><b>Entrenamiento</b><small>Tus palabras difíciles</small><em class="lock-tag" id="practice-tag">Con cuenta</em></span></button>
         </div>
       </div>
-      <aside class="daily" id="daily" hidden>
-        <small>Texto del día</small>
-        <p id="daily-text"></p>
-        <footer><span id="daily-meta"></span><button class="primary" id="daily-go">Correr este texto</button></footer>
+      <div class="hm-group">
+        <p class="eyebrow">Competir</p>
+        <div class="hm-keys">
+          <button class="mode hard" id="go-hc"><span class="m-art" data-art="mode:hardcore"></span><kbd>4</kbd><span class="m-txt"><b>Hardcore</b><small>Un error y se acaba</small></span></button>
+          <button class="mode" id="go-duel"><span class="m-art" data-art="mode:duel"></span><kbd>5</kbd><span class="m-txt"><b>Duelos</b><small>1 contra 1 en vivo</small><em class="lock-tag" id="duel-tag">Con cuenta</em></span></button>
+          <button class="mode tn-mode" id="go-tourney"><span class="m-art" data-art="mode:tourney"></span><kbd>6</kbd><span class="m-txt"><b>Torneos</b><small>Eliminación directa</small><em class="lock-tag" id="tn-tag" hidden></em></span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hm-invite" id="invite" hidden>
+      <div>
+        <p class="eyebrow">Invitado</p>
+        <p>Las carreras no se guardan ni suman al ranking. Con una cuenta tenés nivel, racha, medallas, Duelos y Torneos.</p>
+      </div>
+      <button class="primary" id="invite-login">Ingresar o crear cuenta</button>
+    </div>
+
+    <div class="hm-cards" id="hm-me" hidden>
+      <article class="hm-card" data-feature="levels">
+        <header><p class="eyebrow">Nivel</p><button class="link" id="hm-profile">Ver perfil</button></header>
+        <div class="hm-line"><b class="hm-big" id="lv-num">1</b><span id="lv-title">Novato</span></div>
+        <div class="meter" role="progressbar" aria-label="Avance hacia el próximo nivel"><i id="lv-fill"></i></div>
+        <p class="hm-sub"><span id="lv-xp"></span><span id="lv-next"></span></p>
+        <p class="hm-boost" id="lv-boost" hidden></p>
+      </article>
+
+      <article class="hm-card">
+        <header><p class="eyebrow">Hoy</p><button class="link" id="goal-edit" data-feature="goal">Cambiar meta</button></header>
+        <div class="hm-line"><b class="hm-big" id="td-num">0</b><span id="td-of" data-feature="goal"></span><span id="td-best"></span></div>
+        <div class="ticks" id="goal-ticks" data-feature="goal" aria-hidden="true"></div>
+        <div class="seg" id="goal-seg" hidden><button data-g="3">3</button><button data-g="5">5</button><button data-g="10">10</button><button data-g="20">20</button><button data-g="30">30</button></div>
+        <div class="hm-streak">
+          <p class="hm-sub"><span>Racha <b id="st-n">0</b> <span id="st-u">días</span></span><span>14 días</span></p>
+          <div class="heat" id="heat" role="img" aria-label="Carreras de los últimos 14 días"></div>
+        </div>
+      </article>
+
+      <article class="hm-card">
+        <header><p class="eyebrow">Rendimiento</p><span class="hm-tag" id="pf-unit">CPM</span></header>
+        <div id="spark-box"></div>
+        <dl class="hm-trio">
+          <div><dt>Mejor</dt><dd id="p-best">0</dd></div>
+          <div><dt>Promedio</dt><dd id="p-avg">0</dd></div>
+          <div><dt>Puesto</dt><dd id="p-rank">-</dd></div>
+        </dl>
+      </article>
+    </div>
+
+    <div class="hm-main">
+      <section class="board">
+        <header>
+          <div class="tabs" id="board-tabs">
+            <button data-b="races" class="on">Carreras</button>
+            <button data-b="avg">Promedios</button>
+            <button data-b="hc">Hardcore</button>
+            <button data-b="duels">Duelos</button>
+            <button data-b="tourneys">Torneos</button>
+          </div>
+          <div class="seg" id="board-scope"></div>
+        </header>
+        <ol class="rows" id="board-rows"></ol>
+        <div class="board-pager" id="board-pager" hidden><button id="bp-prev">Anterior</button><span id="bp-info"></span><button id="bp-next">Siguiente</button></div>
+        <p class="board-note" id="board-note"></p>
+      </section>
+
+      <aside class="hm-side">
+        <article class="hm-card" id="w-last" hidden>
+          <header><p class="eyebrow">Última carrera</p><span class="hm-tag" id="last-when"></span></header>
+          <div class="hm-line"><b class="hm-big" id="last-speed">0</b><span id="last-unit">CPM</span></div>
+          <p class="hm-sub"><span id="last-meta"></span><span id="last-text"></span></p>
+          <button id="last-again">Repetir este texto</button>
+        </article>
+
+        <article class="hm-card" id="w-weak" hidden>
+          <header><p class="eyebrow">Teclas a mejorar</p><span class="hm-tag">Tasa de error</span></header>
+          <div class="hm-caps" id="weak-caps"></div>
+          <button id="weak-go">Ir al entrenamiento</button>
+        </article>
+
+        <article class="hm-card" id="w-tn">
+          <header><p class="eyebrow">Torneos</p><button class="link" id="tn-all">Ver todos</button></header>
+          <ul class="hm-tn" id="tn-list-home"></ul>
+        </article>
+
+        <article class="hm-card hm-help">
+          <header><p class="eyebrow">Teclado</p></header>
+          <dl>
+            <div><dt><kbd>1</kbd> a <kbd>6</kbd></dt><dd>Elegir modo</dd></div>
+            <div><dt><kbd>Tab</kbd></dt><dd>Reiniciar la carrera</dd></div>
+            <div><dt><kbd>Enter</kbd></dt><dd>Siguiente texto</dd></div>
+            <div><dt><kbd>Esc</kbd></dt><dd>Volver al inicio</dd></div>
+          </dl>
+        </article>
       </aside>
     </div>
-
-    <div class="modes-grid">
-      <button class="mode primary" id="go-random"><span class="m-art" data-art="mode:random"></span><span><b>Aleatorio</b><small>Un texto al azar, sin vueltas</small></span></button>
-      <button class="mode" id="go-pick"><span class="m-art" data-art="mode:pick"></span><span><b>Personalizado</b><small>Elegí categoría o texto</small></span></button>
-      <button class="mode" id="go-practice"><span class="m-art" data-art="mode:practice"></span><span><b>Entrenamiento</b><small>Tus palabras difíciles</small></span><em class="lock-tag" id="practice-tag">Con cuenta</em></button>
-      <button class="mode hard" id="go-hc"><span class="m-art" data-art="mode:hardcore"></span><span><b>Hardcore</b><small>Un error y se acaba</small></span></button>
-      <button class="mode" id="go-duel"><span class="m-art" data-art="mode:duel"></span><span><b>Duelos</b><small>1 contra 1 en vivo</small></span><em class="lock-tag" id="duel-tag">Con cuenta</em></button>
-      <button class="mode tn-mode" id="go-tourney"><span class="m-art" data-art="mode:tourney"></span><span><b>Torneos</b><small>Llaves de eliminación directa</small></span></button>
-    </div>
-
-    <section class="board">
-      <header>
-        <div class="tabs" id="board-tabs">
-          <button data-b="races" class="on">Carreras</button>
-          <button data-b="avg">Promedios</button>
-          <button data-b="hc">Hardcore</button>
-          <button data-b="duels">Duelos</button>
-          <button data-b="tourneys">Torneos</button>
-        </div>
-        <div class="seg" id="board-scope"></div>
-      </header>
-      <ol class="rows" id="board-rows"></ol>
-      <div class="board-pager" id="board-pager" hidden><button id="bp-prev">Anterior</button><span id="bp-info"></span><button id="bp-next">Siguiente</button></div>
-      <p class="board-note" id="board-note"></p>
-    </section>
-    <p class="community" id="community"></p>
   </section>
 
   <section id="pick" hidden>

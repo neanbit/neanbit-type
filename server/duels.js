@@ -336,5 +336,8 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, sa
     if (c && c.duel) abandon(c);
   }
 
-  return { upgrade, online, hooks, startTournamentDuel, free, kick };
+  // Para el inicio: cuántas personas están conectadas al sistema de duelos y cuántas esperan rival.
+  const presenceNow = () => ({ online: online.size, queued: queue.length });
+
+  return { upgrade, online, hooks, startTournamentDuel, free, kick, presenceNow };
 }

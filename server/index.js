@@ -326,6 +326,28 @@ function homeSummary(userId, tz) {
   };
 }
 
+// Datos extra del inicio, solo para quien tiene sesión: actividad de los últimos 14 días, curva de las últimas carreras,
+// la última carrera, las teclas con más tasa de error y los torneos en los que está anotado. Todo sale con consultas
+// acotadas por usuario (índice races_user), así que el costo no crece con la cantidad de cuentas.
+function homeExtra(userId, tz) {
+  const day = (t) => Math.floor((t - tz * 60000) / 86400000);
+  const today = day(Date.now());
+  const week = Array(14).fill(0);
+  for (const r of db.prepare('select at from races where user_id = ? and hc = 0 and at >= ?').all(userId, Date.now() - 15 * 86400000)) {
+    const i = 13 - (today - day(r.at));
+    if (i >= 0 && i < 14) week[i]++;
+  }
+  const spark = db.prepare('select cpm from races where user_id = ? and hc = 0 order by at desc limit 20').all(userId).map((r) => r.cpm).reverse();
+  const last = db.prepare('select text_id as textId, cpm, acc, at, hc, duel from races where user_id = ? order by at desc limit 1').get(userId) || null;
+  let weak = db.prepare(`select x.key as key, x.n as miss, k.n as typed from errors x
+    join errors k on k.user_id = x.user_id and k.kind = 'k' and k.key = x.key
+    where x.user_id = ? and x.kind = 'x' and k.n >= 25 and trim(x.key) != ''
+    order by (1.0 * x.n / k.n) desc, x.n desc limit 6`).all(userId);
+  if (weak.length < 3) weak = db.prepare("select key, n as miss, 0 as typed from errors where user_id = ? and kind = 'c' and trim(key) != '' order by n desc limit 6").all(userId);
+  const joined = db.prepare('select tournament_id as id from tournament_players where user_id = ?').all(userId).map((r) => r.id);
+  return { week, spark, last, weak, joined };
+}
+
 // Niveles: la XP se guarda al ocurrir (races.xp y la tabla xp_events) y el total vive en users.xp; ver server/xp.js.
 // Los valores (XP por carrera, escala, títulos) se leen de `settings.progress`, que se edita desde el panel (server/levels.js).
 const progress = () => cleanProgress(setting('progress'));
@@ -720,11 +742,13 @@ async function api(req, res, url) {
       users: db.prepare('select count(*) as n from users').get().n,
       today: db.prepare('select count(*) as n from races where at >= ?').get(dayStart).n,
     }));
-    const ids = memo('textids', () => db.prepare('select id from texts where active = 1 order by id').all().map((t) => t.id), 60000);
-    const dayNumber = Math.floor((Date.now() - tz * 60000) / 86400000);
-    const daily = ids.length ? ids[dayNumber % ids.length] : null;
     const pulse = me ? { ...homeSummary(me.id, tz), rank: rankOf(me.id), hcRank: hcRankOf(me.id), level: levelOf(me.id), boost: boostOf(me.id), goal: db.prepare('select goal from users where id = ?').get(me.id).goal } : null;
-    return send(res, 200, { community, daily, pulse, min: minForAverage });
+    const live = memo('home-live', () => duels.presenceNow(), 5000);
+    const open = memo('home-tourneys', () => tourneys.list(null)
+      .filter((t) => t.status === 'inscripcion' || t.status === 'en_curso').slice(0, 4)
+      .map((t) => ({ id: t.id, name: t.name, status: t.status, players: t.players, size: t.size, startsAt: t.startsAt })), 15000);
+    const extra = me ? homeExtra(me.id, tz) : null;
+    return send(res, 200, { community, pulse, min: minForAverage, live, tourneys: open, extra });
   }
 
   if (key === 'GET /api/users') {

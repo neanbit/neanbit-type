@@ -110,7 +110,7 @@ body.zen #r-live { filter: blur(8px); }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
 
 /* marcas de registro en dos esquinas: paneles principales */
-.daily, .board, .result, .pf-hero, .tn-head, .d-res, .page-hero, .s-empty, .tn-alert, .callout {
+.board, .result, .pf-hero, .tn-head, .d-res, .page-hero, .s-empty, .tn-alert, .callout {
   background-color: var(--panel);
   background-image:
     linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)),
@@ -280,5 +280,3 @@ td.empty { padding: 2.5rem 0; color: var(--muted); text-align: center; }
 [data-off~="share"] [data-feature="share"], [data-off~="rematch"] [data-feature="rematch"], [data-off~="sound"] [data-feature="sound"],
 [data-off~="pace"] [data-feature="pace"], [data-off~="mytexts"] [data-feature="mytexts"], [data-off~="levels"] [data-feature="levels"],
 [data-off~="goal"] [data-feature="goal"] { display: none !important; }
-[data-off~="levels"][data-off~="goal"] .progress { display: none !important; }
-[data-off~="levels"] .progress, [data-off~="goal"] .progress { grid-template-columns: 1fr; }
