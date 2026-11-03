@@ -10,6 +10,7 @@ export class Engine {
     this.prev = '';
     this.missedChars = {};
     this.missedWords = {};
+    this.typedKeys = {}; // teclas tipeadas por carácter esperado (minúscula), para sacar la tasa de error por tecla
   }
 
   get word() { return this.words[this.index]; }
@@ -35,6 +36,12 @@ export class Engine {
     const wrong = !word.startsWith(typed);
     if (value.length > this.prev.length) {
       this.keys++;
+      // El espacio que envía la palabra no cuenta como tecla; un espacio de más, tampoco (no tiene carácter esperado).
+      const asked = wrong ? word[this.matched(typed)] : submit ? undefined : word[typed.length - 1];
+      if (asked) {
+        const k = asked.toLowerCase();
+        this.typedKeys[k] = (this.typedKeys[k] || 0) + 1;
+      }
       if (wrong) {
         this.misses++;
         const expected = word[this.matched(typed)]?.toLowerCase();

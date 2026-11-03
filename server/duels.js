@@ -5,7 +5,7 @@ const GRACE_MS = 90000;
 const MAX_RACE_MS = 300000;
 const MAX_CPM = 1800;
 
-export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, xp, rewards = null }) {
+export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, saveKeys = null, xp, rewards = null }) {
   db.exec(`
     create table if not exists duels (
       id integer primary key, a_id integer not null, b_id integer not null, text_id integer not null,
@@ -159,7 +159,7 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, xp
       if (!Number.isInteger(m.acc) || m.acc < 0 || m.acc > 100) return fail(c, 'Resultado inválido.');
       const cpm = Math.min(MAX_CPM, Math.max(1, Math.round(len * 60000 / ms)));
       d.prog.set(c.id, len);
-      d.done.set(c.id, { ms, cpm, acc: m.acc, chars: m.chars, words: m.words });
+      d.done.set(c.id, { ms, cpm, acc: m.acc, chars: m.chars, words: m.words, keys: m.keys });
       d.order.push(c.id);
       if (d.done.size === 2) return conclude(d);
       tell(rival(d, c), { t: 'opp_done', cpm });
@@ -253,15 +253,16 @@ export function createDuels({ db, sessionUser, maintenance, bump, saveErrors, xp
         const info = db.prepare('insert into duels (a_id, b_id, text_id, winner_id, a_cpm, a_acc, b_cpm, b_acc, forfeit, at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
           .run(d.a.id, d.b.id, d.textId, winner ? winner.id : null, da?.cpm ?? null, da?.acc ?? null, dbb?.cpm ?? null, dbb?.acc ?? null, forfeit ? 1 : 0, Date.now());
         duelId = Number(info.lastInsertRowid);
-        const add = db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc, duel, xp) values (?, ?, ?, ?, ?, 0, ?, ?)');
+        const add = db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc, duel, xp, ms) values (?, ?, ?, ?, ?, 0, ?, ?, ?)');
         const at = Date.now();
         for (const [x, r] of [[d.a, da], [d.b, dbb]]) {
           if (!r) continue;
           const gain = xp.race(x.id, 0, r.acc, at);
-          add.run(x.id, d.textId, r.cpm, r.acc, at, duelId, gain.xp);
+          add.run(x.id, d.textId, r.cpm, r.acc, at, duelId, gain.xp, r.ms);
           xp.credit(x.id, gain.xp);
           saveErrors(x.id, 'c', r.chars);
           saveErrors(x.id, 'w', r.words);
+          saveKeys?.(x.id, r.keys, r.chars);
         }
         if (winner) xp.event(winner.id, 'duel', duelId, at);
         if (rewards) for (const x of [d.a, d.b]) rewards.auto(x.id, { events: true });

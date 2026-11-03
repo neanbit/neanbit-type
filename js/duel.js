@@ -261,6 +261,10 @@ export const duel = {
   finish(data) {
     clearTimeout(trailing);
     trailing = 0;
-    send({ t: 'finish', ...data });
+    // El servidor corta mensajes de más de 4 KB: si se pasa, primero se descartan las palabras y después las teclas.
+    const msg = { t: 'finish', ...data };
+    if (JSON.stringify(msg).length > 3400) delete msg.words;
+    if (JSON.stringify(msg).length > 3400) delete msg.keys;
+    send(msg);
   },
 };

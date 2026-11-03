@@ -76,8 +76,8 @@ $('#auth-form').onsubmit = async (e) => {
 
 document.addEventListener('race', async (e) => {
   if (!user) return;
-  const { textId, cpm, acc, hc, chars, words } = e.detail;
-  const saved = await api.sendRace({ textId, cpm, acc, hc: hc ? 1 : 0, chars, words }).catch(() => null);
+  const { textId, cpm, acc, hc, chars, words, keys, ms } = e.detail;
+  const saved = await api.sendRace({ textId, cpm, acc, hc: hc ? 1 : 0, chars, words, keys, ms }).catch(() => null);
   document.dispatchEvent(new CustomEvent('race-saved', { detail: saved && saved.xp }));
   announce(saved && saved.news);
 });

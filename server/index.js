@@ -36,6 +36,8 @@ db.exec(`
   create index if not exists races_cpm on races (cpm desc);
 `);
 try { db.exec('alter table races add column hc integer not null default 0'); } catch {}
+// Duración real de la carrera en milisegundos. Es null en las carreras anteriores a la v20 (ahí el tiempo se estima).
+try { db.exec('alter table races add column ms integer'); } catch {}
 db.exec(`
   create table if not exists errors (
     user_id integer not null, kind text not null, key text not null, n integer not null,
@@ -156,6 +158,32 @@ function saveErrors(userId, kind, map) {
   for (const [key, n] of Object.entries(map || {}).slice(0, 60)) {
     if (key.length <= 30 && Number.isInteger(n) && n > 0 && n < 200) up.run(userId, kind, key, n);
   }
+}
+
+// Teclas tipeadas por carácter esperado (kind 'k') y errores de ese mismo período (kind 'x'). Con los dos se puede
+// sacar la tasa de error por tecla y por dedo; 'c' sigue siendo el historial de errores y no sirve para eso porque
+// incluye carreras sin conteo de teclas.
+function saveKeys(userId, keys, misses) {
+  if (!keys || typeof keys !== 'object' || Array.isArray(keys)) return;
+  const up = db.prepare(
+    'insert into errors (user_id, kind, key, n) values (?, ?, ?, ?) on conflict (user_id, kind, key) do update set n = n + excluded.n'
+  );
+  const bad = misses && typeof misses === 'object' && !Array.isArray(misses) ? misses : {};
+  for (const [key, n] of Object.entries(keys).slice(0, 80)) {
+    if (key.length < 1 || key.length > 4 || !Number.isInteger(n) || n < 1 || n > 5000) continue;
+    const m = Object.hasOwn(bad, key) && Number.isInteger(bad[key]) ? Math.min(bad[key], n) : 0;
+    up.run(userId, 'k', key, n);
+    if (m > 0) up.run(userId, 'x', key, m);
+  }
+}
+
+// La duración llega del navegador: solo se guarda si es un entero razonable y coherente con el largo del texto y la
+// velocidad informada (si no, queda en null y el tiempo se estima como antes, sin rechazar la carrera).
+function raceMs(ms, cpm, textId) {
+  if (!Number.isInteger(ms) || ms < 1000 || ms > 3600000) return null;
+  const len = db.prepare('select length(body) as n from texts where id = ?').get(textId)?.n || 0;
+  const expected = (len * 60000) / cpm;
+  return expected > 0 && Math.abs(ms - expected) <= expected * 0.3 + 1500 ? ms : null;
 }
 
 function profileStats(userId) {
@@ -558,7 +586,7 @@ async function api(req, res, url) {
   if (key === 'POST /api/races') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para guardar la carrera.' });
     if (maintenance().on && me.role !== 'admin') return send(res, 503, { error: 'Estamos en mantenimiento.' });
-    const { textId, cpm, acc, hc = 0, chars, words } = await readBody(req);
+    const { textId, cpm, acc, hc = 0, chars, words, keys, ms } = await readBody(req);
     const valid = [textId, cpm, acc].every(Number.isInteger) && cpm >= 1 && cpm <= 1800 && acc >= 0 && acc <= 100 && (hc === 0 || hc === 1);
     if (!valid || !db.prepare('select 1 from texts where id = ?').get(textId)) return send(res, 400, { error: 'Resultado inválido.' });
     const last = db.prepare('select max(at) as a from races where user_id = ?').get(me.id).a || 0;
@@ -566,12 +594,13 @@ async function api(req, res, url) {
     const before = levelOf(me.id);
     const now = Date.now();
     const gain = xp.race(me.id, hc, acc, now);
-    db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc, xp) values (?, ?, ?, ?, ?, ?, ?)')
-      .run(me.id, textId, cpm, acc, now, hc, gain.xp);
+    db.prepare('insert into races (user_id, text_id, cpm, acc, at, hc, xp, ms) values (?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(me.id, textId, cpm, acc, now, hc, gain.xp, raceMs(ms, cpm, textId));
     xp.credit(me.id, gain.xp);
     version++;
     saveErrors(me.id, 'c', chars);
     saveErrors(me.id, 'w', words);
+    saveKeys(me.id, keys, chars);
     autoRewards(me.id, { events: true });
     return send(res, 201, { ok: true, xp: { before, after: levelOf(me.id), gain: gain.xp, mult: gain.mult }, news: unseen(db, me.id) });
   }
@@ -811,7 +840,7 @@ async function serveStatic(req, res, pathname) {
   }
 }
 
-const duels = createDuels({ db, sessionUser, maintenance, bump: () => { version++; }, saveErrors, xp, rewards: rewardHooks });
+const duels = createDuels({ db, sessionUser, maintenance, bump: () => { version++; }, saveErrors, saveKeys, xp, rewards: rewardHooks });
 const tourneys = createTournaments({
   db, duels, maintenance, xp, rewards: rewardHooks, bump: () => { version++; },
   earnedMedal: (userId, medalId) => medalsOf(userId).some((m) => m.id === medalId && m.earned),

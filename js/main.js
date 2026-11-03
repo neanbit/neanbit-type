@@ -351,7 +351,7 @@ async function searchPilots() {
 function statsKit() {
   const category = (id) => texts.find((t) => t.id === id)?.category;
   const chars = (id) => texts.find((t) => t.id === id)?.text.length || 0;
-  return { speed, unit: unitLabel(), category, label: textLabel, chars };
+  return { speed, unit: unitLabel(), category, label: textLabel, chars, toCpm: (v) => (state.unit === 'wpm' ? v * 5 : v) };
 }
 
 async function openStats() {
@@ -407,7 +407,7 @@ function finish() {
   }
   if (state.mode !== 'practice' && state.mode !== 'custom') {
     document.dispatchEvent(new CustomEvent('race', {
-      detail: { textId: state.text.id, cpm, acc: engine.accuracy(), hc: state.mode === 'hc', chars: engine.missedChars, words: engine.missedWords },
+      detail: { textId: state.text.id, cpm, acc: engine.accuracy(), hc: state.mode === 'hc', chars: engine.missedChars, words: engine.missedWords, keys: engine.typedKeys, ms: Math.round(engine.elapsed() * 1000) },
     }));
   }
 
@@ -799,7 +799,7 @@ function finishDuel() {
   clearInterval(state.timer);
   state.over = true;
   const { engine } = state;
-  duel.finish({ acc: engine.accuracy(), chars: engine.missedChars, words: engine.missedWords });
+  duel.finish({ acc: engine.accuracy(), chars: engine.missedChars, words: engine.missedWords, keys: engine.typedKeys });
   $('#r-bar').style.width = '100%';
   $('#r-forfeit').hidden = true;
   $('#r-meta').textContent = raceMeta(state.text, 'duel', 0);
