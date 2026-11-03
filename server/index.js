@@ -277,6 +277,7 @@ function medalsOf(userId) {
       id: m.id, name: m.name, desc: m.description, icon: `${m.icon}--${tier}`, tier, stackable: !!m.stackable, secret: !!m.secret, earned,
       count: earned && m.stackable ? Math.max(given, 1) : 1,
       group: groupOf(m.condition),
+      speed: !manual && CONDITIONS[m.condition]?.unit === 'speed',
       target: manual ? 0 : m.target, value: manual ? 0 : forced ? m.target : Math.min(have, m.target),
     };
   }).filter((m) => m.earned || !m.secret);

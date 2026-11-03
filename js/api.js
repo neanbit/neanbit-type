@@ -1,3 +1,5 @@
+import { localizeMedals } from './medal-unit.js';
+
 async function call(path, body) {
   const res = await fetch('/api' + path, {
     method: body ? 'POST' : 'GET',
@@ -29,7 +31,7 @@ export const api = {
   best: (textId) => call('/best?textId=' + textId),
   userRaces: (handle, page, mode = 'all') => call('/users/' + handle + '/races?page=' + page + '&mode=' + mode),
   searchUsers: (q) => call('/users?q=' + encodeURIComponent(q)),
-  profile: (handle) => call('/users/' + handle),
+  profile: (handle) => call('/users/' + handle).then(localizeMedals),
   rewards: () => call('/rewards'),
   rewardNews: () => call('/rewards/news'),
   rewardsSeen: () => call('/rewards/seen', {}),
