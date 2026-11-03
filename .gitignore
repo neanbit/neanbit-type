@@ -2,3 +2,7 @@ node_modules/
 data.db*
 .env
 *.zip
+
+# Documentación interna de neanbit (referencia propia, no se publica)
+neanbit-docs.md
+neanbit-type-contexto-completo.md
