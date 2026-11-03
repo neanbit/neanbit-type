@@ -781,5 +781,54 @@
   "description": "Fondo de lunares y cuadros con costuras de caramelo.",
   "since": 3,
   "hidden": 1
+ },
+ {
+  "id": "frame-calabaza",
+  "kind": "frame",
+  "preset": "calabaza",
+  "name": "Calabaza tallada",
+  "rarity": "epica",
+  "theme": "halloween",
+  "anim": 1,
+  "description": "Gajos de calabaza con luz de vela y una cara que sonríe en la esquina.",
+  "since": 4,
+  "hidden": 1
+ },
+ {
+  "id": "name-maleficio",
+  "kind": "name",
+  "preset": "maleficio",
+  "name": "Maleficio",
+  "rarity": "rara",
+  "theme": "halloween",
+  "anim": 1,
+  "font": "Nosifer",
+  "description": "Naranja encendido con sombra violeta y letra chorreante.",
+  "since": 4,
+  "hidden": 1
+ },
+ {
+  "id": "cover-cementerio",
+  "kind": "cover",
+  "preset": "cementerio",
+  "name": "Cementerio",
+  "rarity": "epica",
+  "theme": "halloween",
+  "anim": 1,
+  "description": "Luna, tumbas, calabazas encendidas y fantasmas que pasan.",
+  "since": 4,
+  "hidden": 1
+ },
+ {
+  "id": "palette-noche",
+  "kind": "palette",
+  "preset": "noche",
+  "name": "Noche de brujas",
+  "rarity": "epica",
+  "theme": "halloween",
+  "anim": 0,
+  "description": "Fondo violeta con brasas de calabaza y telarañas en los cuadros.",
+  "since": 4,
+  "hidden": 1
  }
 ]

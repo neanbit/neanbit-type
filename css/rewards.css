@@ -123,6 +123,14 @@
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
 }
 
+/* Calabaza tallada: anillo de gajos naranjas con luz de vela y una calabaza que sonríe en la esquina. Hace juego con «Maleficio», la portada «Cementerio» y la paleta «Noche de brujas». */
+[data-frame="calabaza"] { --fg: #ff7a1a99; animation: rw-flame 1.9s ease-in-out infinite; }
+[data-frame="calabaza"]::before { background: repeating-conic-gradient(from var(--ang), #ff8a1f 0 13deg, #ffb347 13deg 22deg, #b53a08 22deg 30deg, #3b0764 30deg 33deg); animation: rw-spin 24s linear infinite; }
+[data-frame="calabaza"]::after {
+  content: ""; z-index: 3; top: calc((var(--bw) + var(--fw) + 6px) * -1); right: calc((var(--bw) + var(--fw) + 6px) * -1); width: 32%; aspect-ratio: 1;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%20%3Cpath%20d='M12%207C12%204.8%2012.9%203.4%2014.8%202.6'%20fill='none'%20stroke='%2365a30d'%20stroke-width='2.2'%20stroke-linecap='round'/%3E%20%3Cellipse%20cx='7.4'%20cy='14.2'%20rx='5.8'%20ry='7.2'%20fill='%23c2410c'/%3E%3Cellipse%20cx='16.6'%20cy='14.2'%20rx='5.8'%20ry='7.2'%20fill='%23c2410c'/%3E%20%3Cellipse%20cx='12'%20cy='14.2'%20rx='5.4'%20ry='7.8'%20fill='%23ff8a1f'/%3E%20%3Cpath%20d='M8.6%2011.4l2.1%203.1H6.5zM15.4%2011.4l2.1%203.1h-4.2z'%20fill='%23ffe066'/%3E%20%3Cpath%20d='M7.6%2017.2l1.7%201.9%201.4-1.9%201.3%202%201.3-2%201.4%201.9%201.7-1.9'%20fill='none'%20stroke='%23ffe066'%20stroke-width='1.4'%20stroke-linejoin='round'%20stroke-linecap='round'/%3E%20%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 0 4px #ff7a1aaa) drop-shadow(0 1px 2px #0006); animation: rw-pulse 2.4s ease-in-out infinite;
+}
+
 .rw-av { position: relative; display: block; width: 2.6rem; height: 2.6rem; margin: .45rem auto; background: var(--bg-deep); border-radius: 8px; }
 .rw-av[data-frame="corona"], .rw-av[data-frame="aureola"] { margin-top: 1.1rem; }
 
@@ -192,6 +200,11 @@
 @keyframes rw-caret { 50% { opacity: 0; } }
 [data-fx="terminal"] { color: #ffb000; text-shadow: 0 0 6px #ff9d00bb, 0 0 14px #ff9d0055; font-size: 1.18em; }
 [data-fx="terminal"]::after { content: "_"; margin-left: .05em; animation: rw-caret 1s steps(1) infinite; }
+
+/* Maleficio: letra chorreante de naranja encendido, sombra violeta y un parpadeo de vela. Hace juego con la «Calabaza tallada» y la portada «Cementerio». */
+@keyframes rw-candle { 0%, 100% { opacity: 1; } 9% { opacity: .78; } 12% { opacity: 1; } 47% { opacity: 1; } 50% { opacity: .66; } 53% { opacity: 1; } 76% { opacity: .86; } 79% { opacity: 1; } }
+[data-fx="maleficio"] { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(180deg, #ffe08a, #ff9a1f 48%, #e0480a);
+  filter: drop-shadow(0 2px 0 #3b0764) drop-shadow(0 0 7px #ff7a1a99); animation: rw-candle 3.8s linear infinite; font-size: .66em; letter-spacing: .02em; }
 
 /* ---------- Portadas ---------- */
 [data-cover] { background-repeat: no-repeat; }
@@ -309,6 +322,14 @@
 }
 @keyframes rw-petals { to { background-position: 60px 180px, -40px 300px, center bottom, 0 0, 0 0; } }
 
+/* Cementerio: luna, tumbas, calabazas encendidas, niebla baja y fantasmas que pasan. Hace juego con la «Calabaza tallada» y el nombre «Maleficio». */
+[data-cover="cementerio"] {
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='700'%20height='160'%20viewBox='0%200%20700%20160'%3E%20%3Cg%20opacity='0.62'%3E%3Cpath%20d='M150%2076L150%2048.0A18.0%2018.0%200%200%201%20186%2048.0L186%2076Q180.0%2067.72%20174.0%2076Q168.0%2081.52000000000001%20162.0%2076Q156.0%2067.72%20150%2076Z'%20fill='%23f1e8ff'/%3E%3Cellipse%20cx='162.24'%20cy='47.099999999999994'%20rx='2.6999999999999997'%20ry='3.96'%20fill='%231b0a2e'/%3E%3Cellipse%20cx='173.76'%20cy='47.099999999999994'%20rx='2.6999999999999997'%20ry='3.96'%20fill='%231b0a2e'/%3E%3Cellipse%20cx='168.0'%20cy='56.459999999999994'%20rx='2.5200000000000005'%20ry='3.6'%20fill='%231b0a2e'/%3E%3C/g%3E%3Cg%20opacity='0.4'%3E%3Cpath%20d='M470%20104L470%2083.0A13.0%2013.0%200%200%201%20496%2083.0L496%20104Q491.6666666666667%2097.88%20487.3333333333333%20104Q483.0%20108.08000000000001%20478.6666666666667%20104Q474.3333333333333%2097.88%20470%20104Z'%20fill='%23f1e8ff'/%3E%3Cellipse%20cx='478.84'%20cy='82.35'%20rx='1.95'%20ry='2.86'%20fill='%231b0a2e'/%3E%3Cellipse%20cx='487.16'%20cy='82.35'%20rx='1.95'%20ry='2.86'%20fill='%231b0a2e'/%3E%3Cellipse%20cx='483.0'%20cy='89.11'%20rx='1.8200000000000003'%20ry='2.6'%20fill='%231b0a2e'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 700px 160px repeat-x, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='600'%20height='80'%20viewBox='0%200%20600%2080'%3E%20%3Cdefs%3E%3Cfilter%20id='b'%20x='-20%25'%20y='-60%25'%20width='140%25'%20height='220%25'%3E%3CfeGaussianBlur%20stdDeviation='9'/%3E%3C/filter%3E%3C/defs%3E%20%3Cg%20filter='url(%23b)'%20fill='%23e6d8ff'%3E%3Cellipse%20cx='150'%20cy='58'%20rx='110'%20ry='13'%20opacity='.2'/%3E%3Cellipse%20cx='440'%20cy='64'%20rx='95'%20ry='11'%20opacity='.16'/%3E%3C/g%3E%3C/svg%3E") 0 100% / 600px 80px repeat-x, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='560'%20height='100'%20viewBox='0%200%20560%20100'%20preserveAspectRatio='none'%3E%20%3Cdefs%3E%3CradialGradient%20id='gl'%3E%3Cstop%20offset='0'%20stop-color='%23ff8a1f'%20stop-opacity='.55'/%3E%3Cstop%20offset='1'%20stop-color='%23ff8a1f'%20stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%20%3Cpath%20d='M0%20100V58C90%2046%20180%2054%20280%2052S470%2042%20560%2058V100Z'%20fill='%23220d3a'/%3E%20%3Cpath%20d='M0%20100V82C100%2076%20200%2084%20280%2080S470%2074%20560%2082V100Z'%20fill='%2308030f'/%3E%20%3Cg%20fill='%2308030f'%3E%3Cpath%20d='M50%2086V58a13%2013%200%200%201%2026%200V86Z'/%3E%3Cpath%20d='M200%2086V46h-9v-7h9v-9h7v9h9v7h-9v40Z'/%3E%20%3Cpath%20d='M262%2086V66a14%2014%200%200%201%2028%200V86Z'/%3E%3Cpath%20d='M470%2086V68a11%2011%200%200%201%2022%200V86Z'/%3E%3Cpath%20d='M505%2086V74a8%208%200%200%201%2016%200V86Z'/%3E%3C/g%3E%20%3Cpath%20d='M392%2086C392%2070%20390%2056%20386%2044M389%2058C381%2052%20373%2050%20367%2042M389%2058l-8-14M391%2064C399%2058%20405%2052%20409%2042M388%2050l-4-14M390%2070l12-8'%20stroke='%2308030f'%20stroke-width='3'%20fill='none'%20stroke-linecap='round'/%3E%20%3Cg%20transform='translate(120%2076)%20scale(0.62)'%3E%3Ccircle%20r='26'%20cy='-4'%20fill='url(%23gl)'/%3E%3Cpath%20d='M0%20-12C0%20-16%202%20-18%205%20-19'%20fill='none'%20stroke='%233f6212'%20stroke-width='3'%20stroke-linecap='round'/%3E%3Cellipse%20cx='-8'%20rx='9'%20ry='11'%20fill='%239a3412'/%3E%3Cellipse%20cx='8'%20rx='9'%20ry='11'%20fill='%239a3412'/%3E%3Cellipse%20rx='9'%20ry='12'%20fill='%23ea580c'/%3E%3Cpath%20d='M-6%20-3l3%204h-6zM6%20-3l3%204h-6z'%20fill='%23ffe066'/%3E%3Cpath%20d='M-6%205l2.4%202.6L-2%205l2%202.8%202-2.8%202.4%202.6L6%205'%20fill='none'%20stroke='%23ffe066'%20stroke-width='1.8'%20stroke-linejoin='round'/%3E%3C/g%3E%3Cg%20transform='translate(335%2078)%20scale(0.5)'%3E%3Ccircle%20r='26'%20cy='-4'%20fill='url(%23gl)'/%3E%3Cpath%20d='M0%20-12C0%20-16%202%20-18%205%20-19'%20fill='none'%20stroke='%233f6212'%20stroke-width='3'%20stroke-linecap='round'/%3E%3Cellipse%20cx='-8'%20rx='9'%20ry='11'%20fill='%239a3412'/%3E%3Cellipse%20cx='8'%20rx='9'%20ry='11'%20fill='%239a3412'/%3E%3Cellipse%20rx='9'%20ry='12'%20fill='%23ea580c'/%3E%3Cpath%20d='M-6%20-3l3%204h-6zM6%20-3l3%204h-6z'%20fill='%23ffe066'/%3E%3Cpath%20d='M-6%205l2.4%202.6L-2%205l2%202.8%202-2.8%202.4%202.6L6%205'%20fill='none'%20stroke='%23ffe066'%20stroke-width='1.8'%20stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E") 0 100% / 560px 62% repeat-x, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='600'%20height='120'%20viewBox='0%200%20600%20120'%3E%20%3Cg%20fill='%23fff'%3E%3Ccircle%20cx='40'%20cy='18'%20r='1'%20opacity='.9'/%3E%3Ccircle%20cx='130'%20cy='52'%20r='.8'%20opacity='.6'/%3E%3Ccircle%20cx='210'%20cy='14'%20r='1.2'%20opacity='.85'/%3E%20%3Ccircle%20cx='300'%20cy='40'%20r='.8'%20opacity='.7'/%3E%3Ccircle%20cx='380'%20cy='10'%20r='1'%20opacity='.8'/%3E%3Ccircle%20cx='470'%20cy='46'%20r='1.2'%20opacity='.6'/%3E%3Ccircle%20cx='560'%20cy='22'%20r='.9'%20opacity='.9'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 600px 120px repeat-x,
+    radial-gradient(circle at 80% 30%, #fff3d1 0 4.5%, #ffd68a 5.2%, #ff9a4a55 9%, transparent 21%), linear-gradient(180deg, #0d0418 0, #2a0e45 42%, #6b2358 68%, #d9531e 100%);
+  animation: rw-haunt 54s linear infinite;
+}
+@keyframes rw-haunt { to { background-position: 700px 0, -600px 100%, 0 100%, 0 0, 0 0, 0 0; } }
+
 .rw-cv { display: block; height: 3rem; border-radius: 3px; overflow: hidden; }
 
 /* Tema claro: los efectos pensados para fondo oscuro se oscurecen para que se lean */
@@ -333,6 +354,8 @@
 [data-theme="claro"] [data-frame="aureola"]::before { background: conic-gradient(from var(--ang), #d4a017, #f5c242, #fff2b0, #d4a017, #e8b82a, #d4a017); }
 [data-theme="claro"] [data-frame="aureola"]::after { background: conic-gradient(from var(--ang), #e0a800, #f5c242, #b8860b, #f0b400, #e0a800); }
 [data-theme="claro"] [data-frame="aureola"] { --fg: #e0a80044; }
+
+[data-theme="claro"] [data-fx="maleficio"] { background-image: linear-gradient(180deg, #d97706, #c2410c 50%, #7c2d12); filter: drop-shadow(0 1px 0 #ffffffaa); animation: none; }
 
 @media (prefers-reduced-motion: reduce) {
   [data-frame], [data-frame]::before, [data-frame]::after, [data-fx], [data-fx]::before, [data-fx]::after, [data-cover], [data-cover]::before, [data-cover]::after { animation: none !important; }
@@ -481,6 +504,33 @@
   border-radius: 14px; border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
 }
 [data-palette="bombon"] .pf-banner { border-radius: 13px 13px 0 0; }
+/* Noche de brujas: violeta de medianoche con acento de calabaza y telarañas en los cuadros. Hace juego con la «Calabaza tallada». */
+[data-palette="noche"] { --accent: #ff8a1f; --ink: #c9a4ff; --on-accent: #1f0a00; }
+[data-palette="noche"]:not([data-theme="contraste"]) { --bg: #170a24; --bg-deep: #10061a; --panel: #211033; --raise: #2d1745; --line: #4a2a6e; --muted: #b9a2d6; --grid: rgb(255 138 31 / .045); }
+[data-theme="claro"][data-palette="noche"], [data-theme="claro"] [data-palette="noche"] { --accent: #e8650a; --ink: #6b21a8; --muted: #6a4d85; --bg: #f8f0ff; --bg-deep: #efe0fb; --panel: #ffffff; --raise: #fbf5ff; --line: #e0c8f3; --grid: rgb(107 33 168 / .05); }
+
+[data-palette="noche"] body {
+  background-image:
+    radial-gradient(ellipse 80% 100% at 50% 100%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+    radial-gradient(ellipse 60% 100% at 88% 0, color-mix(in srgb, var(--ink) 16%, transparent), transparent 70%),
+    radial-gradient(circle, color-mix(in srgb, var(--ink) 38%, transparent) 0 1px, transparent 1.7px);
+  background-size: 100% 55vh, 100% 45vh, 96px 96px; background-position: 0 100%, 0 0, 24px 36px; background-repeat: no-repeat, no-repeat, repeat; background-attachment: fixed, fixed, scroll;
+}
+[data-palette="noche"] :is(.pf-box, .pf-stats div, .pv) {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2040%2040'%3E%3Cpath%20d='M40%200L40.0%2038.0M40%200L25.5%2035.1M40%200L13.1%2026.9M40%200L4.9%2014.5M40%200L2.0%200.0M40.0%2011.0Q38.3%208.6%2035.8%2010.2M35.8%2010.2Q35.1%207.3%2032.2%207.8M32.2%207.8Q32.7%204.9%2029.8%204.2M29.8%204.2Q31.4%201.7%2029.0%200.0M40.0%2020.0Q36.9%2015.7%2032.3%2018.5M32.3%2018.5Q31.1%2013.3%2025.9%2014.1M25.9%2014.1Q26.7%208.9%2021.5%207.7M21.5%207.7Q24.3%203.1%2020.0%200.0M40.0%2030.0Q35.3%2023.5%2028.5%2027.7M28.5%2027.7Q26.7%2020.0%2018.8%2021.2M18.8%2021.2Q20.0%2013.3%2012.3%2011.5M12.3%2011.5Q16.5%204.7%2010.0%200.0M40.0%2038.0Q34.1%2029.8%2025.5%2035.1M25.5%2035.1Q23.1%2025.3%2013.1%2026.9M13.1%2026.9Q14.7%2016.9%204.9%2014.5M4.9%2014.5Q10.2%205.9%202.0%200.0'%20fill='none'%20stroke='%23b794f6'%20stroke-opacity='.55'%20stroke-width='.9'%20stroke-linecap='round'/%3E%3C/svg%3E"), linear-gradient(180deg, color-mix(in srgb, var(--ink) 11%, transparent), transparent 55%);
+  background-repeat: no-repeat; background-position: right top, 0 0; background-size: 38px 38px, 100% 100%;
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--accent) 55%, transparent), 0 0 22px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+[data-palette="noche"] .pf-hero {
+  background-image:
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 48%);
+  background-position: top left, top left, bottom right, bottom right, 0 0; background-size: 16px 2px, 2px 16px, 16px 2px, 2px 16px, 100% 100%;
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  animation: pal-ember 5.5s ease-in-out infinite;
+}
+
 @keyframes pal-ember { 0%, 100% { box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 16%, transparent); } 50% { box-shadow: 0 0 38px color-mix(in srgb, var(--accent) 34%, transparent); } }
 @media (prefers-reduced-motion: reduce) { [data-palette] .pf-hero { animation: none !important; } }
 
