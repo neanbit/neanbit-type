@@ -10,7 +10,7 @@ const STAY = 10000;
 const shown = new Set();
 let box = null;
 
-function thumb(i) {
+export function thumb(i) {
   const p = safePreset(i.preset);
   if (i.kind === 'frame') return `<i class="rw-av" data-frame="${p}"></i>`;
   if (i.kind === 'cover') return `<i class="rw-cv" data-cover="${p}"></i>`;

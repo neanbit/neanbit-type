@@ -75,10 +75,5 @@ dialog.wide.narrow { width: min(96vw, 600px); }
 .lvd-hint { margin: .6rem 0 0; font: .74rem var(--mono); color: var(--muted); }
 
 /* premios del camino para reclamar */
-.lvd-row.ready { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg-deep)); }
-.lvd-row.ready .lvd-name small { color: var(--text); }
-.lvd-btn { padding: .35rem .85rem; font-size: .82rem; }
-.lvd-btn[disabled], .lvd-all[disabled] { opacity: .55; cursor: default; }
-.lvd-shelf h3 .lvd-all { margin-left: auto; padding: .3rem .75rem; font: 500 .76rem var(--ui); letter-spacing: 0; text-transform: none; }
 .lvd-msg { margin: 0 0 .6rem; padding: .45rem .7rem; border-left: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 9%, transparent); font-size: .85rem; line-height: 1.5; }
 .lvd-msg.bad { border-left-color: var(--bad); background: color-mix(in srgb, var(--bad) 9%, transparent); }

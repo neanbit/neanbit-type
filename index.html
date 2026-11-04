@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/profile.css">
 <link rel="stylesheet" href="css/nivel.css">
+<link rel="stylesheet" href="css/camino.css">
 <link rel="stylesheet" href="css/rewards.css">
 <link rel="stylesheet" href="css/home.css">
 <link rel="stylesheet" href="css/race.css">
@@ -94,7 +95,7 @@
 
     <div class="hm-cards" id="hm-me" hidden>
       <article class="hm-card" data-feature="levels">
-        <header><p class="eyebrow">Nivel</p><button class="link" id="hm-profile">Ver perfil</button></header>
+        <header><p class="eyebrow">Nivel</p><span class="hm-links"><button class="link" id="hm-path">Camino</button><button class="link" id="hm-profile">Ver perfil</button></span></header>
         <div class="hm-line"><b class="hm-big" id="lv-num">1</b><span id="lv-title">Novato</span></div>
         <div class="meter" role="progressbar" aria-label="Avance hacia el próximo nivel"><i id="lv-fill"></i></div>
         <p class="hm-sub"><span id="lv-xp"></span><span id="lv-next"></span></p>
@@ -742,6 +743,35 @@
     </div>
     <p class="lvd-boost" id="lvd-boost" hidden></p>
     <div class="lvd-body" id="lvd-body"></div>
+  </div>
+</dialog>
+<dialog id="camino" class="wide" aria-labelledby="cn-title">
+  <div class="lvd cn">
+    <header class="lvd-head">
+      <span class="lv-key xl" id="cn-n"></span>
+      <div class="lvd-who">
+        <h2 id="cn-title"></h2>
+        <p class="note" id="cn-sub"></p>
+      </div>
+      <button type="button" class="ghost" id="camino-close" aria-label="Cerrar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </header>
+    <div class="lvd-meter">
+      <div class="lvd-ends"><span id="cn-from"></span><span id="cn-to"></span></div>
+      <div class="lvd-track" role="progressbar" aria-labelledby="cn-title" aria-valuemin="0" aria-valuemax="100" id="cn-bar"><i id="cn-fill"></i></div>
+      <p class="note" id="cn-left"></p>
+    </div>
+    <p class="lvd-boost" id="cn-boost" hidden></p>
+    <div class="cn-bar">
+      <p class="cn-next" id="cn-next"></p>
+      <div class="cn-tools">
+        <button type="button" id="cn-here">Ir a mi nivel</button>
+        <button type="button" class="primary" id="cn-all" hidden></button>
+      </div>
+    </div>
+    <p class="lvd-msg" id="cn-msg" role="status" hidden></p>
+    <div class="cn-scroll" id="cn-scroll" tabindex="0" role="region" aria-label="Camino de niveles">
+      <ol class="cn-path" id="cn-path"></ol>
+    </div>
   </div>
 </dialog>
 <dialog id="news">

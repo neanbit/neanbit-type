@@ -3,14 +3,11 @@
 import { $, esc } from './ui.js';
 import { features } from './features.js';
 import { api } from './api.js';
-import { announce } from './unlock.js';
+import { openCamino } from './camino.js';
 
 const AHEAD = 5; // cuántos niveles futuros se muestran
 
 let view = null;
-let trackData = null; // camino de niveles con el estado de cada casillero (solo en el perfil propio)
-let claimMsg = null; // { text, bad } resultado del último reclamo
-let busy = false;
 
 const num = (x) => Number(x).toLocaleString('es-AR');
 // XP total para llegar a un nivel con la curva del servidor: base × (n − 1) + grow × (n − 1) × (n − 2) / 2.
@@ -77,78 +74,17 @@ function draw() {
     return row(kind, min, name, note, xpAt(curve, min), level >= min ? 0 : xpAt(curve, min) - xp);
   }).join('');
 
-  $('#lvd-body').innerHTML = `${claimShelf()}${nextShelf(curve, xp)}<section class="lvd-shelf"><h3>Próximos niveles</h3><ol class="lvd-list">${ahead}</ol></section>
+  $('#lvd-body').innerHTML = `<section class="lvd-shelf"><h3>Próximos niveles</h3><ol class="lvd-list">${ahead}</ol></section>
     <section class="lvd-shelf"><h3>Títulos <small>${titles.filter(([min]) => level >= min).length} de ${titles.length}</small></h3><ol class="lvd-list">${ranks}</ol></section>`;
 }
 
-const until = (t) => new Date(t).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
-
-// Premios del camino que ya se pueden reclamar (solo en el perfil propio). Sin reclamar no se obtienen.
-function claimShelf() {
-  if (!trackData) return '';
-  const ready = trackData.slots.filter((s) => s.state === 'ready');
-  const msg = claimMsg ? `<p class="lvd-msg${claimMsg.bad ? ' bad' : ''}" role="status">${esc(claimMsg.text)}</p>` : '';
-  if (!ready.length) return msg ? `<section class="lvd-shelf">${msg}</section>` : '';
-  const rows = ready.map((s) => `<li class="lvd-row ready" data-rarity="${esc(s.rarity)}">
-    <span class="lv-key sm" data-digits="${String(s.level).length}">${s.level}</span>
-    <span class="lvd-name"><b>${esc(s.name)}</b><small>${esc(s.note)}${s.until ? `, podés reclamarlo hasta el ${until(s.until)}` : ''}</small></span>
-    <button type="button" class="primary lvd-btn" data-claim="${s.id}"${busy ? ' disabled' : ''}>Reclamar</button></li>`).join('');
-  const all = ready.length > 1 ? `<button type="button" class="lvd-all" data-claim-all${busy ? ' disabled' : ''}>Reclamar todo</button>` : '';
-  return `<section class="lvd-shelf"><h3>Para reclamar <small>${ready.length}</small>${all}</h3>${msg}<ol class="lvd-list">${rows}</ol>
-    <p class="lvd-hint">Un premio sin reclamar no se obtiene. Las recompensas cosméticas se activan desde Editar perfil, en Recompensas.</p></section>`;
-}
-
-// La próxima recompensa y las que siguen (solo en el perfil propio): los casilleros del camino que todavía no se alcanzaron.
-function nextShelf(curve, xp) {
-  if (!trackData) return '';
-  const locked = trackData.slots.filter((s) => s.state === 'locked');
-  if (!locked.length) return '';
-  const rowOf = (s, extra = '') => row('next', s.level, s.name, s.note + extra, xpAt(curve, s.level), xpAt(curve, s.level) - xp);
-  const first = locked[0];
-  const same = locked.filter((s) => s.level === first.level).length - 1;
-  const later = locked.slice(1, 4);
-  return `<section class="lvd-shelf"><h3>Próxima recompensa</h3><ol class="lvd-list">${rowOf(first, same > 0 ? `, y ${same} más en este nivel` : '')}</ol></section>`
-    + (later.length ? `<section class="lvd-shelf"><h3>Más adelante</h3><ol class="lvd-list">${later.map((s) => rowOf(s)).join('')}</ol></section>` : '');
-}
-
-// Aplica la respuesta de un reclamo: nivel nuevo (la XP lo puede subir), camino al día y avisos «Desbloqueaste…».
-function applyClaim(res) {
-  trackData = res;
-  view.level = res.level;
-  $('#pf-lv-n').textContent = res.level.level;
-  claimMsg = res.given.length
-    ? { text: res.given.length === 1 ? `Reclamaste: ${res.given[0].name}.` : `Reclamaste ${res.given.length} premios: ${res.given.map((g) => g.name).join(', ')}.` }
-    : null;
-  if (res.failed && res.failed.length) claimMsg = { text: res.failed[0].error, bad: true };
-  if (res.news && res.news.length) announce(res.news);
-  document.dispatchEvent(new CustomEvent('track-claimed'));
-}
-
-async function doClaim(slot) {
-  if (busy || !view || !view.mine) return;
-  busy = true;
-  draw();
-  try {
-    applyClaim(slot ? await api.claim(slot) : await api.claimAll());
-  } catch (err) {
-    claimMsg = { text: err.message, bad: true };
-    try { trackData = await api.track(); } catch {}
-  }
-  busy = false;
-  if ($('#levels').open) draw();
-}
-
+// El perfil propio abre el camino de niveles (js/camino.js); el de otra persona, la ventana simple con su avance y los títulos.
 export async function openNivel() {
   if (!view) return;
-  trackData = null;
-  claimMsg = null;
+  if (view.mine) return openCamino(view);
   draw();
   $('#levels').showModal();
   $('#lvd-body').scrollTop = 0;
-  if (!view.mine) return;
-  const shown = view;
-  try { trackData = await api.track(); } catch { trackData = null; }
-  if (view === shown && $('#levels').open && trackData) draw();
 }
 
 // Abre la ventana de nivel de la persona que tiene la sesión, sin pasar por el perfil (desde el inicio).
@@ -162,10 +98,7 @@ export async function openOwnNivel(handle) {
 }
 
 $('#pf-level').onclick = openNivel;
-$('#lvd-body').addEventListener('click', (e) => {
-  const one = e.target.closest('[data-claim]');
-  if (one) return doClaim(Number(one.dataset.claim));
-  if (e.target.closest('[data-claim-all]')) doClaim(0);
-});
+// El camino avisa cuando cambió el nivel (un reclamo de XP puede subirlo).
+document.addEventListener('track-claimed', (e) => { if (view && e.detail && e.detail.level) $('#pf-lv-n').textContent = e.detail.level.level; });
 $('#levels-close').onclick = () => $('#levels').close();
 $('#levels').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });

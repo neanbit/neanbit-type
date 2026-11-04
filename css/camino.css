@@ -1,0 +1,113 @@
+/* Camino de niveles. Un riel con una tecla por nivel (el mismo cuadrado del widget de nivel) y, colgando de cada una, los premios.
+   El tramo recorrido va en el color del perfil y el cursor parpadea entre tu nivel y el siguiente, según tu XP.
+   Escritorio: horizontal. Celular: vertical. Los colores salen de data-accent y de los temas; sin brillos ni emojis. */
+
+#camino { --rare: var(--line); }
+.cn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* barra de arriba: próxima recompensa y acciones */
+.cn-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem 1.2rem; padding: .9rem 1.9rem; border-top: 1px solid var(--line); }
+.cn-next { display: grid; gap: .1rem; flex: 1 1 18rem; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 2px solid var(--line); background: var(--bg-deep); font: .74rem/1.45 var(--mono); color: var(--muted); }
+.cn-next small { font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; }
+.cn-next b { color: var(--text); font: 600 .9rem var(--ui); overflow-wrap: anywhere; }
+.cn-next[data-rarity="rara"] { border-left-color: #4cc9f0; }
+.cn-next[data-rarity="epica"] { border-left-color: #a78bfa; }
+.cn-next[data-rarity="legendaria"] { border-left-color: #ffb703; }
+.cn-tools { display: flex; flex-wrap: wrap; gap: .5rem; }
+.cn-tools button { padding: .45rem .9rem; font-size: .85rem; }
+.cn-tools button[hidden] { display: none; }
+.cn-tools button[disabled], .cn-btn[disabled] { opacity: .55; cursor: default; }
+#cn-msg { margin: 0 1.9rem .8rem; }
+#cn-msg[hidden] { display: none; }
+
+/* recorrido */
+.cn-scroll { flex: 1; min-height: 0; overflow: auto; border-top: 1px solid var(--line); background: var(--bg-deep); }
+.cn-scroll:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.cn-path { display: flex; margin: 0; padding: 0; list-style: none; }
+.cn-lv { position: relative; display: grid; align-content: start; }
+
+/* nodo: la tecla de cada nivel sobre el riel */
+.cn-node { position: relative; display: flex; align-items: center; }
+.cn-lv .lv-key { position: relative; z-index: 1; flex: none; width: 2.1rem; height: 2.1rem; border-radius: 3px; box-shadow: none; font-size: 1rem; }
+.cn-lv .lv-key[data-digits="3"] { font-size: .8rem; }
+.cn-lv.hito .lv-key { width: 2.9rem; height: 2.9rem; border-radius: 4px; font-size: 1.3rem; }
+.cn-lv.hito .lv-key[data-digits="3"] { font-size: 1rem; }
+.cn-lv.next .lv-key { background: var(--bg-deep); border: 1px solid var(--line); color: var(--muted); }
+.cn-lv.next.hito .lv-key { border-color: var(--muted); color: var(--text); }
+.cn-lv.now .lv-key { box-shadow: 0 0 0 3px var(--bg-deep), 0 0 0 5px var(--ink); }
+.cn-lv.done .lv-key { background: var(--accent); }
+
+/* cursor: la posición dentro del nivel actual */
+.cn-cur { position: absolute; z-index: 2; width: .55rem; height: .55rem; background: var(--ink); animation: cn-blink 1.1s steps(1) infinite; }
+@keyframes cn-blink { 50% { opacity: 0; } }
+
+/* título que arranca en ese nivel */
+.cn-ttl { display: block; font: 500 .68rem/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+.cn-ttl::before { content: ""; display: inline-block; width: .4rem; height: .4rem; margin-right: .4rem; background: var(--accent); }
+
+/* premios de un nivel */
+.cn-slots { display: grid; gap: .5rem; }
+.cn-slot { --rare: var(--line); position: relative; display: grid; gap: .35rem; padding: .55rem .6rem; background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--rare); border-radius: 4px; font-size: .78rem; }
+.cn-slot[data-rarity="rara"] { --rare: #4cc9f0; }
+.cn-slot[data-rarity="epica"] { --rare: #a78bfa; }
+.cn-slot[data-rarity="legendaria"] { --rare: #ffb703; }
+.cn-slot:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.cn-art { display: grid; place-items: center; min-height: 3.2rem; overflow: hidden; }
+.cn-art .rw-cv { width: 100%; }
+.cn-art .rw-pal { min-width: 0; height: 3rem; }
+.cn-sym { display: grid; justify-items: center; gap: .1rem; color: var(--ink); }
+.cn-sym svg.i { width: 1.2rem; height: 1.2rem; }
+.cn-sym b { font: 500 1.15rem/1 var(--mono); letter-spacing: -.03em; }
+.cn-sym small { font: .66rem var(--mono); color: var(--muted); }
+.cn-txt { display: grid; gap: .1rem; min-width: 0; }
+.cn-txt b { font-size: .84rem; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.cn-txt small { color: var(--muted); font: .66rem/1.4 var(--mono); }
+.cn-act { display: grid; gap: .2rem; justify-items: start; }
+.cn-btn { padding: .3rem .8rem; font-size: .8rem; }
+.cn-st { display: inline-flex; align-items: center; gap: .3rem; color: var(--muted); font: .7rem var(--mono); }
+.cn-st svg.i { width: .9rem; height: .9rem; color: var(--ink); }
+.cn-lim { color: var(--muted); font: .66rem var(--mono); }
+.cn-slot[data-state="ready"] { border-color: var(--accent); border-top-color: var(--rare, var(--accent)); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+.cn-slot[data-state="ready"] .cn-txt small { color: var(--text); }
+.cn-slot[data-state="locked"] .cn-art, .cn-slot[data-state="claimed"] .cn-art { opacity: .8; }
+.cn-slot[data-state="claimed"] { background: transparent; }
+.cn-slot[data-state="missed"] { background: transparent; border-style: dashed; }
+.cn-slot[data-state="missed"] .cn-art, .cn-slot[data-state="missed"] .cn-txt b { opacity: .45; }
+
+/* escritorio: horizontal, cada nivel es una columna */
+@media (min-width: 720px) {
+  .cn-path { flex-direction: row; align-items: flex-start; width: max-content; padding: 1.2rem 1.9rem 1.8rem; }
+  .cn-lv { flex: none; width: 3.2rem; padding-top: 1.5rem; gap: .8rem; }
+  .cn-lv.has { width: 12.5rem; }
+  .cn-lv.hito:not(.has) { width: 3.6rem; }
+  .cn-ttl { position: absolute; top: 0; left: 0; }
+  .cn-node { height: 2.9rem; background: linear-gradient(var(--line), var(--line)) 0 50% / 100% 2px no-repeat; }
+  .cn-lv.done .cn-node { background-image: linear-gradient(var(--accent), var(--accent)); }
+  .cn-lv.now .cn-node { background-image: linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--line), var(--line)); background-size: var(--p) 2px, 100% 2px; }
+  .cn-cur { left: var(--p); top: calc(50% - .275rem); margin-left: 1.45rem; }
+  .cn-slot { width: 11.4rem; text-align: left; }
+  .cn-slot .cn-art { min-height: 3.4rem; }
+}
+
+/* celular: vertical, riel a la izquierda */
+@media (max-width: 719px) {
+  .cn-bar { padding-inline: 1.2rem; }
+  #cn-msg { margin-inline: 1.2rem; }
+  .cn-path { flex-direction: column; padding: 1rem 1.2rem 1.6rem; }
+  .cn-lv { grid-template-columns: 2.9rem minmax(0, 1fr); grid-template-areas: "node ttl" "node slots"; column-gap: .8rem; padding-bottom: .5rem; }
+  .cn-lv.has { padding-bottom: 1.1rem; }
+  .cn-node { grid-area: node; justify-content: center; align-items: flex-start; }
+  .cn-lv { background: linear-gradient(var(--line), var(--line)) 1.45rem 0 / 2px 100% no-repeat; }
+  .cn-lv.done { background-image: linear-gradient(var(--accent), var(--accent)); }
+  .cn-lv.now { background-image: linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--line), var(--line)); background-size: 2px var(--p), 2px 100%; background-position: 1.45rem 0, 1.45rem 0; }
+  .cn-lv:last-child { background-size: 2px 1.5rem; }
+  .cn-cur { left: calc(50% - .275rem); top: max(2.3rem, var(--p)); }
+  .cn-lv.hito .cn-cur { top: max(3.1rem, var(--p)); }
+  .cn-ttl { grid-area: ttl; align-self: center; margin-bottom: .4rem; }
+  .cn-lv:not(.has) .cn-ttl { margin-bottom: 0; padding-block: .5rem; }
+  .cn-slots { grid-area: slots; }
+  .cn-slot { grid-template-columns: 3.6rem minmax(0, 1fr); grid-template-areas: "art txt" "art act"; align-items: center; column-gap: .7rem; }
+  .cn-slot .cn-art { grid-area: art; }
+  .cn-slot .cn-txt { grid-area: txt; }
+  .cn-slot .cn-act { grid-area: act; }
+}

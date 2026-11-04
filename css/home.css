@@ -61,6 +61,7 @@
 .hm-boost { margin: 0; padding: .35rem .6rem; border-left: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 9%, transparent); color: var(--text); font: .74rem var(--mono); }
 .hm-next { display: grid; gap: .1rem; margin: 0; padding: .45rem .6rem; border-left: 2px solid var(--line); background: var(--bg-deep); font: .74rem/1.45 var(--mono); color: var(--muted); }
 .hm-next[hidden] { display: none; }
+.hm-links { display: inline-flex; gap: .9rem; }
 .hm-claim { justify-self: start; padding: .4rem .8rem; background: var(--accent); border-color: var(--accent); color: var(--on-accent); font: 600 .8rem var(--ui); box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 58%, #000); }
 .hm-claim:hover { border-color: var(--accent); filter: brightness(1.06); }
 .hm-claim[hidden] { display: none; }

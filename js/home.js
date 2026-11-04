@@ -354,6 +354,7 @@ $('#goal-seg').onclick = async (e) => {
   try { await api.setGoal(g); pulse.goal = g; $('#goal-seg').hidden = true; drawToday(); } catch {}
 };
 $('#invite-login').onclick = () => $('#account').click();
+$('#hm-path').onclick = () => { if (me) openOwnNivel(me.handle); };
 $('#hm-profile').onclick = () => { if (me) document.dispatchEvent(new CustomEvent('profile', { detail: me.handle })); };
 $('#hm-unit').onclick = (e) => {
   const unit = e.target.closest('[data-unit]')?.dataset.unit;
