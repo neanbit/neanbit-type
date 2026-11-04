@@ -222,7 +222,7 @@ El panel deja filas en `tournament_orders` (`tournament_id`, `kind`, `user_id`, 
 La experiencia se guarda **al ocurrir** (no se recalcula con conteos): `races.xp` en cada carrera, la tabla `xp_events` para duelos, torneos y ajustes, y el total en `users.xp`. El historial queda fijo: cambiar un valor global no baja de nivel a nadie.
 
 - **Valores de fábrica:** 10 XP por carrera, 15 en Hardcore, +5 por carrera sin errores, +20 por duelo ganado y +150 por torneo ganado. Los premios de finalista, semifinalista y participación empiezan en 0.
-- **Nivel** = 1 + raíz(XP / escala), con escala 50: el nivel N empieza en `escala × (N−1)²` XP. Títulos por tramo: Novato (1), Aprendiz (3), Mecanógrafo (6), Escribano (10), Veloz (15), Experto (22), Maestro (30) y Leyenda (40).
+- **Nivel**: pasar del nivel N al N+1 cuesta `base + aumento × (N−1)` XP, así que cada nivel pide un poco más que el anterior (de fábrica, base 100 y aumento 10: el nivel 10 llega a 1.260 XP y el 100 a 58.410). Títulos por tramo: Novato (1), Aprendiz (3), Mecanógrafo (6), Escribano (10), Veloz (15), Experto (22), Maestro (30), Leyenda (40), Virtuoso (55), Eminencia (70), Titán (85) e Inmortal (100).
 - **Potenciadores:** multiplicador de 1,1 a 10, global o para un usuario, con inicio y fin. Rige el más alto entre los activos (no se acumulan) y multiplican la XP de carreras, duelos ganados y torneos, no los ajustes manuales. Se avisan en la ventana de nivel, en el inicio y en el resultado de carrera.
 - Todo esto se configura desde el panel (`settings.progress`). Los valores de fábrica y la validación están en `server/levels.js`.
 
@@ -238,7 +238,7 @@ Cosméticos del perfil, de tres tipos: **marcos de foto**, **efectos de nombre**
 
 - **Presets, no archivos:** los efectos son presets de `css/rewards.css` dibujados con CSS o SVG. Nadie sube archivos y la CSP no cambia. El marco es un anillo con degradado cónico animado (`@property --ang`), el nombre es texto con degradado o sombras, y las portadas son degradados, SVG embebidos y animación de fondo.
 - **Tipografías:** lista blanca (`FONTS` en `server/rewards.js`) que se pide a Google Fonts solo cuando aparece alguien que usa esa tipografía.
-- **Cómo se desbloquean:** a mano, por nivel, por medalla, por puesto en un torneo o por un evento con fechas (que puede vencer al terminar). Nunca se quita lo ya entregado.
+- **Cómo se desbloquean:** a mano, por medalla, por puesto en un torneo o por un evento con fechas (que puede vencer al terminar). Las de nivel son casilleros del **camino de niveles**: se consiguen al llegar al nivel y **se reclaman a mano** (pueden ser cosméticos temporales o permanentes, potenciadores que corren al reclamarlos o XP extra). Nunca se quita lo ya entregado.
 - **Dónde se ven:** en el perfil con animación; en rankings, duelos y torneos, quietas. Respetan `prefers-reduced-motion`.
 - **Visibilidad:** cada una se muestra como «bloqueada» (con la pista de cómo conseguirla) u «oculta» hasta tenerla.
 - **Compatibilidad:** el anillo animado necesita `@property` (Firefox 128 o superior, Safari 16.4 o superior); en navegadores más viejos queda quieto y no se rompe. Retrowave usa container queries (Chrome 105, Safari 16 y Firefox 110 o superiores).
@@ -268,7 +268,7 @@ El panel `neanbit-type-admin` es un proyecto aparte (todavía sin repositorio pr
 | `maintenance` | Modo mantenimiento y mensaje (la app solo lee `on` y `message`). |
 | `info` | Aviso del sitio, arriba de la página Información. |
 | `features` | Funciones encendidas o apagadas: `share`, `rematch`, `sound`, `pace`, `mytexts`, `levels` y `goal`. Apagar solo **oculta** (con `data-feature` y `html[data-off]`): el servidor no impide una revancha ni un compartir. |
-| `progress` | XP por acción (incluye los valores por defecto de los puestos de torneo), escala, títulos de nivel, y meta diaria por defecto y máxima. |
+| `progress` | XP por acción (incluye los valores por defecto de los puestos de torneo), curva de niveles (`curve`: base y aumento), títulos de nivel, y meta diaria por defecto y máxima. |
 | `content` | Reemplazos de los textos de las páginas y datos del sitio (contacto, fecha, repositorio). Una página personalizada guarda el texto completo y no recibe cambios posteriores del original. |
 
 Además de `settings`, el contrato incluye las tablas `announcements`, `user_medals`, `tournament_orders`, `xp_events`, `xp_boosters`, `rewards` y `user_rewards`, y las columnas `users.verified` (0, 1 o 2), `users.role` (`user` o `admin`), `users.goal` y `users.xp_bonus`. Las tablas y columnas nuevas las crea la app al arrancar: **la app se actualiza primero y el panel después**. Si cambia alguno de estos formatos en la app, hay que actualizar el panel.

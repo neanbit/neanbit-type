@@ -555,6 +555,16 @@ document.addEventListener('race-saved', (e) => {
   const up = after.level > before.level;
   $('#xp-lv').textContent = up ? `Subiste al nivel ${after.level}: ${after.title}` : `Nivel ${after.level}, ${after.title}`;
   $('#r-xp').classList.toggle('up', up);
+  // Subida de nivel: cuántos saltó y si cambió de título. Después, qué viene (la próxima recompensa por nivel).
+  const extra = [];
+  if (up && after.level - before.level > 1) extra.push(`Subiste ${after.level - before.level} niveles de una vez.`);
+  if (up && after.title !== before.title) extra.push(`Nuevo título: ${after.title}.`);
+  if (up && e.detail.ready > 0) extra.push(`Tenés ${e.detail.ready === 1 ? '1 premio' : `${e.detail.ready} premios`} para reclamar en tu nivel.`);
+  $('#xp-up').hidden = !extra.length;
+  $('#xp-up').textContent = extra.join(' ');
+  const nx = e.detail.next;
+  $('#xp-next').hidden = !nx;
+  if (nx) $('#xp-next').textContent = `Próxima recompensa: ${nx.name}, en el nivel ${nx.level} (faltan ${Math.max(0, nx.xp - after.xp).toLocaleString('es-AR')} XP).`;
   fill.style.transition = 'none';
   fill.style.width = pct(before) + '%';
   void fill.offsetWidth;

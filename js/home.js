@@ -2,6 +2,7 @@ import { api } from './api.js';
 import { load } from './store.js';
 import { avatarInner } from './avatar.js';
 import { frameAttr, nameLite } from './rewards.js';
+import { openOwnNivel } from './nivel.js';
 import { $, esc, svg, icons } from './ui.js';
 import { tourney } from './tourney.js';
 
@@ -183,6 +184,20 @@ function drawLevel() {
   const boost = pulse.boost;
   $('#lv-boost').hidden = !boost;
   if (boost) $('#lv-boost').textContent = `Potenciador x${String(boost.mult).replace('.', ',')} hasta el ${clock(boost.ends)}`;
+  // Próxima recompensa por nivel: la más cercana que todavía no tiene.
+  const nx = pulse.next;
+  const rw = $('#lv-reward');
+  rw.hidden = !nx;
+  if (nx) {
+    rw.dataset.rarity = nx.rarity;
+    rw.innerHTML = `<small>Próxima recompensa</small><b>${esc(nx.name)}</b>`
+      + `<span>${esc(nx.note)}. Nivel ${nx.level}${nx.more ? `, y ${nx.more} más` : ''}; faltan ${num(Math.max(0, nx.xp - xp))} XP.</span>`;
+  }
+  // Premios del camino listos para reclamar.
+  const ready = pulse.ready || 0;
+  const cl = $('#lv-claim');
+  cl.hidden = !ready;
+  if (ready) cl.textContent = ready === 1 ? 'Tenés 1 premio para reclamar' : `Tenés ${ready} premios para reclamar`;
 }
 
 // Tarjeta de hoy: carreras, meta y actividad de los últimos 14 días
@@ -368,6 +383,8 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('session', (e) => { me = e.detail; refresh(true); });
 document.addEventListener('catalog', (e) => { catalog = e.detail; drawLast(); drawBoard(); });
 document.addEventListener('race-saved', () => { loadedAt = 0; });
+document.addEventListener('track-claimed', () => { loadedAt = 0; refresh(true); });
+$('#lv-claim').onclick = () => { if (me) openOwnNivel(me.handle); };
 document.addEventListener('home', () => refresh(false));
 document.addEventListener('units', () => { drawHome(); drawBoard(); });
 

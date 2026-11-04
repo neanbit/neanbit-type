@@ -11,10 +11,11 @@ import { createDuels } from './duels.js';
 import { createTournaments } from './tournaments.js';
 import { createStats } from './stats.js';
 import { clientIp, createLimiter } from './limits.js';
-import { cleanProgress } from './levels.js';
+import { cleanProgress, xpAtLevel } from './levels.js';
 import { setupXp } from './xp.js';
 import { cleanContent } from './content.js';
 import { autoGrant, cosmeticsMany, cosmeticsOf, ensureRewardSchema, grantPlace, markSeen, rewardsFor, setEquip, unseen } from './rewards.js';
+import { claimAll, claimSlot, ensureTrackSchema, migrateTrack, nextOf, trackFor } from './track.js';
 import { CONDITIONS, ensureMedalSchema, grantCount, groupOf, loadIcons, medalFile, medalValues, realTourneyWins, tierOf } from './medals.js';
 
 const scrypt = promisify(scryptCb);
@@ -115,6 +116,15 @@ function setting(key) {
 }
 
 const xp = setupXp(db, setting);
+// Camino de niveles (v22): tablas y, una sola vez, la migración de las reglas por nivel a casilleros (server/track.js).
+ensureTrackSchema(db);
+try {
+  const mig = migrateTrack(db);
+  if (mig) console.log(`Camino de niveles: ${mig.slots} casilleros migrados y ${mig.claims} premios marcados como reclamados.`);
+} catch (err) {
+  console.error(err);
+  process.exit(1); // sin camino no hay premios por nivel: mejor no arrancar a medias
+}
 
 function maintenance() {
   try {
@@ -352,14 +362,30 @@ function homeExtra(userId, tz) {
 // Los valores (XP por carrera, escala, títulos) se leen de `settings.progress`, que se edita desde el panel (server/levels.js).
 const progress = () => cleanProgress(setting('progress'));
 const levelOf = (userId) => xp.levelOf(userId);
-// Escala de niveles para la vitrina del perfil: el nivel n empieza en step × (n − 1)² XP; los títulos cambian en los niveles indicados.
-const ladder = () => { const p = progress(); return { step: p.step, titles: p.titles }; };
+// Curva de niveles para la vitrina del perfil: llegar al nivel n pide base × (n − 1) + grow × (n − 1) × (n − 2) / 2 XP; los títulos cambian en los niveles indicados.
+const ladder = () => { const p = progress(); return { curve: p.curve, titles: p.titles }; };
+// Camino de niveles de alguien: próxima recompensa y cuántos premios tiene para reclamar. Nunca debe frenar lo que se estaba haciendo.
+const trackBits = (userId, level) => {
+  try {
+    const v = trackFor(db, userId, level);
+    const n = nextOf(v);
+    return { next: n ? { ...n, xp: xpAtLevel(n.level, progress().curve) } : null, ready: v.ready };
+  } catch (err) { console.error(err); return { next: null, ready: 0 }; }
+};
 // Potenciador que rige ahora para alguien (el de mayor multiplicador, como xp.multFor); null si no hay ninguno.
 const boostOf = (userId) => {
   const now = Date.now();
   const b = db.prepare('select name, mult, ends from xp_boosters where starts <= ? and ends > ? and (user_id = 0 or user_id = ?) order by mult desc, ends desc limit 1').get(now, now, userId);
   return b ? { name: b.name, mult: b.mult, ends: b.ends } : null;
 };
+
+// Respuesta del camino para una persona: nivel (la XP de un premio puede subirlo), casilleros y próxima recompensa.
+function trackReply(userId) {
+  const level = levelOf(userId);
+  const v = trackFor(db, userId, level.level);
+  const n = nextOf(v);
+  return { level, track: v.track, slots: v.slots, ready: v.ready, next: n ? { ...n, xp: xpAtLevel(n.level, progress().curve) } : null, curve: progress().curve };
+}
 
 // Recompensas automáticas (nivel, medalla, evento): se revisan cuando la persona juega, al abrir la app y al barrer tras un cambio
 // de reglas en el panel. Nunca frenan lo que se estaba haciendo: si algo falla, se anota y la acción sigue.
@@ -538,6 +564,32 @@ async function api(req, res, url) {
     return send(res, 200, rewardsFor(db, me));
   }
 
+  // Camino de niveles: los casilleros con su estado para quien consulta (locked, ready, claimed o missed), y el reclamo.
+  if (key === 'GET /api/track') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    if (limits.hit('tk:' + me.id, 60, 60000)) return tooMany(res, 'tk:' + me.id, 60000);
+    return send(res, 200, trackReply(me.id));
+  }
+  if (key === 'POST /api/track/claim' || key === 'POST /api/track/claim-all') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para reclamar.' });
+    if (maintenance().on && me.role !== 'admin') return send(res, 503, { error: 'Estamos en mantenimiento.' });
+    if (limits.hit('tkc:' + me.id, 30, 60000)) return tooMany(res, 'tkc:' + me.id, 60000);
+    const lv = levelOf(me.id).level;
+    try {
+      if (key === 'POST /api/track/claim') {
+        const { slot } = await readBody(req);
+        if (!Number.isInteger(slot)) return send(res, 400, { error: 'Elegí qué premio reclamar.' });
+        const one = claimSlot(db, me.id, slot, { level: lv, xp });
+        return send(res, 200, { ok: true, given: [one], failed: [], ...trackReply(me.id), news: unseen(db, me.id) });
+      }
+      const all = claimAll(db, me.id, { level: lv, xp });
+      return send(res, 200, { ok: true, ...all, ...trackReply(me.id), news: unseen(db, me.id) });
+    } catch (err) {
+      if (err.status) return send(res, err.status, { error: err.message });
+      throw err;
+    }
+  }
+
   // Avisos «Desbloqueaste…» pendientes. POST los marca como vistos.
   if (key === 'GET /api/rewards/news') {
     if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
@@ -625,7 +677,8 @@ async function api(req, res, url) {
     saveErrors(me.id, 'w', words);
     saveKeys(me.id, keys, chars);
     autoRewards(me.id, { events: true });
-    return send(res, 201, { ok: true, xp: { before, after: levelOf(me.id), gain: gain.xp, mult: gain.mult }, news: unseen(db, me.id) });
+    const after = levelOf(me.id);
+    return send(res, 201, { ok: true, xp: { before, after, gain: gain.xp, mult: gain.mult, ...trackBits(me.id, after.level) }, news: unseen(db, me.id) });
   }
 
   if (key === 'POST /api/goal') {
@@ -743,6 +796,7 @@ async function api(req, res, url) {
       today: db.prepare('select count(*) as n from races where at >= ?').get(dayStart).n,
     }));
     const pulse = me ? { ...homeSummary(me.id, tz), rank: rankOf(me.id), hcRank: hcRankOf(me.id), level: levelOf(me.id), boost: boostOf(me.id), goal: db.prepare('select goal from users where id = ?').get(me.id).goal } : null;
+    if (pulse) Object.assign(pulse, trackBits(me.id, pulse.level.level));
     const live = memo('home-live', () => duels.presenceNow(), 5000);
     const open = memo('home-tourneys', () => tourneys.list(null)
       .filter((t) => t.status === 'inscripcion' || t.status === 'en_curso').slice(0, 4)

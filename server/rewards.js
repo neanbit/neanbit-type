@@ -166,9 +166,19 @@ export function rewardsFor(db, user) {
   for (const r of db.prepare("select theme, kind from rewards where enabled = 1 and theme != ''").all()) {
     kindsOf.set(r.theme, (kindsOf.get(r.theme) || new Set()).add(r.kind));
   }
+  // Nivel del casillero del camino activo que da cada recompensa (el más bajo si hay varios).
+  const at = new Map();
+  try {
+    for (const s of db.prepare("select s.level, s.payload from track_slots s join tracks t on t.id = s.track_id where t.active = 1 and s.enabled = 1 and s.kind = 'reward' order by s.level, s.pos").all()) {
+      const id = (() => { try { return JSON.parse(s.payload).id; } catch { return null; } })();
+      if (id && !at.has(id)) at.set(id, s.level);
+    }
+  } catch {}
   const items = db.prepare('select * from rewards where enabled = 1 order by pos, name').all().filter((r) => !r.hidden || owned.has(r.id)).map((r) => {
     const has = owned.get(r.id);
-    return { ...pub(r), combo: kindsOf.get(r.theme)?.size || 0, lvl: levelOfRule(r.rule), owned: !!has, source: has ? has.source : '', expires: has ? has.expires : 0, hint: has ? '' : ruleText(r.rule, medals) };
+    const lv = at.get(r.id) || levelOfRule(r.rule);
+    const hint = has ? '' : at.has(r.id) ? `Se reclama en el camino de niveles, en el nivel ${lv}.` : ruleText(r.rule, medals);
+    return { ...pub(r), combo: kindsOf.get(r.theme)?.size || 0, lvl: lv, owned: !!has, source: has ? has.source : '', expires: has ? has.expires : 0, hint };
   });
   const eq = parseEquip(user.equip);
   const equip = {};
@@ -189,9 +199,10 @@ export function setEquip(db, user, wanted) {
 
 export function grant(db, userId, rewardId, { source = 'manual', note = '', expires = 0 } = {}) {
   if (!db.prepare('select 1 from rewards where id = ?').get(rewardId)) return false;
-  // seen = 0 para que la persona reciba el aviso «Desbloqueaste…». Si ya la tenía, solo se renueva el vencimiento.
+  // seen = 0 para que la persona reciba el aviso «Desbloqueaste…». Si ya la tenía, solo se renueva el vencimiento: nunca se acorta uno más largo
+  // y una permanente (expires = 0) gana siempre.
   db.prepare(`insert into user_rewards (user_id, reward_id, source, note, at, expires, seen) values (?, ?, ?, ?, ?, ?, 0)
-    on conflict(user_id, reward_id) do update set expires = case when user_rewards.expires = 0 then 0 else excluded.expires end`)
+    on conflict(user_id, reward_id) do update set expires = case when user_rewards.expires = 0 or excluded.expires = 0 then 0 else max(user_rewards.expires, excluded.expires) end`)
     .run(userId, rewardId, String(source).slice(0, 20), String(note).slice(0, 80), Date.now(), expires);
   return true;
 }
@@ -208,13 +219,14 @@ export function revoke(db, userId, rewardId) {
 
 // ---------- Entrega automática ----------
 
-// Revisa las reglas `level`, `medal` y `event` para una persona y le da lo que le toca. Devuelve los ids nuevos.
-//   level   nivel actual de la persona
+// Revisa las reglas `medal` y `event` para una persona y le da lo que le toca. Devuelve los ids nuevos.
+// Desde la v23 (entrega 2) las reglas `level` ya no entregan solas: el premio por nivel es un casillero del camino (server/track.js) que se reclama.
+//   level   (sin uso; se conserva el parámetro por compatibilidad)
 //   medals  función que devuelve el Set de ids de medallas ganadas (solo se llama si hay reglas de medalla)
 //   events  true solo cuando la persona acaba de jugar (carrera o duelo): los eventos se ganan jugando
 // Nunca se quita nada: si después cambia la regla o la persona baja de nivel, lo ya entregado se conserva.
 export function autoGrant(db, userId, { level = 1, medals = () => new Set(), events = false, now = Date.now() } = {}) {
-  const rows = db.prepare('select id, rule from rewards where enabled = 1').all().filter((r) => ruleOf(r.rule).type !== 'manual');
+  const rows = db.prepare('select id, rule from rewards where enabled = 1').all().filter((r) => !['manual', 'level'].includes(ruleOf(r.rule).type));
   if (!rows.length) return [];
   const have = new Map(db.prepare('select reward_id, expires from user_rewards where user_id = ?').all(userId).map((o) => [o.reward_id, o.expires]));
   const alive = (id) => have.has(id) && (have.get(id) === 0 || have.get(id) > now);
@@ -226,8 +238,7 @@ export function autoGrant(db, userId, { level = 1, medals = () => new Set(), eve
     let ok = false;
     let note = '';
     let expires = 0;
-    if (r.type === 'level') { ok = level >= r.level; note = `Nivel ${r.level}`; }
-    else if (r.type === 'medal') { earned ||= medals(); ok = earned.has(r.medal); note = 'Medalla'; }
+    if (r.type === 'medal') { earned ||= medals(); ok = earned.has(r.medal); note = 'Medalla'; }
     else if (r.type === 'event' && events) { ok = now >= r.from && now < r.to; note = 'Evento'; expires = r.temp ? r.to : 0; }
     if (ok && grant(db, userId, row.id, { source: r.type, note, expires })) given.push(row.id);
   }

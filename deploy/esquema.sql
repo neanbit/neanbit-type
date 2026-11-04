@@ -216,3 +216,19 @@ create index if not exists to_open on tournament_orders (done_at);
 --
 -- Ordenes del panel que la app todavia no proceso:
 --   select * from tournament_orders where done_at = 0;
+
+-- Camino de niveles (app v23). Casilleros con premios que se reclaman a mano; ver la sección 12 de neanbit-docs.md.
+create table if not exists tracks (
+  id integer primary key, name text not null, active integer not null default 0, created integer not null);   -- uno solo activo
+create table if not exists track_slots (
+  id integer primary key, track_id integer not null, level integer not null, pos integer not null default 0,
+  kind text not null,                       -- reward (cosmético), booster (potenciador) o xp
+  payload text not null,                    -- JSON: {id,days} | {mult,hours} | {amount}
+  enabled integer not null default 1, until integer not null default 0, retro integer not null default 0, created integer not null);
+create index if not exists track_slots_by_track on track_slots (track_id, level, pos);
+create table if not exists track_claims (
+  user_id integer not null, slot_id integer not null, at integer not null, expires integer not null default 0,
+  primary key (user_id, slot_id));
+create index if not exists track_claims_by_slot on track_claims (slot_id);
+create table if not exists track_blocked (   -- quienes ya estaban en ese nivel al crear un casillero no retroactivo
+  slot_id integer not null, user_id integer not null, primary key (slot_id, user_id));
