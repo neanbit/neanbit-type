@@ -29,6 +29,7 @@
 [Qué incluye](#qué-incluye) ·
 [Cómo correrlo](#cómo-correrlo) ·
 [Estructura](#estructura) ·
+[Estructura del proyecto](#estructura-del-proyecto) ·
 [Cómo funciona](#cómo-funciona) ·
 [Administración](#administración) ·
 [Despliegue en un VPS](#despliegue-en-un-vps) ·
@@ -554,6 +555,18 @@ Todavía no:
 - Torneos: jugadores nuevos con el torneo en curso, sembrado por velocidad, mejor de 3, tercer puesto, doble eliminación y notificaciones fuera de la app.
 - Bloquear a un usuario de las revanchas o invitaciones.
 - Copia de las bases de datos fuera del VPS (hoy solo hay copias en el mismo servidor).
+
+## Estructura del proyecto
+
+El sitio no se compila: el navegador carga `index.html` y los módulos ES de `js/` tal cual, y `server/index.js` sirve los estáticos y la API con Node puro, sin dependencias.
+
+- **`css/`**: un archivo por pantalla, más `style.css` con la base y las variables: `home`, `pick`, `race`, `stats`, `profile`, `duel`, `tourney`, `nivel`, `camino`, `rewards` y `pages`.
+- **`js/`**: el front, en módulos ES y sin bundler. `main.js` arranca la app, `store.js` y `api.js` concentran el estado y las llamadas al servidor, y `engine.js` es el motor de tipeo; el resto cubre cada pantalla y cada función (duelos, torneos, niveles, recompensas, medallas, textos, sonido, editor, avatar).
+- **`server/`**: el backend, en Node con `node:http` y SQLite (`node:sqlite`). `index.js` expone la API, las sesiones y los estáticos; `ws.js` mantiene el WebSocket de duelos y torneos; los demás módulos son de dominio (duels, tournaments, stats, xp, levels, medals, rewards, track, content, limits, seed, html-safe), junto con `medal-icons/` y los catálogos `*-base.json` con los que se siembra la base.
+- **`scripts/`**: utilidades que se corren a mano. `backup.sh` hace la copia consistente con `VACUUM INTO` y la rota por días, `audit-seguridad.sh` audita el VPS en solo lectura y `export-content.mjs` regenera `server/content-defaults.json` a partir de los textos de `js/pages.js`.
+- **`deploy/`**: archivos de referencia para desplegar. Las unidades de systemd (`.service.example`) de la app y del panel, la configuración de ejemplo del túnel de Cloudflare, `esquema.sql` para leer o levantar la base vacía, y `backup.sh` con la variante que corre en el servidor.
+
+El detalle archivo por archivo está en [Estructura](#estructura), más arriba.
 
 ## Licencia y créditos
 
