@@ -61,8 +61,8 @@ export function createTournaments({ db, duels, maintenance, bump, earnedMedal, x
   function tx(fn) {
     if (depth) return fn();
     depth++;
-    db.exec('begin immediate');
     try {
+      db.exec('begin immediate');
       const out = fn();
       db.exec('commit');
       return out;
