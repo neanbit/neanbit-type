@@ -6,3 +6,6 @@ data.db*
 # Documentación interna de neanbit (referencia propia, no se publica)
 neanbit-docs.md
 neanbit-type-contexto-completo.md
+
+# Reglas y configuración local de agentes (no se publican)
+.hermes.md
