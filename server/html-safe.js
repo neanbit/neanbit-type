@@ -1,3 +1,4 @@
+// Archivo compartido entre neanbit-type y neanbit-type-admin: cambiar siempre en ambos repos.
 // Limpieza de HTML para los textos de páginas editables desde el panel. Lista blanca de etiquetas y atributos.
 // Compartido con neanbit-type-admin (archivos idénticos). La app lo vuelve a aplicar al servir, por si la base se tocó a mano.
 
