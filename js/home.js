@@ -388,7 +388,7 @@ $('#ms-list').onclick = async (e) => {
     drawMissions();
     msg.hidden = false;
     msg.textContent = res.claimed
-      ? `Reclamado: ${res.claimed.title}${res.claimed.given != null ? ` (+${res.claimed.given} XP)` : ''}`
+      ? `Reclamado: ${res.claimed.title}${res.claimed.given != null ? ` (+${res.claimed.given} XP${res.claimed.capped ? ', tope diario' : ''})` : ''}`
       : 'Premio reclamado.';
     setTimeout(() => { msg.hidden = true; }, 5000);
     refresh(true);
