@@ -232,3 +232,25 @@ create table if not exists track_claims (
 create index if not exists track_claims_by_slot on track_claims (slot_id);
 create table if not exists track_blocked (   -- quienes ya estaban en ese nivel al crear un casillero no retroactivo
   slot_id integer not null, user_id integer not null, primary key (slot_id, user_id));
+
+-- Metas y misiones (app v25, entrega 6). Ver la sección 12.7 de neanbit-docs.md.
+create table if not exists missions (
+  id integer primary key, title text not null, note text not null default '', kind text not null default 'mission',
+  metric text not null default 'races', period text not null default 'day', filters text not null default '{}',
+  count integer not null default 1, starts integer not null default 0, ends integer not null default 0,
+  repeat integer not null default 0, reward text not null default '{"kind":"none"}', enabled integer not null default 1,
+  pos integer not null default 0, created integer not null, pool integer not null default 0);   -- pool = 1: candidata de la rotación
+create table if not exists mission_claims (
+  user_id integer not null, mission_id integer not null, period_key text not null, at integer not null,
+  primary key (user_id, mission_id, period_key));   -- period_key: AAAA-MM-DD, AAAA-Www o e:AAAA-MM-DD
+create index if not exists mission_claims_by_mission on mission_claims (mission_id);
+create table if not exists mission_rotation (
+  period_key text not null, mission_id integer not null, pos integer not null default 0, at integer not null,
+  primary key (period_key, mission_id));   -- qué eligió la rotación en cada día, semana o evento
+create index if not exists mission_rotation_by_key on mission_rotation (period_key, pos);
+create table if not exists mission_log (
+  id integer primary key, at integer not null, mission_id integer not null default 0, title text not null default '',
+  action text not null, detail text not null default '');
+create index if not exists mission_log_by_at on mission_log (id desc);
+create index if not exists races_user_at on races (user_id, at);
+create index if not exists races_at on races (at);
