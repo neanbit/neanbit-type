@@ -8,7 +8,7 @@
 //
 // Nada de lo reclamado se quita: si después se apaga o se borra el casillero, el premio se conserva.
 import { xpAtLevel } from './levels.js';
-import { grant } from './rewards.js';
+import { deliver } from './deliver.js';
 
 export const SLOT_KINDS = ['reward', 'booster', 'xp'];
 export const LIMITS = { maxLevel: 999, perLevel: 6, slots: 500, days: 3650, hoursMax: 720, xpMax: 10000, multMin: 1.1, multMax: 10 };
@@ -185,22 +185,13 @@ export function nextOf(view) {
 const fail = (status, msg) => Object.assign(new Error(msg), { status });
 
 // Entrega el premio de un casillero. Devuelve cuándo vence lo entregado (0 si no vence). Lo llama claimSlot dentro de una transacción.
+// La entrega en sí vive en deliver.js (compartida con las misiones). Un potenciador del camino que ya esté activo no se desperdicia:
+// el nuevo arranca cuando termine el anterior.
 function applySlot(db, userId, s, { xp, now }) {
-  if (s.kind === 'reward') {
-    const expires = s.days > 0 ? now + s.days * DAY : 0;
-    if (!grant(db, userId, s.rewardId, { source: 'track', note: `Nivel ${s.level}`, expires })) throw fail(410, 'Esa recompensa ya no existe.');
-    return expires;
-  }
-  if (s.kind === 'booster') {
-    // Un potenciador del camino que ya esté activo no se desperdicia: el nuevo arranca cuando termine el anterior.
-    const last = db.prepare("select max(ends) as e from xp_boosters where user_id = ? and name like 'Camino:%' and ends > ?").get(userId, now).e || 0;
-    const starts = Math.max(now, last);
-    const ends = starts + s.hours * HOUR;
-    db.prepare('insert into xp_boosters (name, mult, user_id, starts, ends, created) values (?, ?, ?, ?, ?, ?)').run(`Camino: nivel ${s.level}`, s.mult, userId, starts, ends, now);
-    return ends;
-  }
-  xp.add(userId, s.amount, 'track', { ref: s.id, note: `Camino, nivel ${s.level}`, at: now });
-  return 0;
+  return deliver(db, userId, { kind: s.kind, rewardId: s.rewardId, days: s.days, mult: s.mult, hours: s.hours, amount: s.amount }, {
+    xp, now, source: 'track', note: `Nivel ${s.level}`, boosterLike: 'Camino:%', boosterName: `Camino: nivel ${s.level}`,
+    xpReason: 'track', xpRef: s.id, xpNote: `Camino, nivel ${s.level}`,
+  });
 }
 
 // Reclama un casillero. `xp` es el módulo de XP de la app (server/xp.js). Lanza un Error con `status` si no se puede.

@@ -16,6 +16,7 @@ import { setupXp } from './xp.js';
 import { cleanContent } from './content.js';
 import { autoGrant, cosmeticsMany, cosmeticsOf, ensureRewardSchema, grantPlace, markSeen, rewardsFor, setEquip, unseen } from './rewards.js';
 import { claimAll, claimSlot, ensureTrackSchema, migrateTrack, nextOf, trackFor } from './track.js';
+import { cfgOf as missionCfgOf, claimMission, ensureMissionSchema, missionsFor } from './misiones.js';
 import { CONDITIONS, ensureMedalSchema, grantCount, groupOf, loadIcons, medalFile, medalValues, realTourneyWins, tierOf } from './medals.js';
 
 const scrypt = promisify(scryptCb);
@@ -125,6 +126,10 @@ try {
   console.error(err);
   process.exit(1); // sin camino no hay premios por nivel: mejor no arrancar a medias
 }
+
+// Metas y misiones (v25, entrega 6): las tablas las crea la app (el panel también las crea si faltan: es seguro repetirlo).
+ensureMissionSchema(db);
+const missionCfg = () => missionCfgOf(setting('missions'));
 
 function maintenance() {
   try {
@@ -380,6 +385,11 @@ const boostOf = (userId) => {
 };
 
 // Respuesta del camino para una persona: nivel (la XP de un premio puede subirlo), casilleros y próxima recompensa.
+function missionsReply(userId) {
+  const cfg = missionCfg();
+  return { missions: missionsFor(db, userId, cfg), tz: cfg.tz, xpCapDay: cfg.xpCapDay, now: Date.now() };
+}
+
 function trackReply(userId) {
   const level = levelOf(userId);
   const v = trackFor(db, userId, level.level);
@@ -584,6 +594,27 @@ async function api(req, res, url) {
       }
       const all = claimAll(db, me.id, { level: lv, xp });
       return send(res, 200, { ok: true, ...all, ...trackReply(me.id), news: unseen(db, me.id) });
+    } catch (err) {
+      if (err.status) return send(res, err.status, { error: err.message });
+      throw err;
+    }
+  }
+
+  // Metas y misiones: las activas ahora con el progreso de quien consulta, y el reclamo del premio (se calcula todo en el servidor).
+  if (key === 'GET /api/missions') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para ver esto.' });
+    if (limits.hit('ms:' + me.id, 60, 60000)) return tooMany(res, 'ms:' + me.id, 60000);
+    return send(res, 200, missionsReply(me.id));
+  }
+  if (key === 'POST /api/missions/claim') {
+    if (!me) return send(res, 401, { error: 'Iniciá sesión para reclamar.' });
+    if (maintenance().on && me.role !== 'admin') return send(res, 503, { error: 'Estamos en mantenimiento.' });
+    if (limits.hit('msc:' + me.id, 30, 60000)) return tooMany(res, 'msc:' + me.id, 60000);
+    try {
+      const { mission } = await readBody(req);
+      if (!Number.isInteger(mission)) return send(res, 400, { error: 'Elegí qué misión reclamar.' });
+      const one = claimMission(db, me.id, mission, { xp, cfg: missionCfg() });
+      return send(res, 200, { ok: true, claimed: one, ...missionsReply(me.id), news: unseen(db, me.id) });
     } catch (err) {
       if (err.status) return send(res, err.status, { error: err.message });
       throw err;
