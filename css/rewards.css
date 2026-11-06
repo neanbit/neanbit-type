@@ -695,3 +695,80 @@
 .rw-pal { box-sizing: border-box; width: 100%; min-width: 5rem; position: relative; display: grid; place-items: center; height: 3.4rem; overflow: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; }
 .rw-pal::before { content: ""; position: absolute; inset: 0 0 auto; height: .5rem; background: linear-gradient(90deg, var(--accent) 0 50%, var(--ink) 50%); }
 .rw-pal::after { content: "Aa"; box-sizing: border-box; width: 72%; margin-top: .5rem; padding: .05rem 0; text-align: center; background: var(--panel); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius: 3px; color: var(--ink); font: 600 1rem var(--ui); }
+
+/* ========== COMBO LAZO ========== */
+/* Cuatro piezas que hacen juego: el marco «Lazo», el nombre «Cinta», la portada «Lunares» y la paleta «Fresa».
+   Motivos propios (moño, lunares, rosa y blanco): no se reproduce ningún personaje con derechos. */
+/* ---------- Marco: Lazo ---------- */
+[data-frame="lazo"] { --fg: #ff8fc7aa; animation: rw-breathe 4.2s ease-in-out infinite; }
+[data-frame="lazo"]::before {
+  background: conic-gradient(from var(--ang), #ff4f9a, #ffe3f1, #ffffff, #ffb3d4, #ff4f9a, #fff6fb, #ff4f9a);
+  animation: rw-spin 14s linear infinite;
+}
+[data-frame="lazo"]::after {
+  content: ""; z-index: 3; top: calc((var(--bw) + var(--fw) + 6px) * -1); right: calc((var(--bw) + var(--fw) + 2px) * -1); width: 32%; aspect-ratio: 1;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cg%20transform='rotate(-7%2016%2015)'%3E%3Cpath%20d='M15.6%2014.4C13%2010%208%207.4%205%208.8%202%2010.2%202.4%2016.4%205.6%2018%208.6%2019.4%2013%2017.8%2015.6%2014.4Z'%20fill='%23ff3d8b'%20stroke='%23fff'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3Cpath%20d='M16.4%2014.4C19%2010%2024%207.4%2027%208.8%2030%2010.2%2029.6%2016.4%2026.4%2018%2023.4%2019.4%2019%2017.8%2016.4%2014.4Z'%20fill='%23ff3d8b'%20stroke='%23fff'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3Cpath%20d='M14.9%2016.4C13.7%2019.2%2012.1%2021.8%2010.8%2023.2l2.9-.4c1.3-2%202.1-4.3%202.6-5.9z'%20fill='%23ff9ac8'%20stroke='%23fff'%20stroke-width='.7'%20stroke-linejoin='round'/%3E%3Cpath%20d='M17.1%2016.4c1.2%202.8%202.8%205.4%204.1%206.8l-2.9-.4c-1.3-2-2.1-4.3-2.6-5.9z'%20fill='%23ff9ac8'%20stroke='%23fff'%20stroke-width='.7'%20stroke-linejoin='round'/%3E%3Cellipse%20cx='16'%20cy='14.6'%20rx='2.9'%20ry='2.6'%20fill='%23ff9ac8'%20stroke='%23fff'%20stroke-width='1'/%3E%3Cellipse%20cx='7.4'%20cy='11.6'%20rx='2.2'%20ry='1.1'%20transform='rotate(-18%207.4%2011.6)'%20fill='%23ffd1e6'%20opacity='.85'/%3E%3Cellipse%20cx='24.6'%20cy='11.6'%20rx='2.2'%20ry='1.1'%20transform='rotate(18%2024.6%2011.6)'%20fill='%23ffd1e6'%20opacity='.85'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 1px 2px #0005); animation: rw-float 3.6s ease-in-out infinite;
+}
+
+/* ---------- Nombre: Cinta ---------- */
+[data-fx="cinta"] {
+  color: #fff; font-size: 1.1em; font-weight: 700; letter-spacing: .01em;
+  text-shadow: 0 0 1px #ff4f9a, 1.5px 0 0 #ff4f9a, -1.5px 0 0 #ff4f9a, 0 1.5px 0 #ff4f9a, 0 -1.5px 0 #ff4f9a,
+    1px 1px 0 #ff4f9a, -1px 1px 0 #ff4f9a, 1px -1px 0 #ff4f9a, -1px -1px 0 #ff4f9a, 0 3px 0 #c2185b;
+  filter: drop-shadow(0 0 6px #ff9ac866); animation: rw-pop 3.8s ease-in-out infinite;
+}
+[data-theme="claro"] [data-fx="cinta"] {
+  color: #e0327f; text-shadow: 0 0 1px #fff, 1.5px 0 0 #fff, -1.5px 0 0 #fff, 0 1.5px 0 #fff, 0 -1.5px 0 #fff,
+    1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff, 0 3px 0 #f5a9c8;
+  filter: none;
+}
+
+/* ---------- Portada: Lunares ---------- */
+/* En tema claro el anillo necesita más contraste y el moño se achica en las miniaturas. */
+[data-theme="claro"] [data-frame="lazo"] { --fg: #e0327f44; }
+[data-theme="claro"] [data-frame="lazo"]::before { background: conic-gradient(from var(--ang), #d81b60, #ffd1e6, #ffffff, #ff7ab3, #d81b60, #fff2f8, #d81b60); }
+.rw-av[data-frame="lazo"] { margin-top: 1rem; }
+.rw-av[data-frame="lazo"]::after { top: -6px; right: 2px; width: 38%; }
+
+@keyframes rw-lazos { to { background-position: 0 -160px, 25px -50px, 0 0, 0 0; } }
+[data-cover="lunares"] {
+  background:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='160'%20height='160'%20viewBox='0%200%20160%20160'%3E%3Cg%20transform='translate(24%2024)%20scale(2.2)'%3E%3Cpath%20d='M15.6%2014.4C13%2010%208%207.4%205%208.8%202%2010.2%202.4%2016.4%205.6%2018%208.6%2019.4%2013%2017.8%2015.6%2014.4Z'%20fill='%23fff'%20stroke='%23ff4f9a'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3Cpath%20d='M16.4%2014.4C19%2010%2024%207.4%2027%208.8%2030%2010.2%2029.6%2016.4%2026.4%2018%2023.4%2019.4%2019%2017.8%2016.4%2014.4Z'%20fill='%23fff'%20stroke='%23ff4f9a'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3Cellipse%20cx='16'%20cy='14.6'%20rx='2.9'%20ry='2.6'%20fill='%23ffd1e6'%20stroke='%23ff4f9a'%20stroke-width='1'/%3E%3Cellipse%20cx='7.4'%20cy='11.6'%20rx='2.2'%20ry='1.1'%20transform='rotate(-18%207.4%2011.6)'%20fill='%23ffb3d4'%20opacity='.85'/%3E%3Cellipse%20cx='24.6'%20cy='11.6'%20rx='2.2'%20ry='1.1'%20transform='rotate(18%2024.6%2011.6)'%20fill='%23ffb3d4'%20opacity='.85'/%3E%3C/g%3E%3Cg%20transform='translate(104%2092)%20scale(1.25)'%3E%3Cpath%20d='M15.6%2014.4C13%2010%208%207.4%205%208.8%202%2010.2%202.4%2016.4%205.6%2018%208.6%2019.4%2013%2017.8%2015.6%2014.4Z'%20fill='%23fff'%20stroke='%23ff4f9a'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3Cpath%20d='M16.4%2014.4C19%2010%2024%207.4%2027%208.8%2030%2010.2%2029.6%2016.4%2026.4%2018%2023.4%2019.4%2019%2017.8%2016.4%2014.4Z'%20fill='%23fff'%20stroke='%23ff4f9a'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3Cellipse%20cx='16'%20cy='14.6'%20rx='2.9'%20ry='2.6'%20fill='%23ffd1e6'%20stroke='%23ff4f9a'%20stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 160px 160px repeat,
+    radial-gradient(circle, #ffffffd9 0 4.2px, transparent 5px) 0 0 / 50px 50px repeat,
+    radial-gradient(ellipse at 18% 10%, #ffffffb0, transparent 42%),
+    linear-gradient(180deg, #ff86b9, #ffa9cf 55%, #ffc6e0 100%);
+  animation: rw-lazos 26s linear infinite;
+}
+
+/* ---------- Paleta: Fresa ---------- */
+[data-palette="fresa"] { --accent: #ff4f9a; --ink: #ff9ac8; --on-accent: #2a0514; }
+[data-palette="fresa"]:not([data-theme="contraste"]) {
+  --bg: #2b0f20; --bg-deep: #210a18; --panel: #3a1430; --raise: #4a1a3d; --line: #6b2a56; --muted: #d3a8c4; --grid: rgb(255 154 200 / .04);
+}
+[data-theme="claro"][data-palette="fresa"], [data-theme="claro"] [data-palette="fresa"] {
+  --accent: #e0327f; --ink: #b0165c; --muted: #7a4a63; --bg: #fff5fa; --bg-deep: #ffe4f0; --panel: #ffffff; --raise: #fff9fc; --line: #f5c6dc; --grid: rgb(224 50 127 / .05);
+}
+[data-palette="fresa"] body {
+  background-image:
+    radial-gradient(ellipse 80% 90% at 50% 0, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(circle, color-mix(in srgb, var(--accent) 30%, transparent) 0 2.6px, transparent 3.2px);
+  background-size: 100% 55vh, 42px 42px; background-position: 0 0, 0 0; background-repeat: no-repeat, repeat;
+}
+[data-palette="fresa"] :is(.pf-box, .pf-stats div, .pv) {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 55%);
+  border-radius: 12px; border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent), 0 10px 26px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+[data-palette="fresa"] .pf-hero {
+  background-image: linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 48%);
+  background-position: top left, top left, bottom right, bottom right, 0 0;
+  background-size: 16px 2px, 2px 16px, 16px 2px, 2px 16px, 100% 100%;
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+}
+[data-palette="fresa"] .pf-hero { border-radius: 12px; }
+[data-palette="fresa"] .pf-banner { border-radius: 11px 11px 0 0; }
+
+/* Con prefers-reduced-motion no hace falta nada más: la regla global de
+   rewards.css ya apaga [data-frame], [data-fx] y [data-cover]. */
