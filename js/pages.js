@@ -8,7 +8,7 @@ import { esc } from './ui.js';
 // Quién responde las consultas: la persona dueña del proyecto, a través de su perfil público (ahí figura su Discord).
 // Estos tres valores y los textos de las páginas se pueden reemplazar desde el panel (settings.content, ver `applyContent`).
 // En los textos, {{contacto}}, {{fecha}} y {{repo}} se reemplazan al mostrarlos.
-const SITE = { contact: 'neanbit', updated: '30 de octubre de 2026', repo: 'https://github.com/neanbit/neanbit-type' };
+const SITE = { contact: 'neanbit', updated: '6 de noviembre de 2026', repo: 'https://github.com/neanbit/neanbit-type' };
 
 const paths = { info: '/info', guias: '/guias', terminos: '/terminos', privacidad: '/privacidad', cookies: '/cookies', normas: '/normas' };
 const idOf = (path) => Object.keys(paths).find((k) => paths[k] === path.replace(/\/+$/, '')) || null;
@@ -163,10 +163,10 @@ const GUIDES = [
       <li><b>Si no aparecés, perdés.</b> Si no aparece ninguno de los dos, pasa el mejor sembrado.</li>
     </ol>
     <p>Si en un partido nadie termina el texto en 5 minutos, pasa quien llegó más lejos. Con igualdad se repite una vez con otro texto.</p>`, () => art.bracketDiagram()],
-  ['g-progreso', 'Niveles, rachas y meta diaria', () => `
-    <p>Tu <b>nivel</b> sube con la experiencia (XP) que sale de lo que ya jugás: 10 XP por carrera (15 en Hardcore), 5 más si no tuviste errores, 20 por duelo ganado y, en los torneos, la XP que define cada uno para el campeón y, si la hay, para el finalista, los semifinalistas y los participantes (la ves en la pantalla del torneo; 150 para el campeón salvo que diga otra cosa). El nivel 2 llega a los 50 XP, el 3 a los 200 y el 5 a los 800. Cada tramo de niveles tiene un título, de Novato a Leyenda. Lo ves en el inicio y en tu perfil: tocá el nivel de tu perfil para ver cuánto te falta, los próximos niveles y los títulos. Al terminar una carrera aparece cuánto sumaste, y si hay un potenciador activo, cuánto multiplica.</p>
+  ['g-progreso', 'Niveles, rachas, metas y misiones', () => `
+    <p>Tu <b>nivel</b> sube con la experiencia (XP) que sale de lo que ya jugás: 10 XP por carrera (15 en Hardcore), 5 más si no tuviste errores, 20 por duelo ganado y, en los torneos, la XP que define cada uno para el campeón y, si la hay, para el finalista, los semifinalistas y los participantes (la ves en la pantalla del torneo; 150 para el campeón salvo que diga otra cosa). La XP se guarda cuando ocurre, así que cambiar un valor no recalcula tu historial. Cada nivel pide un poco más que el anterior: de fábrica, el nivel 2 llega a los 100 XP, el 3 a los 210 y el 5 a los 460. Cada tramo de niveles tiene un título, de Novato a Inmortal. Lo ves en el inicio y en tu perfil: tocá el nivel de tu perfil para abrir el camino, con lo que te falta y los premios de cada nivel. Al terminar una carrera aparece cuánto sumaste, y si hay un potenciador activo, cuánto multiplica.</p>
     <p>La <b>racha</b> cuenta los días seguidos en que corriste al menos una carrera. Si hoy todavía no jugaste, la racha de ayer sigue viva hasta que termine el día.</p>
-    <p>La <b>meta de hoy</b> es cuántas carreras querés hacer por día (de 1 a 50). La cambiás desde el inicio con «Cambiar» y se guarda en tu cuenta.</p>`],
+    <p>Las <b>metas y misiones</b> las administra neanbit y aparecen en la tarjeta <b>Misiones</b> del inicio, cada una con su progreso, el período y el botón <b>Reclamar</b> cuando la cumplís. Hay metas fijas (por ejemplo, jugar cierta cantidad de carreras) y misiones con condiciones (Hardcore por encima de cierta velocidad, precisión perfecta, días seguidos). Se muestran pocas a la vez —de fábrica, tres— entre el día y la semana; los eventos van aparte. El premio puede ser XP, un potenciador o un cosmético, y hay que reclamarlo: lo que no se reclama no se entrega. Toda la XP que dan las metas y misiones (también la semanal y los eventos) suma a un tope diario, para que las misiones acompañen a las carreras y no las reemplacen.</p>`],
   ['g-extras', 'Textos propios, ritmo, sonido y compartir', () => `
     <ul>
       <li><b>Mis textos.</b> En Personalizado podés sumar un texto propio (de 40 a 800 caracteres). Se guarda solo en tu navegador, no suma al ranking ni a tus estadísticas.</li>
@@ -197,7 +197,8 @@ const FAQ = [
   ['Cuenta', 'Me olvidé la contraseña, ¿qué hago?', 'Por ahora no hay recuperación automática. Si la perdés, escribinos y vemos cómo ayudarte. Para evitarlo, usá una contraseña que puedas recordar o un gestor de contraseñas.'],
   ['Cuenta', '¿Cómo borro mi cuenta?', `Pedilo por ${contact}. Se eliminan tu perfil, tus carreras y tus estadísticas. Los detalles están en la <a href="/privacidad" data-page="privacidad">Política de privacidad</a>.`],
   ['Cuenta', '¿Quién puede ver mi perfil?', 'Cualquiera. El perfil, el historial reciente, las medallas y tu lugar en los rankings son públicos. Tus errores por tecla y tus estadísticas detalladas solo las ves vos. No pongas en la biografía ni en la foto nada que no quieras que vea todo el mundo.'],
-  ['Progreso', '¿Cómo se calcula mi nivel?', 'Con la experiencia (XP): 10 por carrera, 15 en Hardcore, 5 extra sin errores, 20 por duelo ganado y la que reparte cada torneo (se ve en su pantalla). No hay nada que activar: se calcula con tus carreras guardadas.'],
+  ['Progreso', '¿Cómo se calcula mi nivel?', 'Con la experiencia (XP) que se guarda al ocurrir: 10 por carrera, 15 en Hardcore, 5 extra sin errores, 20 por duelo ganado y la que reparte cada torneo (se ve en su pantalla). Cada nivel pide un poco más que el anterior. De fábrica, el nivel 2 llega a los 100 XP, el 3 a los 210 y el 5 a los 460; cambiarte de nivel no recalcula tu historial.'],
+  ['Progreso', '¿Qué son las metas y misiones?', 'Objetivos que administra neanbit y que aparecen en la tarjeta Misiones del inicio, con su progreso y, cuando las cumplís, el botón Reclamar. Hay metas fijas, misiones por día, por semana y eventos, algunas con condiciones (Hardcore a cierta velocidad, precisión perfecta, días seguidos). El premio puede ser XP, un potenciador o un cosmético, y hay que reclamarlo: no se entrega solo. Las misiones no ocupan el lugar de las carreras; su XP tiene un tope diario.'],
   ['Progreso', '¿Por qué se me cortó la racha?', 'La racha cuenta días seguidos con al menos una carrera guardada, según tu zona horaria. Las carreras de invitado y los textos propios no cuentan.'],
   ['Progreso', '¿Cómo consigo marcos, efectos de nombre y portadas?', 'Se llaman recompensas. Se desbloquean al llegar a ciertos niveles, al ganar medallas, por tu puesto en un torneo o participando en eventos con fecha. En la ventana de tu nivel ves las que se consiguen por nivel, y las activás desde «Editar perfil», en Recompensas. Más detalle en la guía de Recompensas.'],
   ['Progreso', '¿Pierdo una recompensa si cambian las reglas?', 'No. Lo que ya ganaste se conserva. La única excepción son las de evento marcadas para vencer: dejan de verse cuando el evento termina.'],
@@ -320,12 +321,13 @@ const legal = {
         <tbody>
           <tr><td>Cuenta</td><td>Nombre de usuario, nombre para mostrar, fecha de alta y rol. La contraseña se guarda <b>solo como hash</b> (scrypt), nunca en texto.</td></tr>
           <tr><td>Perfil (opcional)</td><td>Foto, biografía, país, distribución y tipo de teclado, usuario de Discord, sitio web, color, cabecera y forma de la foto, las medallas que elegís mostrar y las recompensas (marco, nombre, portada) que tenés puestas.</td></tr>
-          <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>
-          <tr><td>Progreso</td><td>Tu meta diaria de carreras y las recompensas que ganaste (cuál, cuándo y por qué motivo, por ejemplo «nivel 5» o el nombre de un torneo) y si ya viste el aviso. Tu nivel y tu racha no se guardan aparte: se calculan con tus carreras.</td></tr>
+          <tr><td>Actividad</td><td>Carreras (texto, velocidad, precisión, modo y fecha), la duración de cada carrera y el conteo de teclas tipeadas por carácter, errores por tecla y por palabra, eliminaciones en Hardcore, duelos y partidos de torneo con sus resultados, e inscripciones.</td></tr>
+          <tr><td>Progreso</td><td>Las metas y misiones que cumplís, los reclamos que hacés y los premios que ganaste (cuál, cuándo y por qué motivo, por ejemplo «nivel 5», una misión o el nombre de un torneo) y si ya viste el aviso. Se guarda la XP que sumás al jugar y al reclamar, con su motivo y su multiplicador. Tu nivel y tu racha no tienen un registro propio: salen de tu XP y de tus carreras.</td></tr>
           <tr><td>Sesión</td><td>Una cookie que mantiene tu sesión iniciada hasta 30 días. En el servidor se guarda una huella de ese código, no el código.</td></tr>
           <tr><td>Técnicos</td><td>Tu dirección IP y datos del navegador viajan con cada solicitud. Se usan para limitar abusos y proteger el servicio y se mantienen en la memoria del servidor por minutos u horas; <b>no se guardan en la base de datos</b>.</td></tr>
         </tbody></table>
-        <p>No pedimos tu correo, teléfono, nombre real ni documentos.</p>`],
+        <p>No pedimos tu correo, teléfono, nombre real ni documentos.</p>
+        <p>Con tu actividad, la página de Estadísticas te compara con la comunidad. Esa comparación usa solo valores agregados (medianas y percentiles) calculados sobre un mínimo de cinco pilotos: nunca se muestra el valor de otra persona ni se puede reconstruir a partir de esas cifras.</p>`],
       ['Para qué los usamos', `<ul>
         <li>Darte una cuenta y guardar tus carreras, estadísticas, medallas y perfil.</li>
         <li>Armar rankings, duelos y torneos.</li>
@@ -375,6 +377,8 @@ const legal = {
           <tr><td><code>nt_mytexts</code></td><td>Almacenamiento local</td><td>Los textos propios que escribiste. No se envían al servidor.</td><td>Hasta que lo borres</td></tr>
           <tr><td><code>nt_favs</code></td><td>Almacenamiento local</td><td>Los textos que marcaste como favoritos.</td><td>Hasta que lo borres</td></tr>
           <tr><td><code>nt_news</code></td><td>Almacenamiento local</td><td>El último anuncio que viste, para no repetirlo.</td><td>Hasta que lo borres</td></tr>
+          <tr><td><code>nt_statgoal</code></td><td>Almacenamiento local</td><td>Tu meta de velocidad de Estadísticas (en CPM) y si la estás editando. No se envía al servidor.</td><td>Hasta que la borres</td></tr>
+          <tr><td><code>nt_statcompare</code></td><td>Almacenamiento local</td><td>Si en Evolución comparás el período actual contra el anterior.</td><td>Hasta que lo borres</td></tr>
         </tbody></table>`],
       ['Sin publicidad ni seguimiento', `<p>neanbit type no usa cookies publicitarias ni de seguimiento propias, ni comparte datos con redes de anuncios.</p>
         <p>Las cookies y el almacenamiento anteriores son <b>necesarios o de preferencia</b>: sin ellos no podrías mantener la sesión ni recordar tus ajustes. Por eso no mostramos un aviso para aceptarlas.</p>`],
@@ -548,7 +552,7 @@ export const pages = {
     OV = c && c.pages ? c.pages : {};
     const site = (c && c.site) || {};
     SITE.contact = site.contact || 'neanbit';
-    SITE.updated = site.updated || '30 de octubre de 2026';
+    SITE.updated = site.updated || '6 de noviembre de 2026';
     SITE.repo = site.repo || 'https://github.com/neanbit/neanbit-type';
     if (current && !$('#page').hidden) render(current);
   },

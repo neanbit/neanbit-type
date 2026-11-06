@@ -28,7 +28,12 @@ export const REWARD_KINDS = ['none', 'xp', 'booster', 'reward'];
 export const TRI = ['any', 'only', 'none']; // indistinto, solo, sin
 // Evento automático de fábrica: viernes a las 18:00 y 54 horas (hasta el domingo a medianoche), uno del pozo de eventos.
 export const EVENTOS = { on: 0, weekday: 5, hour: 18, hours: 54, count: 1 };
-export const CFG_DEFAULT = { tz: -3, xpCapDay: 0, slots: 3, slotsWeek: 1, events: { ...EVENTOS } };
+// Calibración (entrega 7): la XP de las misiones se mide contra la curva `base 100 / grow 10` y contra el tope diario.
+// Referencia de premios (XP): meta fija 10, misión diaria 15 a 25, semanal 60, evento 40. Una carrera normal da 10 XP.
+// Tope diario de fábrica: 120 XP, que son 12 carreras normales y alrededor del 20 % de un nivel en el 50 (590 XP).
+// El tope cuenta TODO lo que dan las misiones en el día (metas, diarias, semanal y eventos), así un pozo o un evento
+// mal cargado no infla la economía. 0 lo desactiva.
+export const CFG_DEFAULT = { tz: -3, xpCapDay: 120, slots: 3, slotsWeek: 1, events: { ...EVENTOS } };
 export const SLOTS = { max: 10, events: 3 };
 
 const HOUR = 3600000;

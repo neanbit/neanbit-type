@@ -56,7 +56,7 @@ Reglas del proyecto:
 
 **Modos de juego**
 
-- **Aleatorio**, y un **texto del día** en el inicio.
+- **Aleatorio**, con un texto distinto en cada carrera.
 - **Personalizado**: por categoría o por texto, con buscador (resaltado), filtros por largo, «una al azar» y «tu mejor» por texto. Más **Mis textos**: textos propios de 40 a 800 caracteres que se guardan solo en tu navegador y no suman a ranking, XP ni estadísticas.
 - **Entrenamiento** con tus errores, y carrera contra el **fantasma** de tu récord.
 - **Hardcore**: un error y quedás eliminado. Tiene sus propios rankings (carreras y eliminaciones).
@@ -72,7 +72,7 @@ Reglas del proyecto:
 
 **Progreso**
 
-- **Niveles y experiencia** con ocho títulos (de Novato a Leyenda). El nivel se ve en el perfil como un widget que abre el detalle.
+- **Niveles y experiencia** con doce títulos (de Novato a Inmortal) y un **camino de niveles** con premios que se reclaman. El nivel se ve en el perfil como una chapa que abre el camino.
 - **Racha** de días en una tarjeta compacta del inicio (días seguidos y las últimas 14 jornadas de actividad), y **metas y misiones** que administra el panel: hasta tres a la vez entre el día y la semana, con su progreso y el botón **Reclamar**. La meta personal de carreras (`users.goal`) ya no se elige desde el inicio; la columna se conserva.
 - **Rankings** de 10 por página con «tu posición»: carreras, promedios, Hardcore, duelos y torneos. Duelos tiene filtro de 24 horas o histórico.
 
@@ -227,6 +227,24 @@ La experiencia se guarda **al ocurrir** (no se recalcula con conteos): `races.xp
 - **Potenciadores:** multiplicador de 1,1 a 10, global o para un usuario, con inicio y fin. Rige el más alto entre los activos (no se acumulan) y multiplican la XP de carreras, duelos ganados y torneos, no los ajustes manuales. Se avisan en la ventana de nivel, en el inicio y en el resultado de carrera.
 - Todo esto se configura desde el panel (`settings.progress`). Los valores de fábrica y la validación están en `server/levels.js`.
 
+### Metas y misiones
+
+Las administra el panel: metas fijas, misiones por día, por semana y eventos, más un pozo del que la rotación elige las de cada día. El progreso se cuenta con las carreras del período (con filtros), los duelos ganados o los días seguidos, en la zona horaria fija del servidor (UTC−3); no se guardan contadores por carrera.
+
+- **Cupos:** tres misiones a la vez entre el día y la semana, y hasta una de la semana. Las metas fijas y los eventos no ocupan cupo.
+- **Premios:** XP, potenciador o cosmético, siempre al reclamar. Lo no reclamado no se entrega y un mismo premio no se cobra dos veces (`mission_claims`). La XP de una misión no la multiplica un potenciador.
+- **Economía calibrada contra la curva (base 100, aumento 10).** Una carrera normal da 10 XP y pasar del nivel 50 al 51 pide 590.
+
+| Premio | XP | Equivale a |
+|---|---|---|
+| Meta fija | 10 | 1 carrera |
+| Misión del día | 15 a 25 | 1,5 a 2,5 carreras |
+| Misión de la semana | 60 | 6 carreras |
+| Evento | 40 | 4 carreras |
+
+- **Tope diario:** 120 XP por defecto (0 = sin tope), que son 12 carreras normales y alrededor del 20 % de un nivel en el 50. Cuenta toda la XP de misiones del día, también la semanal y los eventos; un día normal ronda los 70 XP, así que el tope solo recorta cuando coinciden varias reclamaciones grandes.
+- **Efecto en el avance:** con unas 10 carreras por día, las misiones suman alrededor de un 35 % de la XP diaria; con 20, cerca del 20 %. Acompañan el ritmo de las carreras, no lo reemplazan.
+
 ### Medallas
 
 - Las automáticas se ganan solas según una condición y un objetivo: carreras completadas, velocidad máxima, promedio, carreras sin errores, Hardcore (carreras y velocidad) y duelos (jugados, ganados, racha, porcentaje de victorias desde 10 duelos, velocidad máxima, promedio desde 5 duelos, ganados sin errores), más torneos ganados. Las de velocidad se escriben en CPM o WPM (1 WPM = 5 CPM; se guarda en CPM). Las manuales las otorga un administrador y pueden ser apilables (con contador) o secretas.
@@ -262,7 +280,7 @@ Todo el texto de Información, Guías, FAQ y las páginas legales vive en `js/pa
 
 ## Administración
 
-El panel `neanbit-type-admin` es un proyecto aparte (todavía sin repositorio propio): escucha solo en `127.0.0.1`, comparte la base SQLite con la app y escribe en la tabla `settings`. Cada proyecto de neanbit tiene su propio panel. La app lee, en cada pedido a `/api/config`:
+El panel `neanbit-type-admin` es un proyecto aparte (repo privado, `neanbit/neanbit-type-admin`): escucha solo en `127.0.0.1`, comparte la base SQLite con la app y escribe en la tabla `settings`. Cada proyecto de neanbit tiene su propio panel. La app lee, en cada pedido a `/api/config`:
 
 | Clave | Qué controla |
 |---|---|
@@ -270,9 +288,10 @@ El panel `neanbit-type-admin` es un proyecto aparte (todavía sin repositorio pr
 | `info` | Aviso del sitio, arriba de la página Información. |
 | `features` | Funciones encendidas o apagadas: `share`, `rematch`, `sound`, `pace`, `mytexts`, `levels` y `goal`. Apagar solo **oculta** (con `data-feature` y `html[data-off]`): el servidor no impide una revancha ni un compartir. |
 | `progress` | XP por acción (incluye los valores por defecto de los puestos de torneo), curva de niveles (`curve`: base y aumento), títulos de nivel, y meta diaria por defecto y máxima. |
+| `missions` | Metas y misiones: zona horaria fija del día y la semana, cupos (cuántas a la vez, cuántas de la semana), pozo, evento automático y tope diario de XP por misiones. |
 | `content` | Reemplazos de los textos de las páginas y datos del sitio (contacto, fecha, repositorio). Una página personalizada guarda el texto completo y no recibe cambios posteriores del original. |
 
-Además de `settings`, el contrato incluye las tablas `announcements`, `user_medals`, `tournament_orders`, `xp_events`, `xp_boosters`, `rewards` y `user_rewards`, y las columnas `users.verified` (0, 1 o 2), `users.role` (`user` o `admin`), `users.goal` y `users.xp_bonus`. Las tablas y columnas nuevas las crea la app al arrancar: **la app se actualiza primero y el panel después**. Si cambia alguno de estos formatos en la app, hay que actualizar el panel.
+Además de `settings`, el contrato incluye las tablas `announcements`, `user_medals`, `tournament_orders`, `xp_events`, `xp_boosters`, `rewards`, `user_rewards`, `tracks`, `track_slots`, `track_claims`, `missions`, `mission_claims` y `mission_rotation`, y las columnas `users.verified` (0, 1 o 2), `users.role` (`user` o `admin`), `users.goal`, `users.xp_bonus` y `missions.pool`. Las tablas y columnas nuevas las crea la app al arrancar: **la app se actualiza primero y el panel después**. Si cambia alguno de estos formatos en la app, hay que actualizar el panel.
 
 Los textos originales de las páginas viven en `js/pages.js`. Cuando cambien, regenerá el archivo que usa el panel y copialo a la carpeta `server/` del panel:
 
@@ -542,7 +561,7 @@ Que los puertos 3000 y 4000 existan en el VPS no los expone: `localhost` es «es
 
 ## Estado y pendientes
 
-Hecho y en producción: el motor de tipeo, todos los modos, duelos, torneos, niveles con XP y potenciadores, medallas, recompensas, estadísticas y las páginas informativas.
+Hecho y en producción: el motor de tipeo, todos los modos, duelos, torneos, niveles con XP y potenciadores, el camino de niveles, metas y misiones, medallas, recompensas, estadísticas y las páginas informativas.
 
 Todavía no:
 
@@ -562,7 +581,7 @@ El sitio no se compila: el navegador carga `index.html` y los módulos ES de `js
 
 - **`css/`**: un archivo por pantalla, más `style.css` con la base y las variables: `home`, `pick`, `race`, `stats`, `profile`, `duel`, `tourney`, `nivel`, `camino`, `rewards` y `pages`.
 - **`js/`**: el front, en módulos ES y sin bundler. `main.js` arranca la app, `store.js` y `api.js` concentran el estado y las llamadas al servidor, y `engine.js` es el motor de tipeo; el resto cubre cada pantalla y cada función (duelos, torneos, niveles, recompensas, medallas, textos, sonido, editor, avatar).
-- **`server/`**: el backend, en Node con `node:http` y SQLite (`node:sqlite`). `index.js` expone la API, las sesiones y los estáticos; `ws.js` mantiene el WebSocket de duelos y torneos; los demás módulos son de dominio (duels, tournaments, stats, xp, levels, medals, rewards, track, content, limits, seed, html-safe), junto con `medal-icons/` y los catálogos `*-base.json` con los que se siembra la base.
+- **`server/`**: el backend, en Node con `node:http` y SQLite (`node:sqlite`). `index.js` expone la API, las sesiones y los estáticos; `ws.js` mantiene el WebSocket de duelos y torneos; los demás módulos son de dominio (duels, tournaments, stats, xp, levels, medals, rewards, track, misiones, deliver, content, limits, seed, html-safe), junto con `medal-icons/` y los catálogos `*-base.json` con los que se siembra la base.
 - **`scripts/`**: utilidades que se corren a mano. `backup.sh` hace la copia consistente con `VACUUM INTO` y la rota por días, `audit-seguridad.sh` audita el VPS en solo lectura y `export-content.mjs` regenera `server/content-defaults.json` a partir de los textos de `js/pages.js`.
 - **`deploy/`**: archivos de referencia para desplegar. Las unidades de systemd (`.service.example`) de la app y del panel, la configuración de ejemplo del túnel de Cloudflare, `esquema.sql` para leer o levantar la base vacía, y `backup.sh` con la variante que corre en el servidor.
 
