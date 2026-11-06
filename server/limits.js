@@ -26,11 +26,13 @@ export function createLimiter(now = () => Date.now()) {
   };
 
   // Al llenarse el mapa: primero lo vencido y, si todavía no alcanza, las claves que hace más
-  // tiempo no se tocan, en bloque. Nunca se vacía el mapa entero, porque ahí también viven los
-  // contadores de login y de intentos fallidos.
+  // tiempo no se tocan, en bloque, hasta quedar por debajo de MAX_KEYS - EVICT_BATCH. Así el
+  // prune() completo no corre en cada clave nueva sino una vez cada EVICT_BATCH claves. Nunca se
+  // vacía el mapa entero, porque ahí también viven los contadores de login y de intentos fallidos.
   const makeRoom = () => {
     prune();
-    for (let n = EVICT_BATCH; n > 0 && marks.size >= MAX_KEYS; n--) {
+    const floor = MAX_KEYS - EVICT_BATCH;
+    while (marks.size >= floor) {
       const oldest = marks.keys().next();
       if (oldest.done) return;
       marks.delete(oldest.value);
