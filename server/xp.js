@@ -9,7 +9,7 @@ import { cleanProgress, countsOf, levelFrom, levelOfXp } from './levels.js';
 
 export const REASONS = {
   manual: 'Ajuste manual', migrado: 'Ajuste anterior', duel: 'Duelo ganado', tourney: 'Torneo ganado',
-  tourney_final: 'Finalista de torneo', tourney_semi: 'Semifinalista de torneo', tourney_part: 'Participación en torneo', track: 'Camino de niveles',
+  tourney_final: 'Finalista de torneo', tourney_semi: 'Semifinalista de torneo', tourney_part: 'Participación en torneo', track: 'Camino de niveles', mission: 'Meta o misión',
 };
 
 const col = (db, table, name) => db.prepare(`pragma table_info(${table})`).all().some((c) => c.name === name);
