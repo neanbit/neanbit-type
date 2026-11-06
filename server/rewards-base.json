@@ -1026,5 +1026,54 @@
   "description": "Pergamino oscuro con clavos en las esquinas y borde de cartel.",
   "since": 5,
   "hidden": 1
- }
+ },
+{
+ "id": "frame-lazo",
+ "kind": "frame",
+ "preset": "lazo",
+ "name": "Lazo",
+ "rarity": "epica",
+ "theme": "lazo",
+ "anim": 1,
+ "description": "Anillo rosa y blanco con un moño en la esquina.",
+ "since": 6,
+ "hidden": 1
+},
+{
+ "id": "name-cinta",
+ "kind": "name",
+ "preset": "cinta",
+ "name": "Cinta",
+ "rarity": "rara",
+ "theme": "lazo",
+ "anim": 1,
+ "font": "Fredoka",
+ "description": "Letras blancas con contorno rosa y un balanceo corto.",
+ "since": 6,
+ "hidden": 1
+},
+{
+ "id": "cover-lunares",
+ "kind": "cover",
+ "preset": "lunares",
+ "name": "Lunares",
+ "rarity": "epica",
+ "theme": "lazo",
+ "anim": 1,
+ "description": "Fondo rosa de lunares blancos con moños que suben despacio.",
+ "since": 6,
+ "hidden": 1
+},
+{
+ "id": "palette-fresa",
+ "kind": "palette",
+ "preset": "fresa",
+ "name": "Fresa",
+ "rarity": "epica",
+ "theme": "lazo",
+ "anim": 0,
+ "description": "Acento rosa fresa: fondo ciruela con lunares y cuadros con costura.",
+ "since": 6,
+ "hidden": 1
+}
 ]

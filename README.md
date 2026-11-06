@@ -253,7 +253,7 @@ Las administra el panel: metas fijas, misiones por día, por semana y eventos, m
 
 ### Recompensas
 
-Cosméticos del perfil, de tres tipos: **marcos de foto**, **efectos de nombre** (un preset más una tipografía) y **portadas**. Cada una tiene rareza (común, rara, épica o legendaria), temática y puede ser animada o estática. Se activan desde Editar perfil y avisan con «Desbloqueaste…» al conseguirlas.
+Cosméticos del perfil, de cuatro tipos: **marcos de foto**, **efectos de nombre** (un preset más una tipografía), **portadas** y **paletas de colores** (que cambian el acento y las superficies del perfil). Cada una tiene rareza (común, rara, épica o legendaria), temática y puede ser animada o estática. Se activan desde Editar perfil y avisan con «Desbloqueaste…» al conseguirlas.
 
 - **Presets, no archivos:** los efectos son presets de `css/rewards.css` dibujados con CSS o SVG. Nadie sube archivos y la CSP no cambia. El marco es un anillo con degradado cónico animado (`@property --ang`), el nombre es texto con degradado o sombras, y las portadas son degradados, SVG embebidos y animación de fondo.
 - **Tipografías:** lista blanca (`FONTS` en `server/rewards.js`) que se pide a Google Fonts solo cuando aparece alguien que usa esa tipografía.
