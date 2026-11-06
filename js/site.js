@@ -16,8 +16,6 @@ async function checkSite() {
   setFeatures(config.features);
   pages.setContent(config.content);
   pages.setInfo(config.info);
-  const gmax = config.goalMax || 50;
-  document.querySelectorAll('#goal-seg button[data-g]').forEach((b) => { b.hidden = Number(b.dataset.g) > gmax; });
 
   if (config.maintenance.on && session.user?.role !== 'admin') {
     $('#maint-msg').textContent = config.maintenance.message || 'Volvemos en un rato.';

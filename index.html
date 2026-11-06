@@ -105,12 +105,17 @@
       </article>
 
       <article class="hm-card">
-        <header><p class="eyebrow">Hoy</p><button class="link" id="goal-edit" data-feature="goal">Cambiar meta</button></header>
-        <div class="hm-line"><b class="hm-big" id="td-num">0</b><span id="td-of" data-feature="goal"></span><span id="td-best"></span></div>
-        <div class="ticks" id="goal-ticks" data-feature="goal" aria-hidden="true"></div>
-        <div class="seg" id="goal-seg" hidden><button data-g="3">3</button><button data-g="5">5</button><button data-g="10">10</button><button data-g="20">20</button><button data-g="30">30</button></div>
+        <header><p class="eyebrow">Misiones</p><span class="hm-tag" id="ms-count"></span></header>
+        <div class="hm-line"><b class="hm-big" id="td-num">0</b><span id="td-of">carreras hoy</span><span id="td-best"></span></div>
+        <ul class="hm-ms" id="ms-list" aria-live="polite"></ul>
+        <p class="hm-empty" id="ms-empty" hidden>No hay misiones por ahora.</p>
+        <p class="hm-msg" id="ms-msg" hidden></p>
+      </article>
+
+      <article class="hm-card hm-card-streak">
+        <header><p class="eyebrow">Racha</p><span class="hm-tag">14 días</span></header>
+        <div class="hm-line"><b class="hm-big" id="st-n">0</b><span id="st-u">días seguidos</span></div>
         <div class="hm-streak">
-          <p class="hm-sub"><span>Racha <b id="st-n">0</b> <span id="st-u">días</span></span><span>14 días</span></p>
           <div class="heat" id="heat" role="img" aria-label="Carreras de los últimos 14 días"></div>
         </div>
       </article>
