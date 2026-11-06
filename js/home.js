@@ -3,6 +3,7 @@ import { load } from './store.js';
 import { avatarInner } from './avatar.js';
 import { frameAttr, nameLite } from './rewards.js';
 import { openOwnNivel } from './nivel.js';
+import { announce } from './unlock.js';
 import { $, esc, svg, icons } from './ui.js';
 import { tourney } from './tourney.js';
 
@@ -18,6 +19,7 @@ let live = null;
 let open = [];
 let community = null;
 let catalog = [];
+let missions = [];
 let loadedAt = 0;
 
 const speed = (cpm) => (load('unit', 'cpm') === 'wpm' ? Math.round(cpm / 5) : cpm);
@@ -200,21 +202,43 @@ function drawLevel() {
   if (ready) cl.textContent = ready === 1 ? 'Tenés 1 premio para reclamar' : `Tenés ${ready} premios para reclamar`;
 }
 
-// Tarjeta de hoy: carreras, meta y actividad de los últimos 14 días
-function drawToday() {
-  const goal = pulse.goal || 5;
-  const done = Math.min(pulse.today, goal);
-  $('#td-num').textContent = pulse.today;
-  $('#td-of').textContent = pulse.today >= goal ? `meta cumplida (${goal})` : `de ${goal} carreras`;
-  $('#td-best').textContent = pulse.today ? `mejor ${speed(pulse.todayBest)} ${unitName()}` : '';
-  $('#goal-ticks').innerHTML = Array.from({ length: goal }, (_, i) => `<i class="${i < done ? 'on' : ''}"></i>`).join('');
-  $('#goal-ticks').classList.toggle('full', pulse.today >= goal);
-  document.querySelectorAll('#goal-seg button').forEach((b) => b.classList.toggle('on', Number(b.dataset.g) === goal));
-  $('#st-n').textContent = pulse.streak;
-  $('#st-u').textContent = pulse.streak === 1 ? 'día' : 'días';
+// Tarjeta de misiones: las carreras de hoy arriba y las metas y misiones con su progreso y el botón para reclamar.
+const PERIOD = { day: 'Hoy', week: 'Semana', event: 'Evento' };
+const rewardName = (r) => (!r || r.kind === 'none' ? 'Sin premio' : r.name);
+
+function missionItem(m) {
+  const pct = m.count ? Math.round((m.progress / m.count) * 100) : 0;
+  const seen = m.metric === 'streak' ? `${m.progress} / ${m.count} días` : `${m.progress} / ${m.count}`;
+  const tag = m.state === 'scheduled' ? `Empieza ${clock(m.starts)}` : PERIOD[m.period];
+  const act = m.state === 'ready' ? `<button type="button" class="hm-m-btn" data-claim="${m.id}">Reclamar</button>`
+    : m.state === 'claimed' ? '<span class="hm-m-done">Reclamada</span>'
+      : m.state === 'done' ? '<span class="hm-m-done">Cumplida</span>' : '';
+  return `<li class="hm-m" data-state="${m.state}">
+    <div class="hm-m-head"><b class="hm-m-name">${esc(m.title)}</b><span class="hm-m-rw">${esc(rewardName(m.reward))}</span></div>
+    <div class="meter" role="progressbar" aria-label="${esc(m.title)}" aria-valuenow="${m.progress}" aria-valuemin="0" aria-valuemax="${m.count}"><i style="width:${pct}%"></i></div>
+    <div class="hm-m-foot"><span class="hm-m-num">${seen}</span><span class="hm-m-tag">${esc(tag)}</span>${act}</div>
+  </li>`;
+}
+
+function drawMissions() {
+  $('#td-num').textContent = pulse ? pulse.today : 0;
+  $('#td-of').textContent = pulse && pulse.today === 1 ? 'carrera hoy' : 'carreras hoy';
+  $('#td-best').textContent = pulse && pulse.today ? `mejor ${speed(pulse.todayBest)} ${unitName()}` : '';
+  const n = missions.filter((m) => m.kind === 'mission').length;
+  $('#ms-count').hidden = !n;
+  $('#ms-count').textContent = n ? `${n} ${n === 1 ? 'misión' : 'misiones'}` : '';
+  $('#ms-list').innerHTML = missions.map(missionItem).join('');
+  $('#ms-empty').hidden = missions.length > 0;
+}
+
+// Tarjeta compacta de racha: días seguidos y las 14 casillas de actividad (sin la meta personal, que salió del inicio).
+function drawStreak() {
+  const s = pulse ? pulse.streak : 0;
+  $('#st-n').textContent = s;
+  $('#st-u').textContent = s === 1 ? 'día seguido' : 'días seguidos';
   const week = extra ? extra.week : Array(14).fill(0);
   $('#heat').innerHTML = week.map((n, i) => {
-    const lvl = n ? Math.min(4, Math.max(1, Math.ceil((n / goal) * 4))) : 0;
+    const lvl = n ? Math.min(4, Math.max(1, Math.ceil((n / 5) * 4))) : 0;
     const d = new Date(Date.now() - (13 - i) * 86400000).toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' });
     return `<i class="l${lvl}${i === 13 ? ' now' : ''}" title="${esc(d)}: ${plural(n, 'carrera', 'carreras')}"></i>`;
   }).join('');
@@ -297,7 +321,8 @@ function drawHome() {
   $('#hm-me').hidden = !logged;
   if (logged) {
     drawLevel();
-    drawToday();
+    drawMissions();
+    drawStreak();
     drawPerf();
   }
   drawLast();
@@ -310,18 +335,21 @@ async function refresh(force) {
   loadedAt = Date.now();
   drawHome();
   try {
-    const data = await api.home();
+    // Las misiones van aparte del resumen del inicio: si fallan, el resto del inicio se muestra igual.
+    const [data, ms] = await Promise.all([api.home(), api.missions().catch(() => null)]);
     pulse = data.pulse;
     extra = data.extra;
     live = data.live;
     open = data.tourneys || [];
     community = data.community;
+    missions = ms && Array.isArray(ms.missions) ? ms.missions : [];
   } catch {
     pulse = null;
     extra = null;
     live = null;
     open = [];
     community = null;
+    missions = [];
   }
   drawHome();
   await loadBoard();
@@ -347,11 +375,28 @@ $('#board-rows').onclick = (e) => {
 };
 $('#bp-prev').onclick = () => { page[current]--; loadBoard(); };
 $('#bp-next').onclick = () => { page[current]++; loadBoard(); };
-$('#goal-edit').onclick = () => { $('#goal-seg').hidden = !$('#goal-seg').hidden; };
-$('#goal-seg').onclick = async (e) => {
-  const g = Number(e.target.dataset.g);
-  if (!g || !pulse) return;
-  try { await api.setGoal(g); pulse.goal = g; $('#goal-seg').hidden = true; drawToday(); } catch {}
+// Reclamo de una misión desde el inicio: la respuesta trae las misiones al día y los avisos «Desbloqueaste…».
+$('#ms-list').onclick = async (e) => {
+  const b = e.target.closest('[data-claim]');
+  if (!b || b.disabled) return;
+  const msg = $('#ms-msg');
+  b.disabled = true;
+  try {
+    const res = await api.claimMission(Number(b.dataset.claim));
+    if (Array.isArray(res.missions)) missions = res.missions;
+    if (res.news && res.news.length) announce(res.news);
+    drawMissions();
+    msg.hidden = false;
+    msg.textContent = res.claimed
+      ? `Reclamado: ${res.claimed.title}${res.claimed.given != null ? ` (+${res.claimed.given} XP)` : ''}`
+      : 'Premio reclamado.';
+    setTimeout(() => { msg.hidden = true; }, 5000);
+    refresh(true);
+  } catch (err) {
+    b.disabled = false;
+    msg.hidden = false;
+    msg.textContent = err.message;
+  }
 };
 $('#invite-login').onclick = () => $('#account').click();
 $('#hm-path').onclick = () => { if (me) openOwnNivel(me.handle); };

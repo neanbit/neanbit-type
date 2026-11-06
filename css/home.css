@@ -81,6 +81,22 @@
 .hm-card .seg { width: max-content; }
 .hm-card .seg button { padding: .25rem .75rem; font-size: .8rem; }
 
+/* misiones del inicio: una línea por misión con su barra y el botón de reclamar */
+.hm-ms { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
+.hm-m { display: grid; gap: .32rem; padding-top: .55rem; border-top: 1px solid var(--line); }
+.hm-m:first-child { padding-top: 0; border-top: 0; }
+.hm-m-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+.hm-m-name { color: var(--text); font-size: .88rem; font-weight: 500; }
+.hm-m-rw { color: var(--accent); font: 400 .7rem var(--mono); white-space: nowrap; }
+.hm-m .meter { height: 6px; }
+.hm-m-foot { display: flex; align-items: center; gap: .5rem; color: var(--muted); font: 400 .72rem var(--mono); }
+.hm-m-tag { font-size: .64rem; letter-spacing: .04em; text-transform: uppercase; }
+.hm-m-done { margin-left: auto; color: var(--muted); }
+.hm-m[data-state="claimed"], .hm-m[data-state="done"], .hm-m[data-state="scheduled"] { opacity: .72; }
+.hm-m-btn { margin-left: auto; padding: .2rem .55rem; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font: 600 .72rem var(--ui); cursor: pointer; }
+.hm-m-btn:hover { filter: brightness(1.06); }
+.hm-msg { margin: 0; color: var(--accent); font-size: .76rem; }
+
 /* racha: 14 casillas, más intensas cuanto más cerca de la meta */
 .hm-streak { display: grid; gap: .5rem; margin-top: auto; }
 .heat { display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; }

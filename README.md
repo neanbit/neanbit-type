@@ -73,7 +73,7 @@ Reglas del proyecto:
 **Progreso**
 
 - **Niveles y experiencia** con ocho títulos (de Novato a Leyenda). El nivel se ve en el perfil como un widget que abre el detalle.
-- **Racha** de días y **meta diaria** (de 1 a 50 carreras por defecto; 5 si no la cambiás). El máximo y el valor por defecto se definen desde el panel.
+- **Racha** de días en una tarjeta compacta del inicio (días seguidos y las últimas 14 jornadas de actividad), y **metas y misiones** que administra el panel: hasta tres a la vez entre el día y la semana, con su progreso y el botón **Reclamar**. La meta personal de carreras (`users.goal`) ya no se elige desde el inicio; la columna se conserva.
 - **Rankings** de 10 por página con «tu posición»: carreras, promedios, Hardcore, duelos y torneos. Duelos tiene filtro de 24 horas o histórico.
 
 **Perfil**
@@ -161,7 +161,7 @@ El servidor entrega los estáticos con `cache-control: no-cache` y agrega `?v=<h
 
 &nbsp;
 
-`/api/me`, `/api/register`, `/api/login`, `/api/logout`, `/api/profile` (acepta `equip`), `/api/avatar`, `/api/texts`, `/api/config` (devuelve también `features`, `content` y `goalMax`), `/api/races` (POST; devuelve `xp` y `news`), `/api/deaths`, `/api/best`, `/api/users`, `/api/users/:handle` (con `duels`, `tourneys`, `hard`, `level`, `cosm` y `ladder`), `/api/users/:handle/races?page=&mode=all|duel|tourney|hc`, `/api/home`, `/api/races/top`, `/api/ranking`, `/api/ranking/average`, `/api/ranking/duels`, `/api/stats?mode=all|duel|tourney|hc`, `/api/goal` (POST), `/api/rewards`, `/api/rewards/news`, `/api/rewards/seen`.
+`/api/me`, `/api/register`, `/api/login`, `/api/logout`, `/api/profile` (acepta `equip`), `/api/avatar`, `/api/texts`, `/api/config` (devuelve también `features`, `content` y `goalMax`), `/api/races` (POST; devuelve `xp` y `news`), `/api/deaths`, `/api/best`, `/api/users`, `/api/users/:handle` (con `duels`, `tourneys`, `hard`, `level`, `cosm` y `ladder`), `/api/users/:handle/races?page=&mode=all|duel|tourney|hc`, `/api/home`, `/api/races/top`, `/api/ranking`, `/api/ranking/average`, `/api/ranking/duels`, `/api/stats?mode=all|duel|tourney|hc`, `/api/missions` (GET; metas y misiones del cupo con progreso y estado), `/api/missions/claim` (POST `{ mission }`), `/api/goal` (POST), `/api/rewards`, `/api/rewards/news`, `/api/rewards/seen`.
 
 Los rankings aceptan páginas de 10 y guardan una copia de 20 segundos que se invalida al guardar una carrera o un duelo. `/api/stats` tiene un límite de 30 pedidos por minuto por usuario. `POST /api/races` acepta además la duración medida por el navegador (`ms`) y las teclas tipeadas por carácter (`keys`): el servidor descarta la duración si no es coherente con el largo del texto y la velocidad, sin rechazar la carrera. En duelos y torneos la duración la mide el servidor. Las rutas de página (`/info`, `/guias`, `/terminos`, `/privacidad`, `/cookies`, `/normas`) entregan `index.html` (`pageRoutes` en `server/index.js`). El WebSocket de duelos está en `/ws`.
 

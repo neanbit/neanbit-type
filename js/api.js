@@ -39,9 +39,10 @@ export const api = {
   rewardNews: () => call('/rewards/news'),
   rewardsSeen: () => call('/rewards/seen', {}),
   home: () => call('/home?tz=' + new Date().getTimezoneOffset()),
+  missions: () => call('/missions'),
+  claimMission: (mission) => call('/missions/claim', { mission }),
   topRaces: (scope) => call('/races/top?scope=' + scope),
   averages: (window, page = 0) => call('/ranking/average?window=' + window + '&page=' + page),
-  setGoal: (goal) => call('/goal', { goal }),
   duelRanking: (scope, page = 0) => call('/ranking/duels?scope=' + scope + '&page=' + page),
   ranking: (scope, hc, page = 0) => call('/ranking?scope=' + scope + (hc ? '&mode=hc' : '') + '&page=' + page),
 };
