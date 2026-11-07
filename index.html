@@ -104,8 +104,8 @@
         <button type="button" class="hm-claim" id="lv-claim" hidden></button>
       </article>
 
-      <article class="hm-card">
-        <header><p class="eyebrow">Misiones</p><span class="hm-tag" id="ms-count"></span></header>
+      <article class="hm-card hm-card-ms">
+        <header><p class="eyebrow">Misiones</p><span class="hm-links"><span class="hm-tag" id="ms-count"></span><button type="button" class="link" id="ms-all" hidden>Ver todas</button></span></header>
         <div class="hm-line"><b class="hm-big" id="td-num">0</b><span id="td-of">carreras hoy</span><span id="td-best"></span></div>
         <ul class="hm-ms" id="ms-list" aria-live="polite"></ul>
         <p class="hm-empty" id="ms-empty" hidden>No hay misiones por ahora.</p>
@@ -777,6 +777,19 @@
     <div class="cn-scroll" id="cn-scroll" tabindex="0" role="region" aria-label="Camino de niveles">
       <ol class="cn-path" id="cn-path"></ol>
     </div>
+  </div>
+</dialog>
+<dialog id="ms-dlg" class="wide narrow" aria-labelledby="ms-dlg-title">
+  <div class="lvd">
+    <header class="lvd-head">
+      <div class="lvd-who">
+        <h2 id="ms-dlg-title">Misiones</h2>
+        <p class="note" id="ms-dlg-sub"></p>
+      </div>
+      <button type="button" class="ghost" id="ms-dlg-close" aria-label="Cerrar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </header>
+    <p class="lvd-msg" id="ms-dlg-msg" role="status" hidden></p>
+    <div class="lvd-body" id="ms-dlg-body"></div>
   </div>
 </dialog>
 <dialog id="news">
