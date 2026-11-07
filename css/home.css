@@ -71,15 +71,13 @@
 .hm-next[data-rarity="epica"] { border-left-color: #a78bfa; }
 .hm-next[data-rarity="legendaria"] { border-left-color: #ffb703; }
 .hm-empty { margin: 0; color: var(--muted); font-size: .85rem; }
-/* la tarjeta de misiones entra en el mismo alto que las otras: dos misiones en la tarjeta y el resto en «Ver todas» */
-.hm-card-ms { gap: .5rem; padding-bottom: .95rem; }
-.hm-card-ms .hm-line { min-height: 1.7rem; }
-.hm-card-ms .hm-big { font-size: 1.7rem; }
-.hm-card-ms .hm-ms { gap: .4rem; }
-.hm-card-ms .hm-m { gap: .22rem; padding-top: .3rem; }
-.hm-card-ms .hm-m-name { font-size: .82rem; }
-.hm-card-ms .hm-m-bar { min-height: 1.25rem; }
-.hm-card-ms .hm-m-btn { padding: .1rem .45rem; }
+/* la tarjeta de misiones entra en el mismo alto que las otras: tres misiones y el resto en «Ver todas» */
+.hm-card-ms { gap: .45rem; padding-bottom: .9rem; }
+.hm-card-ms .hm-ms { gap: .35rem; }
+.hm-card-ms .hm-m { gap: .18rem; padding-top: .2rem; }
+.hm-card-ms .hm-m-name { font-size: .8rem; }
+.hm-card-ms .hm-m-bar { min-height: 1.15rem; }
+.hm-card-ms .hm-m-btn { padding: .08rem .4rem; }
 
 .meter { height: 8px; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 10%), var(--bg-deep); border: 1px solid var(--line); }
 .meter i { display: block; width: 0; height: 100%; background: var(--ink); transition: width .6s ease-out; }
