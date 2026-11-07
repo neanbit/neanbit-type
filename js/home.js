@@ -204,6 +204,7 @@ function drawLevel() {
 
 // Tarjeta de misiones: las carreras de hoy arriba y las metas y misiones con su progreso y el botón para reclamar.
 const PERIOD = { day: 'Hoy', week: 'Semana', event: 'Evento' };
+const CARD_MISSIONS = 2; // misiones que entran en la tarjeta del inicio; el resto va en la ventana «Ver todas»
 const rewardName = (r) => (!r || r.kind === 'none' ? 'Sin premio' : r.name);
 
 function missionItem(m) {
@@ -224,10 +225,38 @@ function drawMissions() {
   $('#td-of').textContent = pulse && pulse.today === 1 ? 'carrera hoy' : 'carreras hoy';
   $('#td-best').textContent = pulse && pulse.today ? `mejor ${speed(pulse.todayBest)} ${unitName()}` : '';
   const n = missions.filter((m) => m.kind === 'mission').length;
-  $('#ms-count').hidden = !n;
+  const full = missions.length > CARD_MISSIONS;
+  // con la lista completa a un clic, el contador deja su lugar al enlace
+  $('#ms-count').hidden = !n || full;
   $('#ms-count').textContent = n ? `${n} ${n === 1 ? 'misión' : 'misiones'}` : '';
-  $('#ms-list').innerHTML = missions.map(missionItem).join('');
+  // en la tarjeta van primero las que se pueden reclamar y después las que están en curso; las reclamadas al final
+  const rank = (m) => (m.state === 'ready' ? 0 : m.state === 'claimed' || m.state === 'done' ? 2 : 1);
+  const shown = missions
+    .map((m, i) => [m, i])
+    .sort((a, b) => (rank(a[0]) - rank(b[0])) || (a[1] - b[1]))
+    .slice(0, CARD_MISSIONS)
+    .map(([m]) => m);
+  $('#ms-list').innerHTML = shown.map(missionItem).join('');
+  $('#ms-all').hidden = !full;
   $('#ms-empty').hidden = missions.length > 0;
+  if ($('#ms-dlg').open) drawAllMissions();
+}
+
+// Ventana con todas las misiones: primero lo que se puede reclamar, después lo que está en curso y lo ya reclamado.
+function drawAllMissions() {
+  const count = (states) => missions.filter((m) => states.includes(m.state));
+  const groups = [
+    ['Para reclamar', count(['ready'])],
+    ['En curso', count(['active', 'scheduled'])],
+    ['Reclamadas y cumplidas', count(['claimed', 'done'])],
+  ].filter(([, list]) => list.length);
+  const total = missions.filter((m) => m.kind === 'mission').length;
+  $('#ms-dlg-sub').textContent = total
+    ? `${total} ${total === 1 ? 'misión activa' : 'misiones activas'} entre hoy, la semana y los eventos`
+    : '';
+  $('#ms-dlg-body').innerHTML = groups.length
+    ? groups.map(([label, list]) => `<section class="lvd-shelf"><h3>${label} <small>${list.length}</small></h3><ul class="lvd-list">${list.map(missionItem).join('')}</ul></section>`).join('')
+    : '<p class="hm-empty">No hay misiones por ahora.</p>';
 }
 
 // Tarjeta compacta de racha: días seguidos y las 14 casillas de actividad (sin la meta personal, que salió del inicio).
@@ -246,7 +275,7 @@ function drawStreak() {
 // Curva de las últimas carreras: línea simple, promedio punteado y un cuadrado (el cursor) en la más reciente.
 function spark(values) {
   const W = 260;
-  const H = 104;
+  const H = 70;
   const pad = 6;
   const lo = Math.min(...values);
   const hi = Math.max(...values);
@@ -374,29 +403,40 @@ $('#board-rows').onclick = (e) => {
 };
 $('#bp-prev').onclick = () => { page[current]--; loadBoard(); };
 $('#bp-next').onclick = () => { page[current]++; loadBoard(); };
-// Reclamo de una misión desde el inicio: la respuesta trae las misiones al día y los avisos «Desbloqueaste…».
-$('#ms-list').onclick = async (e) => {
-  const b = e.target.closest('[data-claim]');
+// Reclamo de una misión: la respuesta trae las misiones al día y los avisos «Desbloqueaste…».
+// Sirve igual desde la tarjeta del inicio y desde la ventana «Ver todas».
+async function claimMissionBtn(b, msg) {
   if (!b || b.disabled) return;
-  const msg = $('#ms-msg');
   b.disabled = true;
   try {
     const res = await api.claimMission(Number(b.dataset.claim));
     if (Array.isArray(res.missions)) missions = res.missions;
     if (res.news && res.news.length) announce(res.news);
     drawMissions();
-    msg.hidden = false;
-    msg.textContent = res.claimed
-      ? `Reclamado: ${res.claimed.title}${res.claimed.given != null ? ` (+${res.claimed.given} XP${res.claimed.capped ? ', tope diario' : ''})` : ''}`
-      : 'Premio reclamado.';
-    setTimeout(() => { msg.hidden = true; }, 5000);
+    if (msg) {
+      msg.hidden = false;
+      msg.textContent = res.claimed
+        ? `Reclamado: ${res.claimed.title}${res.claimed.given != null ? ` (+${res.claimed.given} XP${res.claimed.capped ? ', tope diario' : ''})` : ''}`
+        : 'Premio reclamado.';
+      setTimeout(() => { msg.hidden = true; }, 5000);
+    }
     refresh(true);
   } catch (err) {
     b.disabled = false;
-    msg.hidden = false;
-    msg.textContent = err.message;
+    if (msg) { msg.hidden = false; msg.textContent = err.message; }
   }
+}
+$('#ms-list').onclick = (e) => {
+  const b = e.target.closest('[data-claim]');
+  if (b) claimMissionBtn(b, $('#ms-msg'));
 };
+$('#ms-dlg-body').onclick = (e) => {
+  const b = e.target.closest('[data-claim]');
+  if (b) claimMissionBtn(b, $('#ms-dlg-msg'));
+};
+$('#ms-all').onclick = () => { drawAllMissions(); $('#ms-dlg').showModal(); };
+$('#ms-dlg-close').onclick = () => $('#ms-dlg').close();
+$('#ms-dlg').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 $('#invite-login').onclick = () => $('#account').click();
 $('#hm-path').onclick = () => { if (me) openOwnNivel(me.handle); };
 $('#hm-profile').onclick = () => { if (me) document.dispatchEvent(new CustomEvent('profile', { detail: me.handle })); };

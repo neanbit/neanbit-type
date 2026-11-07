@@ -71,12 +71,15 @@
 .hm-next[data-rarity="epica"] { border-left-color: #a78bfa; }
 .hm-next[data-rarity="legendaria"] { border-left-color: #ffb703; }
 .hm-empty { margin: 0; color: var(--muted); font-size: .85rem; }
-/* con las cuatro tarjetas de la misma altura, el contenido de las más cortas se reparte: título arriba, cifra al medio, pie abajo */
-.hm-cards .hm-card[data-feature="levels"] .hm-line,
-.hm-cards .hm-card-streak .hm-line { margin-top: auto; }
-.hm-cards .hm-card[data-feature="levels"] .meter { margin-top: auto; height: 10px; }
-.hm-cards .hm-card[data-feature="levels"] .hm-big { font-size: 2.9rem; }
-.hm-cards #spark-box { margin-top: auto; }
+/* la tarjeta de misiones entra en el mismo alto que las otras: dos misiones en la tarjeta y el resto en «Ver todas» */
+.hm-card-ms { gap: .5rem; padding-bottom: .95rem; }
+.hm-card-ms .hm-line { min-height: 1.7rem; }
+.hm-card-ms .hm-big { font-size: 1.7rem; }
+.hm-card-ms .hm-ms { gap: .4rem; }
+.hm-card-ms .hm-m { gap: .22rem; padding-top: .3rem; }
+.hm-card-ms .hm-m-name { font-size: .82rem; }
+.hm-card-ms .hm-m-bar { min-height: 1.25rem; }
+.hm-card-ms .hm-m-btn { padding: .1rem .45rem; }
 
 .meter { height: 8px; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 10%), var(--bg-deep); border: 1px solid var(--line); }
 .meter i { display: block; width: 0; height: 100%; background: var(--ink); transition: width .6s ease-out; }
@@ -88,7 +91,7 @@
 .hm-card .seg button { padding: .25rem .75rem; font-size: .8rem; }
 
 /* misiones del inicio: una línea por misión con su barra y el botón de reclamar */
-.hm-ms { display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; max-height: 13.5rem; overflow-y: auto; overscroll-behavior: contain; }
+.hm-ms { display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; }
 .hm-m { display: grid; gap: .3rem; padding-top: .45rem; border-top: 1px solid var(--line); }
 .hm-m:first-child { padding-top: 0; border-top: 0; }
 .hm-m-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
@@ -191,9 +194,14 @@
   .hm-modes { grid-template-columns: 1fr; gap: 1.1rem; }
   .hm-cards { grid-template-columns: 1fr; grid-auto-rows: auto; }
   .hm-card { height: auto; }
-  /* en una sola columna cada tarjeta mide lo suyo: la lista de misiones no se recorta */
-  .hm-ms { max-height: none; overflow: visible; }
 }
+
+/* ventana «Ver todas»: las misiones agrupadas por estado, con la misma fila de la tarjeta */
+#ms-dlg .lvd-msg { margin: 0 1.9rem .6rem; }
+#ms-dlg .lvd-body .hm-m { padding: .55rem .75rem; background: var(--bg-deep); border: 1px solid var(--line); border-radius: var(--r); }
+#ms-dlg .lvd-body .hm-m:first-child { padding-top: .55rem; border-top: 1px solid var(--line); }
+#ms-dlg .lvd-body .hm-m-bar { min-height: 1.4rem; }
+#ms-dlg .lvd-body .hm-m-bar .meter { min-width: 5rem; }
 @media (max-width: 640px) {
   .hm-side { grid-template-columns: 1fr; }
   .hm-keys { grid-template-columns: 1fr; gap: .7rem; }
