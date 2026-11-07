@@ -152,6 +152,13 @@
 .s-tools > button:disabled { opacity: .45; cursor: default; }
 .s-range { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.2rem; margin: -.3rem 0 1.1rem; color: var(--muted); font-size: .85rem; }
 .s-range label { display: flex; align-items: center; gap: .5rem; }
+/* franja de hoy: el día en curso, aparte del período elegido */
+.s-today { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem; margin: 0 0 1rem; padding: .55rem .9rem; background: var(--panel); border: 1px dashed var(--line); border-radius: var(--r); color: var(--muted); font: 400 .8rem var(--mono); }
+.s-today[hidden] { display: none; }
+.s-today b { color: var(--ink); font-weight: 500; }
+.s-today-k { display: inline-flex; align-items: center; gap: .45rem; color: var(--ink); font: 500 .62rem var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+.s-today-k::before { content: ""; width: .4rem; height: .4rem; background: var(--accent); }
+.s-today-off { color: var(--muted); }
 .s-range input, .goal-form input { background: var(--bg-deep); border: 1px solid var(--line); border-radius: var(--r); padding: .4rem .65rem; color: var(--text); font: inherit; }
 .goal-form input { width: 7.5rem; }
 #stats p.first { margin-top: 0; }

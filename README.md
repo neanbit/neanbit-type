@@ -86,6 +86,7 @@ Reglas del proyecto:
 
 Página propia con selector de modo (General, Duelos, Torneos, Hardcore) y de período (7, 30, 90 días, todo o un rango propio). Incluye:
 
+- Franja **Hoy** con las carreras del día y la mejor velocidad, aparte del período elegido y según el modo.
 - Tarjetas con variación contra el período anterior y minigráficos.
 - Evolución de velocidad o precisión, con cruz de lectura y comparación superpuesta contra el período anterior.
 - Calendario de actividad de 26 semanas, mapa de calor día por hora, y hora del día y día de la semana con la franja más rápida.
