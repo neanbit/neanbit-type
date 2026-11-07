@@ -204,7 +204,7 @@ function drawLevel() {
 
 // Tarjeta de misiones: las carreras de hoy arriba y las metas y misiones con su progreso y el botón para reclamar.
 const PERIOD = { day: 'Hoy', week: 'Semana', event: 'Evento' };
-const CARD_MISSIONS = 2; // misiones que entran en la tarjeta del inicio; el resto va en la ventana «Ver todas»
+const CARD_MISSIONS = 3; // misiones que entran en la tarjeta del inicio; el resto va en la ventana «Ver todas»
 const rewardName = (r) => (!r || r.kind === 'none' ? 'Sin premio' : r.name);
 
 function missionItem(m) {
@@ -221,9 +221,6 @@ function missionItem(m) {
 }
 
 function drawMissions() {
-  $('#td-num').textContent = pulse ? pulse.today : 0;
-  $('#td-of').textContent = pulse && pulse.today === 1 ? 'carrera hoy' : 'carreras hoy';
-  $('#td-best').textContent = pulse && pulse.today ? `mejor ${speed(pulse.todayBest)} ${unitName()}` : '';
   const n = missions.filter((m) => m.kind === 'mission').length;
   const full = missions.length > CARD_MISSIONS;
   // con la lista completa a un clic, el contador deja su lugar al enlace

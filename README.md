@@ -73,7 +73,7 @@ Reglas del proyecto:
 **Progreso**
 
 - **Niveles y experiencia** con doce títulos (de Novato a Inmortal) y un **camino de niveles** con premios que se reclaman. El nivel se ve en el perfil como una chapa que abre el camino.
-- **Racha** de días en una tarjeta compacta del inicio (días seguidos y las últimas 14 jornadas de actividad), y **metas y misiones** que administra el panel: hasta tres a la vez entre el día y la semana, con su progreso y el botón **Reclamar**. La tarjeta del inicio muestra las dos primeras (primero las que se pueden reclamar) y **Ver todas** abre la ventana con la lista completa agrupada por estado. La meta personal de carreras (`users.goal`) ya no se elige desde el inicio; la columna se conserva.
+- **Racha** de días en una tarjeta compacta del inicio (días seguidos y las últimas 14 jornadas de actividad), y **metas y misiones** que administra el panel: hasta tres a la vez entre el día y la semana, con su progreso y el botón **Reclamar**. La tarjeta del inicio muestra las tres (primero las que se pueden reclamar) sin el contador de carreras del día; si hay más, **Ver todas** abre la ventana con la lista completa agrupada por estado. La meta personal de carreras (`users.goal`) ya no se elige desde el inicio; la columna se conserva.
 - **Rankings** de 10 por página con «tu posición»: carreras, promedios, Hardcore, duelos y torneos. Duelos tiene filtro de 24 horas o histórico.
 
 **Perfil**
