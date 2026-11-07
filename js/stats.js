@@ -1039,6 +1039,19 @@ const emptyText = {
 const kind = { all: 'Corriendo', duel: 'Duelos', tourney: 'Torneos', hc: 'Hardcore' };
 const title = { all: 'Tu rendimiento', duel: 'Tus duelos', tourney: 'Tus torneos', hc: 'Tu Hardcore' };
 
+// Franja de «hoy»: lo corrido en el día, aparte del período elegido. Sigue el modo de la página (general, duelos, torneos o Hardcore).
+function todayStrip() {
+  const box = $('#s-today');
+  if (!list.length) { box.hidden = true; box.innerHTML = ''; return; }
+  const t0 = dayIndex(Date.now());
+  const today = list.filter((r) => dayIndex(r.at) === t0);
+  const who = mode === 'all' ? '' : ` · ${kind[mode]}`;
+  box.hidden = false;
+  box.innerHTML = today.length
+    ? `<span class="s-today-k">Hoy${who}</span><span><b>${today.length}</b> ${today.length === 1 ? 'carrera' : 'carreras'}</span><span><b>${sp(Math.max(...today.map((r) => r.cpm)))}</b> ${kit.unit} de mejor</span>`
+    : `<span class="s-today-k">Hoy${who}</span><span class="s-today-off">Todavía no corriste</span>`;
+}
+
 function draw() {
   list = data.races.map(([at, cpm, acc, t, duel, ms]) => ({ at, cpm, acc, t, duel, ms }));
   const extra = (mode === 'hc' && data.deathsTotal) || (mode === 'duel' && data.duel?.total) || (mode === 'tourney' && data.tourney?.total);
@@ -1055,7 +1068,7 @@ function draw() {
   $('#s-since').textContent = (data.since
     ? `${kind[mode]} desde el ${date(data.since, { day: 'numeric', month: 'long', year: 'numeric' })}`
     : title[mode]) + (data.capped ? `, mostrando las últimas ${data.races.length.toLocaleString('es-AR')}` : '');
-  if (empty) return;
+  if (empty) { $('#s-today').hidden = true; $('#s-today').innerHTML = ''; return; }
   document.querySelectorAll('#s-body [data-for]').forEach((el) => { el.hidden = !el.dataset.for.split(' ').includes(mode); });
   view = windows();
   const canCompare = !view.b.all;
@@ -1070,6 +1083,7 @@ function draw() {
     $('#s-range-note').textContent = plural(Math.max(1, Math.round(view.b.len / DAY)), 'día', 'días');
   }
   $('#s-export').disabled = !view.cur.length;
+  todayStrip();
   kpis();
   chart();
   donuts();
