@@ -215,8 +215,7 @@ function missionItem(m) {
       : m.state === 'done' ? '<span class="hm-m-done">Cumplida</span>' : '';
   return `<li class="hm-m" data-state="${m.state}">
     <div class="hm-m-head"><b class="hm-m-name">${esc(m.title)}</b><span class="hm-m-rw">${esc(rewardName(m.reward))}</span></div>
-    <div class="meter" role="progressbar" aria-label="${esc(m.title)}" aria-valuenow="${m.progress}" aria-valuemin="0" aria-valuemax="${m.count}"><i style="width:${pct}%"></i></div>
-    <div class="hm-m-foot"><span class="hm-m-num">${seen}</span><span class="hm-m-tag">${esc(tag)}</span>${act}</div>
+    <div class="hm-m-bar"><div class="meter" role="progressbar" aria-label="${esc(m.title)}" aria-valuenow="${m.progress}" aria-valuemin="0" aria-valuemax="${m.count}"><i style="width:${pct}%"></i></div><span class="hm-m-num">${seen}</span><span class="hm-m-tag">${esc(tag)}</span>${act}</div>
   </li>`;
 }
 
@@ -247,7 +246,7 @@ function drawStreak() {
 // Curva de las últimas carreras: línea simple, promedio punteado y un cuadrado (el cursor) en la más reciente.
 function spark(values) {
   const W = 260;
-  const H = 70;
+  const H = 104;
   const pad = 6;
   const lo = Math.min(...values);
   const hi = Math.max(...values);

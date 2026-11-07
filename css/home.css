@@ -45,8 +45,8 @@
 .hm-invite p:not(.eyebrow) { margin: .4rem 0 0; max-width: 56ch; color: var(--muted); }
 
 /* tarjetas */
-.hm-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: .8rem; align-items: start; }
-.hm-card { display: flex; flex-direction: column; gap: .8rem; min-width: 0; padding: 1.05rem 1.15rem 1.1rem; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
+.hm-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: .8rem; align-items: stretch; grid-auto-rows: 1fr; }
+.hm-card { display: flex; flex-direction: column; gap: .8rem; height: 100%; min-width: 0; padding: 1.05rem 1.15rem 1.1rem; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
 .hm-card > header { display: flex; align-items: center; justify-content: space-between; gap: .6rem; min-height: 1.2rem; }
 .hm-card .link { padding: 0; border: 0; background: transparent; color: var(--ink); font: 500 .72rem var(--mono); text-decoration: underline; text-underline-offset: 3px; }
 .hm-card .link:hover { text-decoration-thickness: 2px; }
@@ -71,6 +71,12 @@
 .hm-next[data-rarity="epica"] { border-left-color: #a78bfa; }
 .hm-next[data-rarity="legendaria"] { border-left-color: #ffb703; }
 .hm-empty { margin: 0; color: var(--muted); font-size: .85rem; }
+/* con las cuatro tarjetas de la misma altura, el contenido de las más cortas se reparte: título arriba, cifra al medio, pie abajo */
+.hm-cards .hm-card[data-feature="levels"] .hm-line,
+.hm-cards .hm-card-streak .hm-line { margin-top: auto; }
+.hm-cards .hm-card[data-feature="levels"] .meter { margin-top: auto; height: 10px; }
+.hm-cards .hm-card[data-feature="levels"] .hm-big { font-size: 2.9rem; }
+.hm-cards #spark-box { margin-top: auto; }
 
 .meter { height: 8px; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 10%), var(--bg-deep); border: 1px solid var(--line); }
 .meter i { display: block; width: 0; height: 100%; background: var(--ink); transition: width .6s ease-out; }
@@ -82,24 +88,24 @@
 .hm-card .seg button { padding: .25rem .75rem; font-size: .8rem; }
 
 /* misiones del inicio: una línea por misión con su barra y el botón de reclamar */
-.hm-ms { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
-.hm-m { display: grid; gap: .32rem; padding-top: .55rem; border-top: 1px solid var(--line); }
+.hm-ms { display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; max-height: 13.5rem; overflow-y: auto; overscroll-behavior: contain; }
+.hm-m { display: grid; gap: .3rem; padding-top: .45rem; border-top: 1px solid var(--line); }
 .hm-m:first-child { padding-top: 0; border-top: 0; }
 .hm-m-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
 .hm-m-name { color: var(--text); font-size: .88rem; font-weight: 500; }
 .hm-m-rw { color: var(--ink); font: 400 .7rem var(--mono); white-space: nowrap; }
-.hm-m .meter { height: 6px; }
-.hm-m-foot { display: flex; align-items: center; gap: .5rem; color: var(--muted); font: 400 .72rem var(--mono); }
-.hm-m-tag { font-size: .64rem; letter-spacing: .04em; text-transform: uppercase; }
-.hm-m-done { margin-left: auto; color: var(--muted); }
+.hm-m-bar { display: flex; align-items: center; gap: .45rem; min-height: 1.4rem; color: var(--muted); font: 400 .7rem var(--mono); }
+.hm-m-bar .meter { flex: 1 1 auto; min-width: 2.5rem; height: 5px; }
+.hm-m-tag { font-size: .62rem; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.hm-m-done { color: var(--muted); white-space: nowrap; }
 .hm-m[data-state="claimed"], .hm-m[data-state="done"], .hm-m[data-state="scheduled"] { opacity: .72; }
-.hm-m-btn { margin-left: auto; padding: .2rem .55rem; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font: 600 .72rem var(--ui); cursor: pointer; }
+.hm-m-btn { padding: .18rem .5rem; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font: 600 .7rem var(--ui); cursor: pointer; }
 .hm-m-btn:hover { filter: brightness(1.06); }
 .hm-msg { margin: 0; color: var(--ink); font-size: .76rem; }
 
-/* racha: 14 casillas, más intensas cuanto más cerca de la meta */
+/* racha: 14 casillas en dos semanas, más intensas cuanto más cerca de la meta */
 .hm-streak { display: grid; gap: .5rem; margin-top: auto; }
-.heat { display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; }
+.heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .heat i { aspect-ratio: 1; background: var(--bg-deep); border: 1px solid var(--line); }
 .heat i.l1 { background: color-mix(in srgb, var(--accent) 28%, var(--bg-deep)); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
 .heat i.l2 { background: color-mix(in srgb, var(--accent) 50%, var(--bg-deep)); border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
@@ -183,7 +189,10 @@
 }
 @media (max-width: 900px) {
   .hm-modes { grid-template-columns: 1fr; gap: 1.1rem; }
-  .hm-cards { grid-template-columns: 1fr; }
+  .hm-cards { grid-template-columns: 1fr; grid-auto-rows: auto; }
+  .hm-card { height: auto; }
+  /* en una sola columna cada tarjeta mide lo suyo: la lista de misiones no se recorta */
+  .hm-ms { max-height: none; overflow: visible; }
 }
 @media (max-width: 640px) {
   .hm-side { grid-template-columns: 1fr; }
