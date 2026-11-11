@@ -8,6 +8,7 @@
   --accent: #fca311; --ink: #fca311; --on-accent: #14213d; --bad: #ff7466;
   --z1: #ff7466; --z2: #fca311; --z3: #3ddc97; --z4: #4cc9f0;
   --grid: rgb(241 245 249 / .04);
+  --key-fill: var(--panel); --key-line: var(--line); --key-text: var(--muted);
   --ui: "Poppins", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   --r: 3px;
@@ -32,6 +33,14 @@
   --grid: transparent;
 }
 [data-theme="contraste"] :focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* teclado de las ilustraciones en los temas oscuros: la tecla se separa del panel y las letras
+   que no están en la palabra quedan legibles, sin competir con las encendidas */
+[data-theme="neanbit"], [data-theme="carbon"] {
+  --key-fill: color-mix(in srgb, var(--text) 8%, var(--panel));
+  --key-line: color-mix(in srgb, var(--muted) 55%, var(--line));
+  --key-text: color-mix(in srgb, var(--text) 40%, var(--muted));
+}
 [data-theme="contraste"] button, [data-theme="contraste"] .panel { border-width: 2px; }
 
 [data-theme="neanbit"], [data-theme="carbon"], [data-theme="contraste"] { color-scheme: dark; }
@@ -168,8 +177,8 @@ svg.i { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor;
 .art .dash { stroke-dasharray: 4 4; }
 .art .kl { fill: currentColor; stroke: none; font: 500 12px var(--mono); text-transform: none; }
 .art .kl.big { font-size: 20px; }
-.art .k rect { fill: var(--panel); stroke: var(--line); }
-.art .k text { fill: var(--muted); }
+.art .k rect { fill: var(--key-fill); stroke: var(--key-line); }
+.art .k text { fill: var(--key-text); }
 .art .k.on rect { fill: var(--accent); stroke: var(--accent); }
 .art .k.on text { fill: var(--on-accent); }
 .art .k.bad rect { fill: color-mix(in srgb, var(--bad) 20%, var(--panel)); stroke: var(--bad); }

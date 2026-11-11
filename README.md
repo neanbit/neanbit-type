@@ -270,7 +270,7 @@ La idea es **una tecla y un cursor**: el logo termina en un cuadrado de color, y
 - Los botones son teclas (borde inferior, se hunden al apretar); los controles dentro de filas (pestañas, segmentos) quedan planos.
 - Los paneles principales llevan marcas de registro en dos esquinas, dibujadas con `background`, sin pseudo-elementos. No hay franjas de color al costado.
 - Rótulos en IBM Plex Mono, en mayúsculas y con cuadrado. Fondo de papel cuadriculado (`--grid`).
-- Tokens: `--bg-deep`, `--raise`, `--grid`, `--k` (radio de tecla) y `--z1` a `--z4` (los dedos en el dibujo del teclado).
+- Tokens: `--bg-deep`, `--raise`, `--grid`, `--k` (radio de tecla), `--z1` a `--z4` (los dedos en el dibujo del teclado) y `--key-fill`, `--key-line` y `--key-text` (la tecla del dibujo; en los temas oscuros se separa del panel y las letras apagadas, las que no están en la palabra encendida, suben de contraste).
 - `js/art.js` genera las ilustraciones SVG (teclado con zonas por dedo, íconos de modo, diagramas de CPM, duelo, llave, Hardcore, récord, niveles de medalla y escenas legales); toman el color del tema. `img/mark.svg` es la marca y el favicon.
 
 ### Textos de las páginas
