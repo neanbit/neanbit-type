@@ -66,7 +66,7 @@ function show(name) {
   $('#more-menu').hidden = true;
   screens.forEach((s) => ($('#' + s).hidden = s !== name));
   if (name !== 'page') {
-    document.title = 'neanbit type';
+    document.title = 'neanbit ▪ type';
     if (location.pathname !== '/') history.pushState(null, '', '/');
   }
   if (name === 'home') document.dispatchEvent(new Event('home'));

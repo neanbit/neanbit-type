@@ -509,7 +509,7 @@ function open(id, { push = true, anchor = '' } = {}) {
   render(id);
   ctx.show('page');
   if (push && location.pathname !== paths[id]) history.pushState({ page: id }, '', paths[id]);
-  document.title = `${ov(id).title || defs[id].title} · neanbit type`;
+  document.title = `${ov(id).title || defs[id].title} · neanbit ▪ type`;
   window.scrollTo(0, 0);
   if (anchor) requestAnimationFrame(() => scrollToAnchor(anchor));
 }
